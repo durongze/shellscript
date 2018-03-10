@@ -17,3 +17,8 @@ net usershare add Download /home/du/Desktop
 net usershare delete Download
 #4.LINUX 挂载windows共享到本地 
 sudo mount -t cifs -o nolock //192.168.99.208/d /mnt/window-pc -o username=administrator,password=password
+
+#4.在rhel7上需要
+sudo getsebool -a | grep samba
+sudo setsebool -P samba_enable_home_dirs on
+
