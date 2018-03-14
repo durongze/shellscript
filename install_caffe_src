@@ -51,7 +51,7 @@ unzip $GFLAGS
 pushd $GFLAGS
 mkdir build
 pushd build
-cmake .. && make 
+export CXXFLAGS="-fPIC" && cmake .. && make VERBOSE=1 && make 
 popd
 mkdir /opt/gflags
 cp lib include /opt/gflags/ -a
