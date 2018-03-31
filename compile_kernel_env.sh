@@ -12,3 +12,5 @@ cp  arch/arm/configs/hi3536c_full_defconfig .config
 yum groupinstall "Development Tools"
 
 yum install gcc make ncurses ncurses-devel perl  kernel-devel
+
+sudo  apt-get source linux-image-$(uname -r)
