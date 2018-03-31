@@ -14,3 +14,6 @@ yum groupinstall "Development Tools"
 yum install gcc make ncurses ncurses-devel perl  kernel-devel
 
 sudo  apt-get source linux-image-$(uname -r)
+
+git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$(lsb_release --codename | cut -f2).git
+sudo apt-get build-dep linux-image-$(uname -r) 
