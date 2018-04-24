@@ -22,3 +22,6 @@ sudo mount -t cifs -o nolock //192.168.99.208/d /mnt/window-pc -o username=admin
 sudo getsebool -a | grep samba
 sudo setsebool -P samba_enable_home_dirs on
 
+#5.
+sudo chmod 755 /var/lib/samba/usershare/
+
