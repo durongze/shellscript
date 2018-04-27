@@ -17,3 +17,9 @@ sudo  apt-get source linux-image-$(uname -r)
 
 git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$(lsb_release --codename | cut -f2).git
 sudo apt-get build-dep linux-image-$(uname -r) 
+
+
+#rhel7安装图形界面
+yum groupinstall "Server with GUI"  
+#rhel6安装图形界面
+yum groupinstall "X Window System"  
