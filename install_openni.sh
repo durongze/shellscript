@@ -115,8 +115,11 @@ function install_all()
 }
 
 function ubuntu_cfg_install()
-{
+{ 
     sudo apt-get update
-    sudo apt-get install make cmake g++ flex bison  pkg-config  lrzsz libglib2.0-dev  libffi-dev  python3-dev python python-dev 
+    sudo apt-get install make cmake g++ flex bison  pkg-config  lrzsz 
+    sudo apt-get install libglib2.0-dev  libffi-dev  python3-dev python python-dev  libkmod-dev libblkid-dev  x11proto-gl-dev 
+    sudo apt-get install libdrm-dev
+    sudo apt-get install libx11-dev libxext-dev libxdamage-dev  libxfixes-dev libx11-xcb-dev libxcb-glx0-dev  libxcb-dri2-0-dev 
 }
 install_all
