@@ -117,6 +117,6 @@ function install_all()
 function ubuntu_cfg_install()
 {
     sudo apt-get update
-    sudo apt-get install make cmake g++ flex bison  pkg-config  lrzsz libglib2.0-dev
+    sudo apt-get install make cmake g++ flex bison  pkg-config  lrzsz libglib2.0-dev  libffi-dev  python3-dev python python-dev 
 }
 install_all
