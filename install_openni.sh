@@ -114,4 +114,9 @@ function install_all()
     install_freeglut300
 }
 
+function ubuntu_cfg_install()
+{
+    sudo apt-get update
+    sudo apt-get install make cmake g++ flex bison  pkg-config  lrzsz
+}
 install_all
