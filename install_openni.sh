@@ -121,5 +121,6 @@ function ubuntu_cfg_install()
     sudo apt-get install libglib2.0-dev  libffi-dev  python3-dev python python-dev  libkmod-dev libblkid-dev  x11proto-gl-dev 
     sudo apt-get install libdrm-dev
     sudo apt-get install libx11-dev libxext-dev libxdamage-dev  libxfixes-dev libx11-xcb-dev libxcb-glx0-dev  libxcb-dri2-0-dev 
+    sudo apt-get install libxcb-xfixes0-dev libxcb-dri3-dev libxcb-present-dev libxcb-sync-dev libxshmfence-dev 
 }
 install_all
