@@ -114,6 +114,18 @@ function install_all()
     install_freeglut300
 }
 
+function install_mesa1802()
+{
+    file=mesa-18.0.2.tar.gz
+    tar xf $file
+    FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq)
+    pushd $FileDir
+    ./configure --prefix=/home/durongze/opt/mesa1802 --enable-llvm  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
+    make  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
+    make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
+    popd    
+}
+
 function ubuntu_cfg_install()
 { 
     sudo apt-get update
@@ -122,6 +134,8 @@ function ubuntu_cfg_install()
     sudo apt-get install libdrm-dev
     sudo apt-get install libx11-dev libxext-dev libxdamage-dev  libxfixes-dev libx11-xcb-dev libxcb-glx0-dev  libxcb-dri2-0-dev 
     sudo apt-get install libxcb-xfixes0-dev libxcb-dri3-dev libxcb-present-dev libxcb-sync-dev libxshmfence-dev 
-    sudo apt-get install llvm
+    sudo apt-get install llvm libelf-dev 
 }
+
+
 install_all
