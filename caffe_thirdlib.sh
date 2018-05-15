@@ -57,8 +57,8 @@ function install_hdf5()
     echo -e "\033[32m $FUNCNAME \033[0m"
     tar xf hdf5-1.8.0.tar.gz 
     pushd hdf5-1.8.0
-    ./configure --prefix=${HOME}/opt/hdf5180
-    make && make install
+    ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=${HOME}/opt/hdf5180
+    make CFLAGS=-fPIC CXXFLAGS=-fPIC && make install
     popd
 }
 
