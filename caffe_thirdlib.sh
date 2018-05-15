@@ -148,7 +148,7 @@ function install_zlib()
     echo -e "\033[32m $FUNCNAME \033[0m"
     tar xf zlib-1.2.3.tar.gz
     pushd zlib-1.2.3
-    ./configure --prefix=${HOME}/opt/zlib123/   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
+    ./configure --prefix=${HOME}/opt/zlib123/  --shared || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
     make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
     make install  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
     popd
