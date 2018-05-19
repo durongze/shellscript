@@ -18,3 +18,12 @@ export DISPLAY=192.168.179.1:0.0
 xclock #测试程序
 
  
+############################################### rhel7  桌面安装 #####################################################
+yum group list
+yum -y groupinstall "Server with GUI"
+show-installed
+systemctl get-default
+systemctl set-default graphical.target
+reboot  #远程连接时不要使用startx， 使用reboot重启
+
+
