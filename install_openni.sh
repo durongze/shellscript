@@ -195,6 +195,7 @@ llvm -6.0.0.src libxshmfence-1.3 expat-2.2.5 mesa-18.0.2"
 #TarXFFile "libxcb-1.13.tar.bz2" ~/opt  ""
 #TarXFFile "libpciaccess-0.10.3.tar.bz2" ~/opt  ""
 #TarXFFile "libdrm-2.4.92.tar.gz" ~/opt  " --enable-intel --enable-libkms "
+#BUILD_SHARED_LIBS 改为 ON
 #TarXFFile "llvm-6.0.0.src.tar.xz" ~/opt  ""
 #TarXFFile "libxshmfence-1.3.tar.bz2" ~/opt  ""
 #TarXFFile "expat-2.2.5.tar.bz2" ~/opt  ""
