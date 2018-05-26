@@ -7,6 +7,8 @@ sudo apt-get install xterm
 su  #切换到root
 vi /etc/ssh/sshd_config  
 #修改其中的 X11Forwarding yes
+
+#display: unable to open X server `' @ error/display.c/DisplayImageCommand/431
 apt-fast install vnc4server
 vncserver
 #ip为window的ip，第一个0 代表 0+6000 = 6000 端口 ，第二个0 一般总为0
