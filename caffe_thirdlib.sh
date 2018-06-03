@@ -165,10 +165,10 @@ function install_caffe()
     grep "CPU_ONLY" Makefile.config | grep "#" 
     if [ 0 -eq $? ];then
         cp .build_release  ${HOME}/opt/caffe_gpu -a
-        cp include  ${HOME}/opt/caffe_cpu/ -a
+        cp include  ${HOME}/opt/caffe_gpu/ -a
     else
         cp .build_release  ${HOME}/opt/caffe_cpu -a
-        cp include  ${HOME}/opt/caffe_gpu/ -a
+        cp include  ${HOME}/opt/caffe_cpu/ -a
     fi  
     popd
 }
