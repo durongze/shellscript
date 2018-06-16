@@ -71,6 +71,42 @@ function GenInputHeader()
     cd /usr/include/X11/extensions && sudo ln -s XI.h XInput.h
 }
 
+function InstallQGisDep()
+{
+	sudo pip install SIP 
+	sudo pip3 install sip 
+	sudo apt install python3-pip
+	sudo apt-get install libsip-api-java 
+	sudo apt-get install libsipwitch-dev 
+	sudo apt-get install libsipxtapi-dev 
+	sudo pip3 install PyQt
+	sudo pip install pyqtconfig
+	sudo pip install sipconfig
+	sudo apt install  pyqt5.qsci-dev 
+	sudo apt install  pyqt5-dev
+	sudo apt install  pyqt5-dev-tools 
+	sudo apt-get install QScintilla
+	sudo apt-get install libqscintilla2-qt5-dev 
+	sudo apt-get install libqtkeychain1 
+	sudo apt-get install qtkeychain-dev 
+	sudo apt-get install libqwt-dev 
+	sudo apt-get install libspatialite-dev 
+	sudo apt-get install libqt5xmlpatterns5-dev 
+	sudo apt-get install pyqt5-dev-tools 
+	sudo apt-get install pyqt5-dev
+	sudo apt-get install libgsl-dev 
+	sudo apt-get install libspatialindex-dev 
+	sudo apt-get install python3-pyqt5.qsci
+	sudo apt-get install python3-pyqt5.qsci-dbg 
+	sudo apt install  pyqt5-dev-tools
+	sudo apt install  pyqt5-dev
+	sudo apt install  pyqt5.qsci-dev 
+	sudo apt-get install python3-pyqt5.qtsql
+	sudo apt-get install libpq-dev 
+	sudo apt-get install libpqxx-dev 
+	sudo apt-get install libpqxx-doc 
+}
+
 #TarXFFile "glib-2.56.0.tar.xz" ~/opt ""
 #TarXFFile "atk-1.29.92.tar.gz" ~/opt ""
 #TarXFFile "tiff-4.0.9.tar.gz" ~/opt " --shared "
@@ -97,3 +133,24 @@ TarXFFile "aMule-2.3.2.tar.xz" ~/opt " --enable-amule-daemon --enable-amulecmd -
 #TarXFFile "doxygen-1.8.14.src.tar.gz" ~/opt ""
 #X11/extensions/XInput.h: No such file or directory #GenInputHeader
 #TarXFFile "freeglut-3.0.0.tar.gz" ~/opt ""
+
+#TarXFFile "gdal-2.3.0.tar.gz" ~/opt ""
+#TarXFFile "proj-4.9.1.tar.gz" ~/opt ""
+#TarXFFile "geos-3.5.1.tar.bz2" ~/opt " CFLAGS=-fPIC CXXFLAGS=-fPIC --shared "
+##TarXFFile "spatialite-2.2.tar.gz" ~/opt ""
+#TarXFFile "freexl-1.0.5.tar.gz" ~/opt ""
+#TarXFFile "libspatialite-4.2.0.tar.gz" ~/opt ""
+#TarXFFile "libspatialite-4.3.0.tar.gz" ~/opt ""
+#TarXFFile "readosm-1.1.0.tar.gz" ~/opt ""
+##TarXFFile "spatialite-tools-4.2.0.tar.gz" ~/opt "  "
+#TarXFFile "fftw-3.3.8.tar.gz" ~/opt ""
+# configure
+#TarXFFile "freetype-2.9.tar.bz2" ~/opt " CFLAGS=-fPIC CXXFLAGS=-fPIC --shared "
+#TarXFFile "cairo-1.14.12.tar.xz" ~/opt ""
+#TarXFFile "grass-7.4.0.tar.gz" ~/opt " --with-freetype-includes=/home/du/opt/freetype-2_9/include/freetype2 "
+#TarXFFile "spatialindex-src-1.8.5.tar.bz2" ~/opt ""
+
+#TarXFFile "QScintilla_gpl-2.10.4.tar.gz" ~/opt ""
+##TarXFFile "qwt-5.2.3.tar.bz2" ~/opt ""
+#TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/home/durongze/opt/gdal-2_3_0/include -DGDAL_LIBRARY=/home/durongze/opt/gdal-2_3_0/lib/ -DPROJ_INCLUDE_DIR=/home/durongze/opt/proj-4_9_1/include/ -DPROJ_LIBRARY=/home/durongze/opt/proj-4_9_1/lib -DQSCINTILLA_INCLUDE_DIR=/usr/lib/x86_64-linux-gnu/  -DQSCINTILLA_INCLUDE_DIR=/usr/lib/x86_64-linux-gnu/  -DQSCINTILLA_LIBRARY=/usr/lib/libqscintilla2_qt5.so  -DQt5Positioning_DIR=/usr/lib/x86_64-linux-gnu "
+TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/home/durongze/opt/gdal-2_3_0/include -DGDAL_LIBRARY=/home/durongze/opt/gdal-2_3_0/lib/libgdal.so -DPROJ_INCLUDE_DIR=/home/durongze/opt/proj-4_9_1/include/ -DPROJ_LIBRARY=/home/durongze/opt/proj-4_9_1/lib/libproj.so   -DQt5Positioning_DIR=/usr/lib/x86_64-linux-gnu -DQSCINTILLA_VERSION_STR=/usr/lib/python3/dist-packages/PyQt5/Qsci.cpython-36m-x86_64-linux-gnu.so"
