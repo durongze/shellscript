@@ -4,9 +4,9 @@ function AutoInstall()
 {
     SrcDir=$1
     DstDir=$2
-    CurFlags=$3
+    CurFlags="$3"
     InstallDir=$(echo $SrcDir | tr -s "." "_")
-    echo "DstDir:$DstDir InstallDir:$InstallDir #####################################"
+    echo "DstDir:$DstDir InstallDir:$InstallDir CurFlags:$CurFlags"
     pushd $SrcDir
         if [ -f CMakeLists.txt ];then
             mkdir dyzbuild  
@@ -19,7 +19,7 @@ function AutoInstall()
             mkdir dyzbuild
             pushd dyzbuild
     	    dos2unix ../configure
-            ../configure --prefix=$DstDir/$InstallDir $CurFlags  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
+            ../configure --prefix=$DstDir/$InstallDir "$CurFlags"  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
             make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
             make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
             popd
@@ -34,7 +34,7 @@ function TarXFFile()
 {
     SrcDir=$1
     DstDir=$2
-    CurFlags=$3
+    CurFlags="$3"
     pushd ./
         SrcFileList=$SrcDir
         for file in $SrcFileList
@@ -44,13 +44,13 @@ function TarXFFile()
             	FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq)
             	echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
             	tar xf $file
-            	AutoInstall $FileDir $DstDir $CurFlags
+            	AutoInstall $FileDir $DstDir "$CurFlags"
 	    ;;
 	    *.zip)
 	    	FileDir=$(unzip -v jpegsr6.zip |awk '{print $8}' | grep "/$" | uniq)
             	echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
 		unzip $file
-		AutoInstall $FileDir $DstDir $CurFlags
+		AutoInstall $FileDir $DstDir "$CurFlags"
 	    ;;
 	    esac;
         done
@@ -154,3 +154,12 @@ TarXFFile "aMule-2.3.2.tar.xz" ~/opt " --enable-amule-daemon --enable-amulecmd -
 ##TarXFFile "qwt-5.2.3.tar.bz2" ~/opt ""
 #TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/home/durongze/opt/gdal-2_3_0/include -DGDAL_LIBRARY=/home/durongze/opt/gdal-2_3_0/lib/ -DPROJ_INCLUDE_DIR=/home/durongze/opt/proj-4_9_1/include/ -DPROJ_LIBRARY=/home/durongze/opt/proj-4_9_1/lib -DQSCINTILLA_INCLUDE_DIR=/usr/lib/x86_64-linux-gnu/  -DQSCINTILLA_INCLUDE_DIR=/usr/lib/x86_64-linux-gnu/  -DQSCINTILLA_LIBRARY=/usr/lib/libqscintilla2_qt5.so  -DQt5Positioning_DIR=/usr/lib/x86_64-linux-gnu "
 TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/home/durongze/opt/gdal-2_3_0/include -DGDAL_LIBRARY=/home/durongze/opt/gdal-2_3_0/lib/libgdal.so -DPROJ_INCLUDE_DIR=/home/durongze/opt/proj-4_9_1/include/ -DPROJ_LIBRARY=/home/durongze/opt/proj-4_9_1/lib/libproj.so   -DQt5Positioning_DIR=/usr/lib/x86_64-linux-gnu -DQSCINTILLA_VERSION_STR=/usr/lib/python3/dist-packages/PyQt5/Qsci.cpython-36m-x86_64-linux-gnu.so"
+
+
+#TarXFFile "zlib-1.2.11.tar.xz" ~/opt ""
+#TarXFFile "libffi-3.2.1.tar.gz" ~/opt ""
+#TarXFFile "util-linux-2.32.tar.xz" ~/opt ""
+#TarXFFile "pcre-8.42.tar.bz2" ~/opt " --enable-utf8 --enable-unicode-properties "
+#TarXFFile "glib-2.57.1.tar.gz" ~/opt ""
+#TarXFFile "readline-7.0.tar.gz" ~/opt ""
+#TarXFFile "sdcv-0.4.2.tar.bz2" ~/opt ""
