@@ -156,7 +156,7 @@ TarXFFile "aMule-2.3.2.tar.xz" ~/opt " --enable-amule-daemon --enable-amulecmd -
 TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/home/durongze/opt/gdal-2_3_0/include -DGDAL_LIBRARY=/home/durongze/opt/gdal-2_3_0/lib/libgdal.so -DPROJ_INCLUDE_DIR=/home/durongze/opt/proj-4_9_1/include/ -DPROJ_LIBRARY=/home/durongze/opt/proj-4_9_1/lib/libproj.so   -DQt5Positioning_DIR=/usr/lib/x86_64-linux-gnu -DQSCINTILLA_VERSION_STR=/usr/lib/python3/dist-packages/PyQt5/Qsci.cpython-36m-x86_64-linux-gnu.so"
 
 
-#TarXFFile "zlib-1.2.11.tar.xz" ~/opt ""
+#TarXFFile "zlib-1.2.11.tar.xz" ~/opt " --shared "
 #TarXFFile "libffi-3.2.1.tar.gz" ~/opt ""
 #TarXFFile "util-linux-2.32.tar.xz" ~/opt ""
 #TarXFFile "pcre-8.42.tar.bz2" ~/opt " --enable-utf8 --enable-unicode-properties "
