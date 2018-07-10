@@ -41,13 +41,13 @@ function TarXFFile()
         do
 	   case $file in
 	    *.tar.*)
-            	FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq)
+            	FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
             	echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
             	tar xf $file
             	AutoInstall $FileDir $DstDir "$CurFlags"
 	    ;;
 	    *.zip)
-	    	FileDir=$(unzip -v jpegsr6.zip |awk '{print $8}' | grep "/$" | uniq)
+	    	FileDir=$(unzip -v $file |awk '{print $8}' | grep "/$" | uniq | sed -n '1p')
             	echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
 		unzip $file
 		AutoInstall $FileDir $DstDir "$CurFlags"
@@ -56,6 +56,47 @@ function TarXFFile()
         done
     popd
 }
+
+function GenFileNameVar()
+{
+    FileList="$1"
+    FileDir=""
+
+    echo "" >env.txt
+    for file in $FileList
+    do
+        case $file in
+            *.tar.*)
+            FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
+        ;;
+            *.zip)
+            FileDir=$(unzip -v $file |awk '{print $8}' | grep "/$" | uniq | sed -n '1p')
+        ;;
+        esac;
+            FileDir=$(echo $FileDir | tr -s "." "_")
+            echo $FileDir >>env.txt
+    done
+}
+
+function GenEnvVar()
+{
+    BASHRC="~/.bashrc"
+    echo "fileList=\"$(cat env.txt)\""  >>${BASHRC}
+    echo "for tmpFile in \${fileList}" >>${BASHRC}
+    echo "do" >>${BASHRC}
+    echo "    TMP_FILE_HOME=\${HOME}/opt/\${tmpFile}" >>${BASHRC}
+    echo "    export C_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${C_INCLUDE_PATH}" >>${BASHRC}
+    echo "    export CPLUS_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CPLUS_INCLUDE_PATH}" >>${BASHRC}
+    echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LIBRARY_PATH}" >>${BASHRC}
+    echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LIBRARY_PATH}" >>${BASHRC}
+    echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LD_LIBRARY_PATH}" >>${BASHRC}
+    echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LD_LIBRARY_PATH}" >>${BASHRC}
+    echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib/pkgconfig/:\${PKG_CONFIG_PATH}" >>${BASHRC}
+    echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib64/pkgconfig/:\${PKG_CONFIG_PATH}" >>${BASHRC}
+    echo "    export PATH=\${TMP_FILE_HOME}/bin:\${TMP_FILE_HOME}/sbin:\$PATH" >>${BASHRC}
+    echo "done" >>${BASHRC}
+}
+
 
 function ModifyWxGTK()
 {
@@ -106,6 +147,9 @@ function InstallQGisDep()
 	sudo apt-get install libpqxx-dev 
 	sudo apt-get install libpqxx-doc 
 }
+
+GenFileNameVar "$(ls *.tar.* *.zip)"
+GenEnvVar
 
 #TarXFFile "glib-2.56.0.tar.xz" ~/opt ""
 #TarXFFile "atk-1.29.92.tar.gz" ~/opt ""
@@ -163,3 +207,5 @@ TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/home/durongze/opt/gd
 #TarXFFile "glib-2.57.1.tar.gz" ~/opt ""
 #TarXFFile "readline-7.0.tar.gz" ~/opt ""
 #TarXFFile "sdcv-0.4.2.tar.bz2" ~/opt ""
+
+#TarXFFile "qt-everywhere-opensource-src-5.6.3.tar.xz" ~/opt " -confirm-license -opensource -no-opengl -no-opengles3 -nomake examples"
