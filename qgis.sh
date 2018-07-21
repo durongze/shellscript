@@ -269,7 +269,7 @@ function MysqlStart()
 #TarXFFile "liblzma-4.27.1.tar.gz" ~/opt ""
 #TarXFFile "kea-1.4.0.tar.gz" ~/opt ""
 #TarXFFile "openssl-1.1.0h.tar.gz" ~/opt " "
-#TarXFFile "gdal-2.3.0.tar.xz" ~/opt " --with-mysql=/opt/mysql-5_7_19/bin/mysql_config --with-sqlite3=/opt/sqlite-src-3240000  --with-liblzma=yes   --with-expat=/home/du/opt/expat-2_2_5/  --with-cryptopp=/opt/cryptopp700/  --with-spatialite=/opt/libspatialite-4_3_0/ "
+#TarXFFile "gdal-2.3.0.tar.xz" ~/opt " --with-mysql=/opt/mysql-5_7_19/bin/mysql_config --with-sqlite3=/opt/sqlite-src-3240000  --with-liblzma=yes   --with-expat=/home/du/opt/expat-2_2_5/  --with-cryptopp=/opt/cryptopp700/  --with-spatialite=/opt/libspatialite-4_3_0/  --with-teigha=/usr/local/bin/TeighaFileConverter  --with-teigha-plt=Linux"
 #TarXFFile "grass-7.4.1.tar.gz" ~/opt " --with-freetype-includes=${HOME}/opt/freetype-2_9/include/freetype2 "
 #TarXFFile "postgis-2.4.4.tar.gz" ~/opt ""
 #TarXFFile "libelf-0.8.13.tar.gz" ~/opt ""
