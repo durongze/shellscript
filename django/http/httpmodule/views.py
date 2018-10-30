@@ -15,3 +15,6 @@ def get(requset):
     # To do
     return HttpResponse(result)
     # To do可以写上自己的逻辑代码，也可以调用自己封装的python脚本。
+
+def index(request):
+    return HttpResponse("welcom to raspberrypi!!")
