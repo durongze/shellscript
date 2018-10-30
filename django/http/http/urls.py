@@ -24,13 +24,13 @@ Including another URLconf
 from django.conf.urls import include, url 
 from django.contrib import admin 
 admin.autodiscover() 
-from httpmodule import views as http_views 
+from httpmodule import views as httpmodule_views 
 urlpatterns = [ 
         # Examples: 
-        # url(r'^$', 'http.views.home', name='home'), 
+        url(r'^$', httpmodule_views.index, name='home'), 
         # url(r'^blog/', include('blog.urls')), 
         url(r'^admin/', include(admin.site.urls)), 
-        url(r'^get/$', http_views.get, name='get'), # 新增get方法 需要对应到views.py 
-        url(r'^set/$', http_views.set, name='set'), # 新增set方法 需要对应到views.py 
+        url(r'^get/$', httpmodule_views.get, name='get'), # 新增get方法 需要对应到views.py 
+        url(r'^set/$', httpmodule_views.set, name='set'), # 新增set方法 需要对应到views.py 
         ]
 
