@@ -14,5 +14,8 @@ cat .git/refs/heads/testing
 #切换到testing分支
 git checkout testing
 
+#合并分支  将testing合并到master
+git checkout master
+git merge testing
 
 

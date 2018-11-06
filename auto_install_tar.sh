@@ -209,3 +209,6 @@ TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/home/durongze/opt/gd
 #TarXFFile "sdcv-0.4.2.tar.bz2" ~/opt ""
 
 #TarXFFile "qt-everywhere-opensource-src-5.6.3.tar.xz" ~/opt " -confirm-license -opensource -no-opengl -no-opengles3 -nomake examples"
+
+#TarXFFile "libxml2-2.9.8.tar.gz" ~/opt ""
+#TarXFFile "php-5.6.38.tar.gz" ~/opt " --with-libxml-dir=/usr/local/libxml2-2_9_8/ --with-apxs2=/usr/bin/apxs "
