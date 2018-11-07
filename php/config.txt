@@ -1,0 +1,30 @@
+
+方法一：如果是apache2.conf
+
+cp php-5.6.2/php.ini-development  /usr/local/php/etc/php.ini 
+
+sudo a2dismod mpm_event
+sudo a2enmod mpm_prefork
+
+sudo vi mods-available/dir.conf 
+   增加 index.php
+
+方法二：如果是httpd.conf
+cp php-5.6.2/php.ini-development  /usr/local/php/etc/php.ini 
+修改Apache的配置文件httpd.conf
+
+DirectoryIndex index.html index.php #添加index.php
+
+找到：
+
+AddType  application/x-compress .Z
+
+AddType application/x-gzip .gz .tgz
+
+添加如下内容
+
+AddType application/x-httpd-php-source .phps
+
+AddType application/x-httpd-php .php
+
+检查LoadModule php5_module modules/libphp5.so 是否已经添加 libphp5.so文件是否存在
