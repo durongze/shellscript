@@ -11,6 +11,9 @@ git config --global user.email 'durongze@qq.com'
 git config  user.name 'yongze du'
 git config  user.email 'durongze@qq.com'
 
+#查看本地配置
+git config --local -l 
+
 
 #git:three Areas
 Repository
