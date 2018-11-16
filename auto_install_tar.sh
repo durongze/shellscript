@@ -80,7 +80,7 @@ function GenFileNameVar()
 
 function GenEnvVar()
 {
-    BASHRC="~/.bashrc"
+    BASHRC="${HOME}/.bashrc"
     echo "fileList=\"$(cat env.txt)\""  >>${BASHRC}
     echo "for tmpFile in \${fileList}" >>${BASHRC}
     echo "do" >>${BASHRC}
