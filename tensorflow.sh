@@ -20,7 +20,7 @@ function AutoInstall()
     elif [ -f configure ];then
         mkdir dyzbuild
         pushd dyzbuild
-        dos2unix ../configure
+        dos2unix ../configure && export CXXFLAGS="-fPIC"
         ../configure --prefix=$DstDir/$InstallDir $CurFlags  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
         make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
         make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
@@ -219,3 +219,8 @@ function InstallQGisDep()
 #TarXFFile "packaging-18.0.tar.gz" "" "" 
 #TarXFFile "scikit-build-0.8.1.tar.gz" "" ""
 #TarXFFile "opencv-python-19.tar.gz" "" ""  ####pip install opencv-python
+#TarXFFile "zlib-1.2.11.tar.gz" "${HOME}/opt" "--shared" 
+#TarXFFile "freetype-2.9.tar.bz2" "${HOME}/opt" " CFLAGS=-fPIC CXXFLAGS=-fPIC --shared "
+#TarXFFile "jpegsrc.v9c.tar.gz" "${HOME}/opt" ""
+#TarXFFile "libpng-1.6.34.tar.gz" "${HOME}/opt" ""
+TarXFFile "tiff-4.0.9.tar.gz" "${HOME}/opt" ""
