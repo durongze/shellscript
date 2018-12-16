@@ -207,3 +207,15 @@ function InstallQGisDep()
 #TarXFFile "h5py-2.8.0.tar.gz" "" "" ####pkg-config
 #TarXFFile "funcsigs-1.0.2.tar.gz" "" ""
 #TarXFFile "Keras_Applications-1.0.6.tar.gz" "" ""
+#TarXFFile "subprocess32-3.5.3.tar.gz" "" ""
+#TarXFFile "backports.functools_lru_cache-1.5.tar.gz" "" ""
+#TarXFFile "kiwisolver-1.0.1.tar.gz" "" "" 
+#TarXFFile "pytz-2018.7.tar.gz" "" ""
+#TarXFFile "python-dateutil-2.7.5.tar.gz" "" ""
+#TarXFFile "pyparsing-2.3.0.tar.gz" "" ""
+#TarXFFile "cycler-0.10.0.tar.gz" "" ""
+#TarXFFile "matplotlib-2.2.3.tar.gz" "" ""
+#TarXFFile "cairocffi-0.9.0.tar.gz" "" ""
+#TarXFFile "packaging-18.0.tar.gz" "" "" 
+#TarXFFile "scikit-build-0.8.1.tar.gz" "" ""
+#TarXFFile "opencv-python-19.tar.gz" "" ""  ####pip install opencv-python
