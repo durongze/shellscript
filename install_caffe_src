@@ -96,3 +96,46 @@ nvidia-smi
 export CUDA_HOME=/usr/local/cuda
 export PATH=$CUDA_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+##################################################################
+sudo apt-get install samba-client
+sudo apt-fast install smb4k
+sudo apt-get install xorg-server-source-hwe-18.04
+sudo apt-get install libxorg-gtest-dev
+sudo apt-fast install xorg-dev
+sudo nvidia-xconfig
+sudo reboot
+sudo apt-get install autoconf libtool
+sudo apt-get install flex bison
+sudo dpkg -i cuda-repo-ubuntu1804_10.0.130-1_amd64.deb
+sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+sudo apt-get update
+sudo apt-get install cuda-drivers
+nvidia-smi
+sudo apt remove nvidia-*
+sudo dpkg -r nvidia
+sudo init 5
+sudo apt upgrade
+sudo ./NVIDIA-Linux-x86_64-410.78.run --no-opengl-files
+sudo reboot
+sudo service gdm3 stop
+sudo service gdm stop
+sudo vi /etc/modprobe.d/blacklist.conf
+sudo reboot
+sudo apt-get install gnome-panel
+sudo apt-get install cuda-gpu-library-advisor-10-0
+sudo apt-get install xserver-xorg-video-nvidia-390
+sudo apt-get install cuda-driver-390
+find /usr/ -iname "cuda"
+sudo apt-get install gnome
+sudo apt-get install ubuntu-gnome-desktop
+sudo reboot
+sudo apt-get upgrade
+nvidia-smi
+sudo apt-get install caffe-cuda
+sudo apt-get install caffe-tools-cuda
+sudo apt-get install cuda-cublas-dev-10-0
+find /usr/ -iname "cublas_v2.h"
+sudo apt-fast install nvidia-cuda-toolkit
+find /usr -iname "nvcc"
+/usr/lib/nvidia-cuda-toolkit/bin/nvcc --version
+sudo ln -sf  /usr/bin/nvcc /usr/local/cuda-10.0/bin/
