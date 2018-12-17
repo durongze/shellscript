@@ -223,4 +223,6 @@ function InstallQGisDep()
 #TarXFFile "freetype-2.9.tar.bz2" "${HOME}/opt" " CFLAGS=-fPIC CXXFLAGS=-fPIC --shared "
 #TarXFFile "jpegsrc.v9c.tar.gz" "${HOME}/opt" ""
 #TarXFFile "libpng-1.6.34.tar.gz" "${HOME}/opt" ""
-TarXFFile "tiff-4.0.9.tar.gz" "${HOME}/opt" ""
+#TarXFFile "tiff-4.0.9.tar.gz" "${HOME}/opt" ""
+#TarXFFile "Imaging-1.1.7.tar.gz" "" ""  #sudo pip install Pillow-PIL
+#TarXFFile "lcms2-2.9.zip" "${HOME}/opt" ""
