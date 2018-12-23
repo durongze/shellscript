@@ -1,0 +1,37 @@
+
+;nasm 安装
+nmake /f Mkfiles/msvc.mak
+
+;启动vs64位命令行。之前编译过32位，需要nmake clean
+;openssl-1.1.1编译。先安装perl和nasm工具
+perl Configure  VC-WIN64A --prefix=E:\programs\openssl
+nmake
+nmake install
+
+;zlib 安装
+cmake .. -G "Visual Studio 14 2015 Win64"
+
+;boost169  .prefix路径要存在
+b2.exe install --toolset=msvc-14.0 --prefix="E:\programs\boost169"  threading=multi --build -type=complete  address-model=64
+
+set path=%path%;e:\program\openssl\bin;e:\program\openssl\lib
+set lib=%lib%;e:\program\openssl\bin;e:\program\openssl\lib
+set include=%include%;e:\program\openssl\include
+
+set boost_root=e:\program\boost
+set include=%include%;e:\program\boost\include
+set lib=%lib%;e:\program\boost\bin;e:\program\boost\lib
+
+;websocketapp
+cmake  .. -G "Visual Studio 14 2015 Win64"
+msbuild websocketpp.sln
+
+;cpprestsdk 
+;set(Boost_USE_STATIC_LIBS ON CACHE BOOL "Link against boost statically.")
+;    set(OPENSSL_LIBRARIES "E:/programs/OpenSSL/lib" CACHE INTERNAL "")
+;    set(OPENSSL_INCLUDE_DIR "E:/programs/OpenSSL/include" CACHE INTERNAL "")  
+;    set(Boost_LIBRARIES "E:/programs/boost169/lib" CACHE INTERNAL "")
+;    set(Boost_INCLUDE_DIR "E:/programs/boost169/include" CACHE INTERNAL "")  
+cmake  -G "Visual Studio 14 2015 Win64" ..
+msbuild cpprestsdk-root.sln
+
