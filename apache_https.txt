@@ -1,0 +1,158 @@
+在apache 源码的modules/ssl文件夹下，使用命令
+/usr/sbin/apxs -i -a -D HAVE_OPENSSL=1 -I/usr/include/openssl/ -L/usr/lib/openssl/ -c *.c -lcrypto -lssl -ldl
+（apxs需要安装http-devel才有，虽然如此，我还是没有编译成功，于是就在其他已经编译了这个模块的机器上拷贝mod_ssl.so到apache模块目录/usr/local/apache/modules)
+
+
+pi@raspberrypi:
+~
+$sudo mkdir  -pv  /etc/pki/CA/{certs,crl,newcerts}
+mkdir: 已创建目录 "/etc/pki"
+mkdir: 已创建目录 "/etc/pki/CA"
+mkdir: 已创建目录 "/etc/pki/CA/certs"
+mkdir: 已创建目录 "/etc/pki/CA/crl"
+mkdir: 已创建目录 "/etc/pki/CA/newcerts"
+pi@raspberrypi:
+~
+$sudo touch  /etc/pki/CA/{serial,index.txt}
+pi@raspberrypi:
+~
+$sudo mkdir /etc/pki/CA/private/
+pi@raspberrypi:
+~
+$(umask 077;sudo  openssl genrsa -out /etc/pki/CA/private/cakey.pem 4096)
+Generating RSA private key, 4096 bit long modulus
+......................................................................................++
+.............................................................................++
+e is 65537 (0x10001)
+pi@raspberrypi:
+~
+$sudo openssl req  -new -x509 -key /etc/pki/CA/private/cakey.pem -out /etc/pki/CA/cacert.pem -days 3655
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:China
+string is too long, it needs to be less than  2 bytes long
+Country Name (2 letter code) [AU]:86
+State or Province Name (full name) [Some-State]:ShanXi
+Locality Name (eg, city) []:YunCheng
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:LinYin
+Organizational Unit Name (eg, section) []:Music
+Common Name (e.g. server FQDN or YOUR name) []:durongze
+Email Address []:durongze@qq.com
+pi@raspberrypi:
+~
+$echo  01 > /etc/pki/CA/serial
+
+
+
+
+
+
+
+
+
+pi@raspberrypi:
+~
+$sudo mkdir /etc/apache2/ssl
+pi@raspberrypi:
+~
+$cd /etc/apache2/ssl/
+pi@raspberrypi:
+/etc/apache2/ssl
+$(umask  077;sudo openssl  genrsa  -out  /etc/apache2/ssl/https.key  2048)
+Generating RSA private key, 2048 bit long modulus
+......................................................................+++
+.......................+++
+e is 65537 (0x10001)
+pi@raspberrypi:
+/etc/apache2/ssl
+$sudo openssl  req  -new -key  /etc/apache2/ssl/https.key -out /etc/apache2/ssl/https.csr  -days  365
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:China
+string is too long, it needs to be less than  2 bytes long
+Country Name (2 letter code) [AU]:86
+State or Province Name (full name) [Some-State]:ShanXi
+Locality Name (eg, city) []:YunCheng
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:LinYin
+Organizational Unit Name (eg, section) []:Music
+Common Name (e.g. server FQDN or YOUR name) []:durongze
+Email Address []:durongze@qq.com
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:LinYinExt
+
+
+
+
+
+
+
+#修改路径为/etc/pki/CA/
+pi@raspberrypi:
+/etc/apache2/ssl
+$sudo vi /usr/lib/ssl/openssl.cnf    
+pi@raspberrypi:
+/etc/apache2/ssl
+$sudo openssl ca -in /etc/apache2/ssl/https.csr -out /etc/apache2/ssl/https.crt -days 365
+Using configuration from /usr/lib/ssl/openssl.cnf
+Check that the request matches the signature
+Signature ok
+Certificate Details:
+        Serial Number: 1 (0x1)
+        Validity
+            Not Before: Dec 23 16:12:30 2018 GMT
+            Not After : Dec 23 16:12:30 2019 GMT
+        Subject:
+            countryName               = 86
+            stateOrProvinceName       = ShanXi
+            organizationName          = LinYin
+            organizationalUnitName    = Music
+            commonName                = durongze
+            emailAddress              = durongze@qq.com
+        X509v3 extensions:
+            X509v3 Basic Constraints:
+                CA:FALSE
+            Netscape Comment:
+                OpenSSL Generated Certificate
+            X509v3 Subject Key Identifier:
+                EF:CE:DC:B6:6E:01:E2:EE:0D:3E:94:B6:0C:E4:53:30:78:E0:F4:AA
+            X509v3 Authority Key Identifier:
+                keyid:B8:FA:9B:6C:D2:E7:D3:12:12:C9:C9:4F:82:01:C8:95:2E:1A:34:CB
+
+Certificate is to be certified until Dec 23 16:12:30 2019 GMT (365 days)
+Sign the certificate? [y/n]:y
+
+
+1 out of 1 certificate requests certified, commit? [y/n]y
+Write out database with 1 new entries
+Data Base Updated
+
+
+
+
+
+
+
+
+#配置openssl生成ca的路径
+sudo vi /etc/ssl/openssl.cnf
+
+#站点使能ssl
+sudo ln -sf /etc/apache2/sites-available/default-ssl.conf sites-enabled/
+#模块使能ssl
+sudo ln -sf /etc/apache2/mods-available/ssl.conf mods-enabled/ssl.conf
+sudo ln -sf /etc/apache2/mods-available/ssl.load mods-enabled/ssl.load
+#使能ssl依赖模块
+sudo ln -sf /etc/apache2/mods-available/socache_shmcb.load /etc/apache2/mods-enabled/
