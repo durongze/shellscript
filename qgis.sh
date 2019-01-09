@@ -1,61 +1,7 @@
 #!/bin/bash
 
-function AutoInstall()
-{
-    SrcDir=$1
-    DstDir=$2
-    CurFlags="$3"
-    InstallDir=$(echo $SrcDir | tr -s "." "_")
-    echo "DstDir:$DstDir InstallDir:$InstallDir CurFlags:$CurFlags"
-    pushd $SrcDir
-        if [ -f CMakeLists.txt ];then
-            mkdir dyzbuild  
-            pushd dyzbuild
-            export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir  $CurFlags
-            make  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            make install  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            popd
-        elif [ -f configure ];then
-            mkdir dyzbuild
-#pushd dyzbuild
-    	    dos2unix ./configure
-            ./configure --prefix=$DstDir/$InstallDir $CurFlags  
-            make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-#            popd
-        else
-            echo -e "\033[31m Install $InstallDir Fail !!! \033[0m"
-            exit 1
-        fi
-    popd
-}
+. auto_install_func.sh
 
-function TarXFFile()
-{
-    SrcDir=$1
-    DstDir=$2
-    CurFlags="$3"
-    pushd ./
-        SrcFileList=$SrcDir
-        for file in $SrcFileList
-        do
-	   case $file in
-	    *.tar.*)
-            	FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
-            	echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
-            	tar xf $file
-            	AutoInstall $FileDir $DstDir "$CurFlags"
-	    ;;
-	    *.zip)
-	    	FileDir=$(unzip -v $file |awk '{print $8}' | grep "/$" | uniq | sed -n '1p')
-            	echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
-		unzip $file
-		AutoInstall $FileDir $DstDir "$CurFlags"
-	    ;;
-	    esac;
-        done
-    popd
-}
 
 function ModifyWxGTK()
 {
@@ -69,46 +15,6 @@ function ModifyWxGTK()
 function GenInputHeader()
 {
     cd /usr/include/X11/extensions && sudo ln -s XI.h XInput.h
-}
-
-function GenFileNameVar()
-{
-    FileList="$1"
-    FileDir=""
-
-    echo "" >env.txt
-    for file in $FileList
-    do
-        case $file in
-            *.tar.*)
-            FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
-        ;;
-            *.zip)
-            FileDir=$(unzip -v $file |awk '{print $8}' | grep "/$" | uniq | sed -n '1p')
-        ;;
-        esac;
-            FileDir=$(echo $FileDir | tr -s "." "_")
-            echo $FileDir >>env.txt
-    done
-}
-
-function GenEnvVar()
-{
-    BASHRC="bashrc"
-    echo "fileList=\"$(cat env.txt)\""  >${BASHRC}
-    echo "for tmpFile in \${fileList}" >>${BASHRC}
-    echo "do" >>${BASHRC}
-    echo "    TMP_FILE_HOME=\${HOME}/opt/\${tmpFile}" >>${BASHRC}
-    echo "    export C_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${C_INCLUDE_PATH}" >>${BASHRC}
-    echo "    export CPLUS_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CPLUS_INCLUDE_PATH}" >>${BASHRC}
-    echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LIBRARY_PATH}" >>${BASHRC}
-    echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LIBRARY_PATH}" >>${BASHRC}
-    echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LD_LIBRARY_PATH}" >>${BASHRC}
-    echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LD_LIBRARY_PATH}" >>${BASHRC}
-    echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib/pkgconfig/:\${PKG_CONFIG_PATH}" >>${BASHRC}
-    echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib64/pkgconfig/:\${PKG_CONFIG_PATH}" >>${BASHRC}
-    echo "    export PATH=\${TMP_FILE_HOME}/bin:\${TMP_FILE_HOME}/sbin:\$PATH" >>${BASHRC}
-    echo "done" >>${BASHRC}
 }
 
 function InstallQGisDep()
@@ -176,7 +82,7 @@ function MysqlStart()
 #"cryptopp565.zip"
 #make install PREFIX=${HOME}/opt/cryptopp565
 #TarXFFile "zlib-1.2.11.tar.gz" ~/opt ""
-#TarXFFile "aMule-2.3.2.tar.xz" ~/opt " --enable-amule-daemon --enable-amulecmd --enable-webserver --enable-amule-gui --enable-alc --enable-alcc --enable-fileview --enable-plasmamule "
+TarXFFile "aMule-2.3.2.tar.xz" ~/opt " --enable-amule-daemon --enable-amulecmd --enable-webserver --enable-amule-gui --enable-alc --enable-alcc --enable-fileview --enable-plasmamule "
 
 
 #TarXFFile "xcb-proto-1.13.tar.bz2" ~/opt ""
@@ -194,7 +100,7 @@ function MysqlStart()
 
 #TarXFFile "gdal-2.3.0.tar.gz" ~/opt ""
 #TarXFFile "proj-4.9.1.tar.gz" ~/opt ""
-#TarXFFile "geos-3.5.1.tar.bz2" ~/opt " CFLAGS=-fPIC CXXFLAGS=-fPIC  "
+#TarXFFile "geos-3.5.1.tar.bz2" ~/opt " CFLAGS=-fPIC CXXFLAGS=-fPIC --shared "
 #TarXFFile "spatialite-2.2.tar.gz" ~/opt ""
 #TarXFFile "freexl-1.0.5.tar.gz" ~/opt ""
 #TarXFFile "libspatialite-4.3.0.tar.gz" ~/opt ""
@@ -202,7 +108,7 @@ function MysqlStart()
 #TarXFFile "spatialite-tools-4.2.0.tar.gz" ~/opt "  "
 #TarXFFile "fftw-3.3.8.tar.gz" ~/opt ""
 # configure
-#TarXFFile "freetype-2.9.tar.bz2" ~/opt " CFLAGS=-fPIC CXXFLAGS=-fPIC  "
+#TarXFFile "freetype-2.9.tar.bz2" ~/opt " CFLAGS=-fPIC CXXFLAGS=-fPIC --shared "
 #TarXFFile "libpng-1.6.34.tar.gz" ~/opt ""
 #TarXFFile "pixman-0.34.0.tar.gz" ~/opt ""
 #TarXFFile "cairo-1.14.12.tar.xz" ~/opt ""
@@ -216,7 +122,7 @@ function MysqlStart()
 #TarXFFile "QScintilla_gpl-2.10.4.tar.gz" ~/opt ""
 ##TarXFFile "qwt-5.2.3.tar.bz2" ~/opt ""
 #TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/opt/gdal-2_3_0/include -DGDAL_LIBRARY=/opt/gdal-2_3_0/lib/ -DPROJ_INCLUDE_DIR=/opt/proj-4_9_1/include/ -DPROJ_LIBRARY=/opt/proj-4_9_1/lib -DQSCINTILLA_INCLUDE_DIR=/opt/qt-everywhere-opensource-src-5.6.3/qtbase/include -DQSCINTILLA_LIBRARY=/opt/qt-everywhere-opensource-src-5.6.3/qtbase/lib/libqscintilla2_qt5.so   -DGEOS_INCLUDE_DIR=/opt/geos-3_5_1/include     -DGEOS_LIBRARY=/opt/geos-3_5_1/lib/libgeos.so"
-#TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/home/durongze/opt/gdal-2_3_0/include -DGDAL_LIBRARY=/home/durongze/opt/gdal-2_3_0/lib/libgdal.so -DPROJ_INCLUDE_DIR=/home/durongze/opt/proj-4_9_1/include/ -DPROJ_LIBRARY=/home/durongze/opt/proj-4_9_1/lib/libproj.so   -DQt5Positioning_DIR=/usr/lib/x86_64-linux-gnu -DQSCINTILLA_VERSION_STR=/usr/lib/python3/dist-packages/PyQt5/Qsci.cpython-36m-x86_64-linux-gnu.so"
+TarXFFile "qgis-latest.tar.bz2" ~/opt " -DGDAL_INCLUDE_DIR=/opt/gdal-2_3_0/include -DGDAL_LIBRARY=/home/durongze/opt/gdal-2_3_0/lib/libgdal.so -DPROJ_INCLUDE_DIR=/home/durongze/opt/proj-4_9_1/include/ -DPROJ_LIBRARY=/home/durongze/opt/proj-4_9_1/lib/libproj.so   -DQt5Positioning_DIR=/usr/lib/x86_64-linux-gnu -DQSCINTILLA_VERSION_STR=/usr/lib/python3/dist-packages/PyQt5/Qsci.cpython-36m-x86_64-linux-gnu.so"
 
 #cp zlib.pc
 #TarXFFile "zlib-1.2.11.tar.gz" ~/opt " --shared "
