@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. auto_install_func.sh
+
 sudo yum install usbutils-007-4.el7.x86_64.rpm 
 
 function remove_tmp_dir()
@@ -107,17 +109,6 @@ function install_usbutils008()
     make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
     popd
 }
-function install_all()
-{
-    #install_gobject1380
-    #install_gperf304
-    #install_udev174
-    #install_libusb1022
-    #install_usbutils008
-    #install_graphviz
-    #install_doxygen1814
-    install_freeglut300
-}
 
 function install_mesa1802()
 {
@@ -131,48 +122,16 @@ function install_mesa1802()
     popd    
 }
 
-function AutoInstall()
+function install_all()
 {
-    SrcDir=$1
-    DstDir=$2
-    CurFlags=$3
-    pushd $FileDir
-        if [ -f CMakeLists.txt ];then
-            mkdir build  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            pushd build
-            export CXXFLAGS="-fPIC" && cmake  -DCMAKE_INSTALL_PREFIX=$DstDir/$SrcDir ..
-            make  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            make install  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            popd
-        elif [ -f configure ];then
-            mkdir build
-            pushd build
-            ../configure --prefix=$DstDir/$SrcDir $CurFlags  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-            popd
-        else
-            echo -e "\033[31m Install $SrcDir Fail !!! \033[0m"
-            exit 1
-        fi
-    popd
-}
-
-function TarXFFile()
-{
-    SrcDir=$1
-    DstDir=$2
-    CurFlags=$3
-    pushd ./
-        SrcFileList=$SrcDir
-        for file in $SrcFileList
-        do
-            FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq)
-            echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
-            tar xf $file
-            AutoInstall $FileDir $DstDir $CurFlags
-        done
-    popd
+    #install_gobject1380
+    #install_gperf304
+    #install_udev174
+    #install_libusb1022
+    #install_usbutils008
+    #install_graphviz
+    #install_doxygen1814
+    install_freeglut300
 }
 
 function SetMesaEnv()
@@ -216,6 +175,5 @@ function ubuntu_cfg_install()
     sudo apt install libglapi-mesa
     sudo apt-get install glew-utils libglew-dev
 }
-
 
 install_all
