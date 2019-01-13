@@ -1,5 +1,6 @@
 #!/bin/bash
-ClientIp=$(who | grep -E "[0-9]{1,3}(\.[0-9]{1,3}){3}" | cut -f2 -d'(' | cut -f1 -d')')
+TTY_NAME=$(tty | cut -f3-4 -d'/')
+ClientIp=$(who | grep "${TTY_NAME}" |grep -E "[0-9]{1,3}(\.[0-9]{1,3}){3}" | cut -f2 -d'(' | cut -f1 -d')')
 ServerIpList=$(ifconfig | grep "inet " | awk '{print $2}')
 
 function GetServerIp()
