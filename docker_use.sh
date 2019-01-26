@@ -22,6 +22,8 @@ sudo docker run -t -i vmware/photon:1.1 /bin/bash
 sudo docker ps -a | grep "vmware/photon:1.1" | awk '{print $1}' | xargs -I {} sudo docker start -i {}
 #打tag
 sudo docker tag vmware/photon:1.1 192.168.99.141:1180/vmware/photon:1.1
+sudo docker save 192.168.99.141:1180/vmware/photon:1.1  -o vmware_10.tar.gz
+sudo docker load -i vmware_10.tar.gz
 #登录
 sudo docker login 192.168.99.141:1180
 sudo docker push 192.168.99.141:1180/vmware/photon:1.1
