@@ -1,17 +1,17 @@
 
-;nasm °²×°
+;nasm å®‰è£…
 nmake /f Mkfiles/msvc.mak
 
-;Æô¶¯vs64Î»ÃüÁîĞĞ¡£Ö®Ç°±àÒë¹ı32Î»£¬ĞèÒªnmake clean
-;openssl-1.1.1±àÒë¡£ÏÈ°²×°perlºÍnasm¹¤¾ß
+;å¯åŠ¨vs64ä½å‘½ä»¤è¡Œã€‚ä¹‹å‰ç¼–è¯‘è¿‡32ä½ï¼Œéœ€è¦nmake clean
+;openssl-1.1.1ç¼–è¯‘ã€‚å…ˆå®‰è£…perlå’Œnasmå·¥å…·
 perl Configure  VC-WIN64A --prefix=E:\programs\openssl
 nmake
 nmake install
 
-;zlib °²×°
+;zlib å®‰è£…
 cmake .. -G "Visual Studio 14 2015 Win64"
 
-;boost169  .prefixÂ·¾¶Òª´æÔÚ
+;boost169  .prefixè·¯å¾„è¦å­˜åœ¨
 b2.exe install --toolset=msvc-14.0 --prefix="E:\programs\boost169"  threading=multi --build -type=complete  address-model=64
 
 set path=%path%;e:\program\openssl\bin;e:\program\openssl\lib
@@ -35,3 +35,9 @@ msbuild websocketpp.sln
 cmake  -G "Visual Studio 14 2015 Win64" ..
 msbuild cpprestsdk-root.sln
 
+; ç¼–è¯‘libx264
+./configure --enable-static --enable-shared   --extra-ldflags=-Wl,--output-def=libx264.def  --host=mingw64 --prefix=/e/program/libx264
+; ç¼–è¯‘ffmpeg
+ ./configure --disable-static --enable-shared --enable-gpl --enable-version3  --enable-debug=3 --disable-optimizations --disable-mmx --disable-stripping  --prefix=/e/program/ffmpeg
+; ç¼–è¯‘obs
+mkdir dyzbuild && cd dyzbuild && cmake ..
