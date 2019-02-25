@@ -41,3 +41,49 @@ msbuild cpprestsdk-root.sln
  ./configure --disable-static --enable-shared --enable-gpl --enable-version3  --enable-debug=3 --disable-optimizations --disable-mmx --disable-stripping  --prefix=/e/program/ffmpeg
 ; 编译obs
 mkdir dyzbuild && cd dyzbuild && cmake ..
+
+msys2 的主页地址：
+http://sourceforge.net/projects/msys2/
+packages：
+https://github.com/Alexpux/MSYS2-packages
+
+安装
+
+msys2 安装目录只能是 ascii 字符并且不能有空格。比如：
+C:/msys64
+安装完后只有最基本的系统，没有gcc开发环境。打开bash shell：
+msys2_shell.bat
+
+pacman包管理
+
+更新本地软件包
+
+更新本地软件包数据库：
+pacman -S --refresh
+可以缩写为：pacman -Sy
+然后升级软件包：
+pacman -S --refresh --sysupgrade
+可以缩写为：pacman -Syu
+
+列出所有已安装软件
+
+pacman -Q --explicit
+缩写：
+pacman -Q -e
+
+安装新的软件包
+
+pacman -S <package_names|package_groups>
+比如要安装 gcc，执行：
+pacman -S gcc
+
+安装本地包:
+pacman -U *.tar.xz
+
+搜索软件包
+
+pacman -Ss <name_pattern>
+
+列出所有的软件组
+
+pacman -Q --groups
