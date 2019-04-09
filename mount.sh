@@ -13,7 +13,8 @@
 
 #3.LINUX 共享本地路径
 net usershare list
-net usershare add Download /home/du/Desktop
+#/var/lib/samba/usershares/code 写权限可以将R替换为f 
+net usershare add Download /home/du/Desktop "" "du:f" 
 net usershare delete Download
 #4.LINUX 挂载windows共享到本地 
 sudo mount -t cifs -o nolock //192.168.99.208/d /mnt/window-pc -o username=administrator,password=password
