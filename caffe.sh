@@ -39,7 +39,7 @@ function install_openblas()
 
 function install_boost()
 {
-    file=boost_1_68_0.tar.gz
+    file=boost_1_69_0.tar.gz
     echo -e "\033[32m $FUNCNAME \033[0m"
     tar xf $file 
     FileDir=$(GenFileNameByFile "$file")
