@@ -13,6 +13,7 @@
 
 #3.LINUX 共享本地路径
 net usershare list
+#将[homes]下的只读配置改为 read only = no
 #/var/lib/samba/usershares/code 写权限可以将R替换为f 
 net usershare add Download /home/du/Desktop "" "du:f" 
 net usershare delete Download
