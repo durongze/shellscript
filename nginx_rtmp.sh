@@ -35,4 +35,6 @@ ffmpegd.exe -re -i test.flv -vcodec copy -acodec copy -f flv -y rtmp://192.168.1
 #拉流 
 #1.打开串口流  注意nginx服务器端口默认为80 
 #http://192.168.137.7/cctvf/durongze.m3u8
+#生成h264文件
+ffmpegd.exe -i output.mp4 output.264
 
