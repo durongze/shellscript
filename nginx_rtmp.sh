@@ -32,6 +32,9 @@ sudo vi /opt/nginx-1_17_1/conf/nginx.conf
 #3.验证 可以在hls_path 中看到视频文件,停止推流后文件会自动删除
 #ffmpeg 推流
 ffmpegd.exe -re -i test.flv -vcodec copy -acodec copy -f flv -y rtmp://192.168.137.7:1935/cctvf/du
+####ffmpegd -list_devices true -f dshow -i dummy  查看摄像头名称
+ffmpeg -f dshow -i video="Integrated Webcam"  -acodec copy -preset:v ultrafast  -f flv rtmp://192.168.137.157:1935/cctvf/du
+ffmpeg -f gdigrab -i desktop  -preset:v ultrafast  -f flv  rtmp://192.168.137.157:1935/cctvf/du
 #拉流 
 #1.打开串口流  注意nginx服务器端口默认为80 
 #http://192.168.137.7/cctvf/durongze.m3u8
