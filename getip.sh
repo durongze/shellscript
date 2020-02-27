@@ -1,7 +1,10 @@
 #!/bin/bash
 TTY_NAME=$(tty | cut -f3-4 -d'/')
+
 ClientIp=$(who | grep "${TTY_NAME}" |grep -E "[0-9]{1,3}(\.[0-9]{1,3}){3}" | cut -f2 -d'(' | cut -f1 -d')')
 ServerIpList=$(ifconfig | grep "inet " | awk '{print $2}')
+
+ServerIpList=$(ip addr | grep "inet " | awk -F' ' '{print $2}' | awk -F'/' '{print $1}')
 
 function GetServerIp()
 {
@@ -35,3 +38,6 @@ echo "ServerIpList:($ServerIpList)"
 
 ServerIp=$(GetServerIp "$ClientIp" "$ServerIpList")
 echo "ServerIp:$ServerIp"
+
+GateWay=$(ip route | grep "default" | awk -F' ' '{print $3}')
+echo "GateWay:$GateWay"
