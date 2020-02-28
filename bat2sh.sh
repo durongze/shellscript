@@ -4,12 +4,14 @@ dos2unix ${FileName}
 declare -A sermap=(["set"]="export"
                    ["move"]="mv"
                    ["%cd%"]="\$(pwd)"
+                   ["%proj_name%"]="\$proj_name"
                    ["%proj_dir%"]="\$proj_dir"
                    ["%all_jar%"]="\$all_jar"
                    ["%PATH%"]="\$PATH"
                    ["%CLASSPATH%"]="\$CLASSPATH"
                    ["%JAVA_HOME%"]="\$JAVA_HOME"
-                   [";"]=":")
+                   [";"]=":"
+                   ["pause"]="read pause")
                    #["\\"]="/")
 for key in ${!sermap[@]}
 do 
