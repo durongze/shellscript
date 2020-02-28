@@ -1,6 +1,6 @@
 #!/bin/bash
 FileName=$1
-
+dos2unix ${FileName}
 declare -A sermap=(["set"]="export"
                    ["move"]="mv"
                    ["%cd%"]="\$(pwd)"
@@ -25,7 +25,12 @@ do
     idx=$(expr $idx + 1)
     echo "$V" | awk -F'=' '{print $1" "$2}' | while read key val
     do
-        echo "$idx $key \"$val"
+        if [ "$key" != "" ] && [ "$val" != "" ];then
+            echo "$idx $key \"$val\""
+            sed -i "${idx}s/=/=\"/g" ${FileName}
+            sed -i "${idx}s/\$/\"/g" ${FileName}
+            #sed -i "${idx}s/$val/\"$val\"/g" ${FileName}
+        fi
     done
 done
 
