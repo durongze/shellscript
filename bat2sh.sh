@@ -13,10 +13,10 @@ declare -A sermap=(["set"]="export"
                    [";"]=":"
                    ["pause"]="read pause")
                    #["\\"]="/")
-for key in ${!sermap[@]}
+for k in ${!sermap[@]}
 do 
-    val=${sermap[$key]}
-    sed -i 's/'"$key"'/'"$val"'/g'  ${FileName} 
+    v=${sermap[$k]}
+    sed -i 's/'"$k"'/'"$v"'/g'  ${FileName} 
 done
 
 sed -i 's#\\#/#g' ${FileName}
@@ -29,9 +29,12 @@ do
     do
         if [ "$key" != "" ] && [ "$val" != "" ];then
             echo "$idx $key \"$val\""
-            sed -i "${idx}s/=/=\"/g" ${FileName}
-            sed -i "${idx}s/\$/\"/g" ${FileName}
-            #sed -i "${idx}s/$val/\"$val\"/g" ${FileName}
+            #sed -i "${idx}s/=/=\"/g" ${FileName}
+            #sed -i "${idx}s/\$/\"/g" ${FileName}
+            
+            eval sed 's/'"$val"'/'\""$val"\"'/g' ${FileName}
+
+            #sed "s/$val/\"$val\"/g" ${FileName}
         fi
     done
 done
