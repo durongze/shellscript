@@ -19,9 +19,9 @@ do
         do
             targetIdx=$(expr $targetIdx + 1)
             if [ "$targetIdx" == "$idx" ];then
-                #targetVal=$(echo ${$target} | awk -F':' '{print $2}') 
-                echo "sed -i '${line}s#${key}#${target}#g' $FileName"
-                sed -e "${line}s#${key}#${target}#g" -i $FileName
+                targetVal=$(echo ${target} | awk -F':' '{print $2}') 
+                echo "sed -i '${line}s#${key}#${targetVal}#g' $FileName"
+                sed -e "${line}s#${key}#${targetVal}#g" -i $FileName
                 break
             fi
         done
