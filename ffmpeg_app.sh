@@ -12,3 +12,6 @@ for /r %%i in (%video_dir%\*.*) do (%ffmpeg_app% -i "%%i" -ss 00:00:7.435 -vfram
 for /r %%i in (%video_dir%\*.*) do (%ffmpeg_app% -i "%%i" -vf fps=1/6 thum%%04d.png )
 @rem for /r %%i in (%video_dir%\*.*) do (%ffmpeg_app% -i "%%i" -vf "select='eq(pict_type, PICT_TYPE_I)'" -vsync vfr thum%%04d.png )
 pause
+
+@rem dumpbin /LINKERMEMBER  libgmp.lib | findstr ___gmpn_add_n
+@rem dumpbin /exports avcodec-57.dll
