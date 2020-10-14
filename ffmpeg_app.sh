@@ -5,6 +5,7 @@ set gif_file="find_gf.gif"
 set subtitle_file="find_gf.srt"
 set image_dir=".\img"
 set ffmpeg_app=".\ffmpegd.exe"
+set ffprobe=".\ffprobed.exe"
 
 @rem 查看录制设备 
 @rem %ffmpeg_app% -f dshow -list_devices true -i dummy
@@ -43,4 +44,8 @@ set ffmpeg_app=".\ffmpegd.exe"
 @rem 添加字幕
 @rem %ffmpeg_app% -y -i %video_file% -vf subtitles=%subtitle_file% %video_file%.mp4
 %ffmpeg_app% -y -i %video_file% -i xx.png -filter_complex "overlay=x=10:y=10,subtitles=%subtitle_file%:force_style='Fontsize=44,Shadow=0,MarginV=80'" output.mp4
+
+@rem 显示视频信息
+for /r %%i in (%video_dir%\*.*) do (%ffprobe%  -show_format "%%i"  >>times.txt)
+
 pause
