@@ -6,6 +6,8 @@ set subtitle_file="find_gf.srt"
 set image_dir=".\img"
 set ffmpeg_app=".\ffmpegd.exe"
 set ffprobe=".\ffprobed.exe"
+set video_list="filelist.txt"
+
 
 @rem 查看录制设备 
 @rem %ffmpeg_app% -f dshow -list_devices true -i dummy
@@ -48,4 +50,7 @@ set ffprobe=".\ffprobed.exe"
 @rem 显示视频信息
 for /r %%i in (%video_dir%\*.*) do (%ffprobe%  -show_format "%%i"  >>times.txt)
 
+@rem del %video_list%
+@rem for /r %%i in (%video_dir%\*.*) do (echo file '%%i' >> %video_list%)
+%ffmpeg_app% -f concat  -safe 0 -i %video_list% -c copy %video_file%
 pause
