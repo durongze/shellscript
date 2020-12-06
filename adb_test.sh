@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PushClient="adbself"
+PushClient="${HOME}/cli"
 
 function InputWords()
 {
@@ -30,12 +30,25 @@ function InputWords()
 
 function DialNumber()
 {
-	$PushClient "\"adb shell service call phone 1 s16 %2A%23%2A%237777%23%2A%23%2A \""	
+    local Number=$1
+    if [[ "$Number" == "" ]];then
+        return 1
+    else
+	    $PushClient "\"adb shell service call phone 1 s16 $Number \""
+        return 0
+    fi
+}
+
+function OpenDebugMode()
+{
+    DialNumber "%2A%23%2A%237777%23%2A%23%2A"
 }
 
 function GetUiCtx()
 {
+    local uiXml=$1
 	$PushClient "\"adb shell uiautomator dump /sdcard/ui.xml\""
+	$PushClient "\"adb pull /sdcard/ui.xml ./$uiXml \""
 }
 
 function PressPower()
@@ -105,52 +118,69 @@ function GetEventPosH()
 function PageDown()
 {
 	#$PushClient "\"adb shell input keyevent KEYCODE_PAGE_DOWN \""	
-	WmW=$(GetWmSizeW)
-	WmH=$(GetWmSizeH)
-	HalfWmW=$(expr $WmW / 2)
-	HalfWmH=$(expr $WmH / 2)
-	QWmW=$(expr $WmW / 4)
-	QWmH=$(expr $WmH / 4)
-	SwipeScreen "$HalfWmW" "$HalfWmH" "$QWmW" "$QWmW"
+    #InitScreen
+    if [ $? -ne 0 ];then
+	    SwipeScreen "$QWmW" "$QWmH"  "$HalfWmW" "$HalfWmH"
+    fi
 }
 
 function PageUp()
 {
 	#$PushClient "\"adb shell input keyevent KEYCODE_PAGE_UP \""	
-	WmW=$(GetWmSizeW)
-	WmH=$(GetWmSizeH)
-	HalfWmW=$(expr $WmW / 2)
-	HalfWmH=$(expr $WmH / 2)
-	QWmW=$(expr $WmW / 6)
-	QWmH=$(expr $WmH / 6)
-	SwipeScreen "$QWmW" "$QWmH"  "$HalfWmW" "$HalfWmH"
+    #InitScreen
+    if [ $? -ne 0 ];then
+	    SwipeScreen "$HalfWmW" "$HalfWmH" "$QWmW" "$QWmW"
+    fi
 }
 
 function GetScreenStat()
 {
-	local ScreenStat=$($PushClient "\"adb shell dumpsys power | find \"Display Power: state=\"\"")
+	local ScreenStat=$($PushClient "\"adb shell dumpsys power | grep \"Display Power: state=\"\"")
 	local ScreenStat=$(echo $ScreenStat | grep "msg" | cut -f4 -d' ' | cut -f2 -d'=')
 	echo $ScreenStat
 }
-WmW=$(GetWmSizeW)
-WmH=$(GetWmSizeH)
-EvtPosW=$(GetEventPosW)
-EvtPosH=$(GetEventPosH)
-HalfWmW=$(expr $WmW / 2)
-HalfWmH=$(expr $WmH / 2)
 
-ScreenStat=$(GetScreenStat)
-if [[ "$ScreenStat" == "OFF" ]];then
-	PressPower
-fi
+function OpenScreen()
+{
+    ScreenStat=$(GetScreenStat)
+    if [[ "$ScreenStat" == "OFF" ]];then
+	    PressPower
+    fi
+}
 
-echo "$HalfWmW" "$HalfWmH" "1" "1"
-SwipeScreen "$HalfWmW" "$HalfWmH" "1" "1"
-#InputDevelop
-DialNumber
-sleep 1
+function InitScreen()
+{
+    WmW=$(GetWmSizeW)
+    WmH=$(GetWmSizeH)
+    EvtPosW=$(GetEventPosW)
+    EvtPosH=$(GetEventPosH)
+    if [[ "$WmW" == "" ]] || [[ "$WmH" == "" ]];then
+        return 1
+    fi
+    HalfWmW=$(expr $WmW / 2)
+    HalfWmH=$(expr $WmH / 2)
+	QWmW=$(expr $WmW / 4)
+	QWmH=$(expr $WmH / 4)
+    return 0
+}
+
+function ShowScreenInfo()
+{
+    echo "WmW=$WmW"
+    echo "WmH=$WmH"
+    echo "EvtPosW=$EvtPosW"
+    echo "EvtPosH=$EvtPosH"
+    echo "HalfWmW=$HalfWmW"
+    echo "HalfWmH=$HalfWmH"
+	echo "QWmW=$QWmW"
+	echo "QWmH=$QWmH"
+}
+
+OpenScreen
+InitScreen
+OpenDebugMode
 PageUp
 PageUp
 PageDown
-GetUiCtx
+GetUiCtx "ui.xml"
 
