@@ -40,11 +40,9 @@ function AutoInstall()
     elif [ -f Makefile ];then
         make $CurFlags || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
     elif [ -f meson.build ];then
-	meson setup build
-	meson build --prefix=$DstDir/$InstallDir $CurFlags || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1;  }  
-	pushd build
-	ninja -j8
-	popd
+	    meson build -Dprefix=$DstDir/$InstallDir $CurFlags || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1;  }  
+	    meson compile -C build #ninja -j8
+	    meson install -C build #ninja install
     else
         echo -e "\033[31m Install $InstallDir Fail, cfg file not exist !!! \033[0m"
         exit 1
@@ -126,8 +124,11 @@ function GenEnvVar()
     echo "    TMP_FILE_HOME=\${HOME}/opt/\${tmpFile}" >>${BASHRC}
     echo "    export C_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${C_INCLUDE_PATH}" >>${BASHRC}
     echo "    export CPLUS_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CPLUS_INCLUDE_PATH}" >>${BASHRC}
+    echo "    export CMAKE_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CPLUS_INCLUDE_PATH}" >>${BASHRC}
     echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LIBRARY_PATH}" >>${BASHRC}
     echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LIBRARY_PATH}" >>${BASHRC}
+    echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LIBRARY_PATH}" >>${BASHRC}
+    echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LIBRARY_PATH}" >>${BASHRC}
     echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LD_LIBRARY_PATH}" >>${BASHRC}
     echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LD_LIBRARY_PATH}" >>${BASHRC}
     echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib/pkgconfig/:\${PKG_CONFIG_PATH}" >>${BASHRC}
@@ -140,19 +141,21 @@ function GenEnvVar()
 #GenFileNameVar 
 #GenEnvVar 
 
+#TarXFFile "libpng-1.6.37.tar.gz" "${HOME}/opt/" "" 
+#TarXFFile "libjpeg-turbo-2.1.1.tar.gz" "${HOME}/opt/" "" 
+#TarXFFile "openjpeg-2.4.0.tar.gz" "${HOME}/opt/" "" 
 #TarXFFile "icu-release.zip" "${HOME}/opt/" ""
 #TarXFFile "tiff-4.3.0.zip" "${HOME}/opt/" "" 
-#TarXFFile "leptonica.zip" "${HOME}/opt/" "" 
+#TarXFFile "leptonica.zip" "${HOME}/opt/" " -DBUILD_SHARED_LIBS=true " 
 #TarXFFile "pcre2-10.39.tar.gz" "${HOME}/opt/" "" 
 #TarXFFile "pcre-8.45.tar.gz" "${HOME}/opt/" " -DBUILD_SHARED_LIBS=true " 
 #TarXFFile "libffi-3.4.2.tar.gz" "${HOME}/opt/" "" 
 #TarXFFile "zlib-1.2.11.tar.gz" "${HOME}/opt/" "" 
 #TarXFFile "freetype-2.11.0.tar.gz" "${HOME}/opt/" " -DBUILD_SHARED_LIBS=true " 
-#TarXFFile "harfbuzz-3.1.1.tar.gz" "${HOME}/opt/" "" 
+#TarXFFile "harfbuzz-3.1.1.tar.gz" "${HOME}/opt/" " -DBUILD_SHARED_LIBS=true " 
 #TarXFFile "fontconfig-2.13.94.tar.xz" "${HOME}/opt/" "" 
-#TarXFFile "libpng-1.6.37.tar.gz" "${HOME}/opt/" "" 
-#TarXFFile "libjpeg-turbo-2.1.1.tar.gz" "${HOME}/opt/" "" 
 #TarXFFile "pixman-0.40.0.tar.gz" "${HOME}/opt/" "" 
 #TarXFFile "cairo-1.17.4.tar.xz" "${HOME}/opt/" "" 
-TarXFFile "pango-1.49.3.tar.gz" "${HOME}/opt/" "" 
-#TarXFFile "tesseract.zip" "${HOME}/opt/" ""
+#TarXFFile "pango-1.49.3.tar.gz" "${HOME}/opt/" "" 
+#sed -e 's/text2image pango_training/text2image pango_training harfbuzz/g' -i tesseract/src/training/CMakeLists.txt
+TarXFFile "tesseract.zip" "${HOME}/opt/" " -DBUILD_SHARED_LIBS=true "
