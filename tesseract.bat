@@ -28,6 +28,7 @@ goto :eof
         echo cmake .. -DCMAKE_INSTALL_PREFIX=%dst_dir%\%install_dir%  %cur_flags%
         cmake .. -DCMAKE_INSTALL_PREFIX=%dst_dir%\%install_dir%  %cur_flags%
         cmake --build .
+        cmake --install .
     popd
     endlocal
 goto :eof
@@ -123,8 +124,8 @@ goto :eof
     set DstDir=%2
     set CurFlags="%3"
     set Spec=%4
-    set FileDir=lpng1637
-    @rem call :get_dir_by_zip %zip_file%
+    set FileDir=
+    call :get_dir_by_zip %zip_file% FileDir
 
     call :color_text 4e "++++++++++++++zip_file_install++++++++++++++"
     unzip -q -o %zip_file%
@@ -140,17 +141,55 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     set zip_file=%1
     call :color_text 4e "++++++++++++++get_dir_by_zip++++++++++++++"
-    for /f "tokens=8 delims= " %%i in ('unzip -v %zip_file%') do (
-         %%~i
+    @rem for /f "tokens=8 delims= " %%i in ('unzip -v %zip_file%') do ( echo %%~i )
+    set FileDir=
+    @rem unzip -v %zip_file% | gawk -F" "  "{ print $8 } " | gawk  -F"/" "{ print $1 }" | sed -n "4p"
+    echo zip_file:%zip_file%
+    FOR /F "usebackq" %%i IN (` unzip -v %zip_file% ^| gawk -F" "  "{ print $8 } " ^| gawk  -F"/" "{ print $1 }" ^| sed -n "4p" `) DO ( set FileDir=%%i )
+    echo FileDir:!FileDir!
+    endlocal  & set "%~2=!FileDir!"
+goto :eof
+
+:gen_env_by_file
+    setlocal ENABLEDELAYEDEXPANSION
+    set zip_file=%1
+    set DstDir=%2
+    set FileDir=
+    call :get_dir_by_zip %zip_file% FileDir
+    call :color_text 4e "++++++++++++++gen_env_by_file++++++++++++++"
+    set include=%DstDir%\%FileDir%\include;%include%
+    set lib=%DstDir%\%FileDir%\lib;%lib%
+    endlocal
+goto :eof
+
+:gen_all_env
+    setlocal ENABLEDELAYEDEXPANSION
+    call :color_text 4e "++++++++++++++gen_all_env++++++++++++++"
+    for /f %%i in ( 'dir /b *.zip' ) do (
+        set zip_file=%%i
+        call :gen_env_by_file "!zip_file!" "F:\program\"
     )
     endlocal
 goto :eof
 
 :bat_start
     setlocal ENABLEDELAYEDEXPANSION
-    call :zip_file_install "lpng1637.zip" "F:\program" "" ""
+    call :gen_all_env
+    call :color_text 4e "++++++++++++++bat_start++++++++++++++"
+    for /f %%i in ( 'dir /b *.zip' ) do (
+        set zip_file=%%i
+        call :zip_file_install "!zip_file!" "F:\program\" " -DCMAKE_BUILD_TYPE=Debug " ""
+    )
     endlocal
 goto :eof
+
+@rem https://udomain.dl.sourceforge.net/project/gnuwin32/wget/1.11.4-1/wget-1.11.4-1-bin.zip
+@rem https://udomain.dl.sourceforge.net/project/gnuwin32/tar/1.13-1/tar-1.13-1-bin.zip
+@rem https://udomain.dl.sourceforge.net/project/gnuwin32/unrar/3.4.3/unrar-3.4.3-bin.zip
+@rem https://udomain.dl.sourceforge.net/project/gnuwin32/unzip/5.51-1/unzip-5.51-1-bin.zip
+@rem https://udomain.dl.sourceforge.net/project/gnuwin32/gawk/3.1.6-1/gawk-3.1.6-1-bin.zip
+@rem https://udomain.dl.sourceforge.net/project/gnuwin32/sed/4.2.1/sed-4.2.1-bin.zip
+@rem https://udomain.dl.sourceforge.net/project/gnuwin32/grep/2.5.4/grep-2.5.4-bin.zip
 
 
 
