@@ -19,14 +19,15 @@ goto :eof
     set src_dir=%1
     set dst_dir=%2
     set cur_flags=%3
-    set install_dir=%4
+    set install_dir=%dst_dir%/%src_dir%
     if not exist dyzbuild (
         md dyzbuild
     )
+    call:color_text 4e "++++++++++++++cmake_install++++++++++++++"
+    echo %0 %src_dir% %dst_dir% %cur_flags% %install_dir%
     pushd dyzbuild
-        call:color_text 4e "++++++++++++++cmake_install++++++++++++++"
-        echo cmake .. -DCMAKE_INSTALL_PREFIX=%dst_dir%\%install_dir%  %cur_flags%
-        cmake .. -DCMAKE_INSTALL_PREFIX=%dst_dir%\%install_dir%  %cur_flags%
+        echo cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
+        cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
         cmake --build .
         cmake --install .
     popd
@@ -38,14 +39,14 @@ goto :eof
     set src_dir=%1
     set dst_dir=%2
     set cur_flags=%3
-    set install_dir=%4
+    set install_dir=%dst_dir%\%src_dir%
     if not exist dyzbuild (
         md dyzbuild
     )
+    call:color_text 4e "++++++++++++++auto_gen_install++++++++++++++"
     pushd dyzbuild
-        call:color_text 4e "++++++++++++++auto_gen_install++++++++++++++"
         echo ./autogen.sh
-        ../configure --prefix=%dst_dir%\%install_dir%  %cur_flags%
+        ../configure --prefix=%install_dir%  %cur_flags%
     popd
     endlocal
 goto :eof
@@ -55,13 +56,13 @@ goto :eof
     set src_dir=%1
     set dst_dir=%2
     set cur_flags=%3
-    set install_dir=%4
+    set install_dir=%dst_dir%\%src_dir%
     if not exist dyzbuild (
         md dyzbuild
     )
+    call:color_text 4e "++++++++++++++cfg_install++++++++++++++"
     pushd dyzbuild
-        call:color_text 4e "++++++++++++++cfg_install++++++++++++++"
-        ../configure --prefix=%dst_dir%\%install_dir%  %cur_flags%
+        ../configure --prefix=%install_dir%  %cur_flags%
     popd
     endlocal
 goto :eof
@@ -71,22 +72,22 @@ goto :eof
     set src_dir=%1
     set dst_dir=%2
     set cur_flags=%3
-    set install_dir=%dst_dir%\%src_dir%
 
     if not exist %src_dir% (
         echo %0 path '%src_dir%' does not exist.
         goto :eof
     )
+    call:color_text 4e "++++++++++++++auto_install++++++++++++++"
+    echo %0 %src_dir% %dst_dir% %cur_flags%
     pushd %src_dir%
-        call:color_text 4e "++++++++++++++auto_install++++++++++++++"
         if exist CMakeLists.txt ( 
-            call :cmake_install %src_dir% %dst_dir% %cur_flags% %install_dir% 
+            call :cmake_install %src_dir% %dst_dir% %cur_flags% 
         ) else if exist autogen.sh ( 
-            call :auto_gen_install %src_dir% %dst_dir% %cur_flags% %install_dir% 
+            call :auto_gen_install %src_dir% %dst_dir% %cur_flags% 
         ) else if exist configure ( 
-            call :cfg_install %src_dir% %dst_dir% %cur_flags% %install_dir% 
+            call :cfg_install %src_dir% %dst_dir% %cur_flags%
         ) else (
-            echo %src_dir% %dst_dir% %cur_flags% %install_dir% 
+            echo %src_dir% %dst_dir% %cur_flags% 
         )
     popd
     endlocal
@@ -97,22 +98,22 @@ goto :eof
     set src_dir=%1
     set dst_dir=%2
     set cur_flags=%3
-    set install_dir=%4
 
     if not exist %src_dir% (
         echo %0 path '%src_dir%' does not exist.
         goto :eof
     )
+    call:color_text 4e "++++++++++++++spec_install++++++++++++++"
+    echo %0 %src_dir% %dst_dir% %cur_flags%
     pushd %src_dir%
-        call:color_text 4e "++++++++++++++spec_install++++++++++++++"
         if exist CMakeLists.txt ( 
-            call :cmake_install %src_dir% %dst_dir% %cur_flags% %install_dir% 
+            call :cmake_install %src_dir% %dst_dir% %cur_flags% 
         ) else if exist autogen.sh ( 
-            call :auto_gen_install %src_dir% %dst_dir% %cur_flags% %install_dir% 
+            call :auto_gen_install %src_dir% %dst_dir% %cur_flags% 
         ) else if exist configure ( 
-            call :cfg_install %src_dir% %dst_dir% %cur_flags% %install_dir% 
+            call :cfg_install %src_dir% %dst_dir% %cur_flags% 
         ) else (
-            echo %src_dir% %dst_dir% %cur_flags% %install_dir% 
+            echo %src_dir% %dst_dir% %cur_flags% 
         )
     popd
     endlocal
@@ -122,17 +123,18 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     set zip_file=%1
     set DstDir=%2
-    set CurFlags="%3"
+    set CurFlags=%3
     set Spec=%4
     set FileDir=
     call :get_dir_by_zip %zip_file% FileDir
 
     call :color_text 4e "++++++++++++++zip_file_install++++++++++++++"
+    echo %0 %FileDir% %DstDir% %CurFlags% %Spec%
     unzip -q -o %zip_file%
-    if "%Spec%" == "" (
-        call :spec_install %FileDir% %DstDir% %CurFlags% %Spec%
-    ) else (
+    if %Spec% == "" (
         call :auto_install %FileDir% %DstDir% %CurFlags%
+    ) else (
+        call :spec_install %FileDir% %DstDir% %CurFlags% %Spec%
     )
     endlocal
 goto :eof
@@ -147,7 +149,8 @@ goto :eof
     echo zip_file:%zip_file%
     FOR /F "usebackq" %%i IN (` unzip -v %zip_file% ^| gawk -F" "  "{ print $8 } " ^| gawk  -F"/" "{ print $1 }" ^| sed -n "4p" `) DO ( set FileDir=%%i )
     echo FileDir:!FileDir!
-    endlocal  & set "%~2=!FileDir!"
+    echo FileDir:%FileDir%
+    endlocal  & set %~2=%FileDir%
 goto :eof
 
 :gen_env_by_file
@@ -157,17 +160,18 @@ goto :eof
     set FileDir=
     call :get_dir_by_zip %zip_file% FileDir
     call :color_text 4e "++++++++++++++gen_env_by_file++++++++++++++"
-    set include=%DstDir%\%FileDir%\include;%include%
-    set lib=%DstDir%\%FileDir%\lib;%lib%
+    echo %0 %zip_file% %DstDir% %FileDir%
+    set include=%DstDir%/%FileDir%/include;%include%
+    set lib=%DstDir%/%FileDir%/lib;%lib%
     endlocal
 goto :eof
 
 :gen_all_env
     setlocal ENABLEDELAYEDEXPANSION
     call :color_text 4e "++++++++++++++gen_all_env++++++++++++++"
-    for /f %%i in ( 'dir /b *.zip' ) do (
+    for /f %%i in ( 'dir /b z*.zip' ) do (
         set zip_file=%%i
-        call :gen_env_by_file "!zip_file!" "F:\program\"
+        call :gen_env_by_file "!zip_file!" "F:/program/"
     )
     endlocal
 goto :eof
@@ -176,9 +180,9 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     call :gen_all_env
     call :color_text 4e "++++++++++++++bat_start++++++++++++++"
-    for /f %%i in ( 'dir /b *.zip' ) do (
+    for /f %%i in ( 'dir /b z*.zip' ) do (
         set zip_file=%%i
-        call :zip_file_install "!zip_file!" "F:\program\" " -DCMAKE_BUILD_TYPE=Debug " ""
+        call :zip_file_install  !zip_file!  F:/program  "-DCMAKE_BUILD_TYPE=Debug"  ""
     )
     endlocal
 goto :eof
