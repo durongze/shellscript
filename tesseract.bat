@@ -1,5 +1,5 @@
 @echo off
-goto:bat_start
+goto :bat_start
 
 :color_text
     setlocal EnableDelayedExpansion
@@ -150,7 +150,7 @@ goto :eof
     FOR /F "usebackq" %%i IN (` unzip -v %zip_file% ^| gawk -F" "  "{ print $8 } " ^| gawk  -F"/" "{ print $1 }" ^| sed -n "4p" `) DO ( set FileDir=%%i )
     echo FileDir:!FileDir!
     echo FileDir:%FileDir%
-    endlocal  & set %~2=%FileDir%
+    endlocal & set %~2=%FileDir%
 goto :eof
 
 :gen_env_by_file
@@ -176,29 +176,107 @@ goto :eof
     endlocal
 goto :eof
 
-:bat_start
+:get_str_len
     setlocal ENABLEDELAYEDEXPANSION
-    call :gen_all_env
-    call :color_text 4e "++++++++++++++bat_start++++++++++++++"
-    for /f %%i in ( 'dir /b z*.zip' ) do (
-        set zip_file=%%i
-        call :zip_file_install  !zip_file!  F:/program  "-DCMAKE_BUILD_TYPE=Debug"  ""
+    set mystr=%1
+    set mystrlen=%2
+    set count=0
+    call :color_text 4e "++++++++++++++get_str_len++++++++++++++"
+    :intercept_str_len
+    set /a count+=1
+    for /f %%i in ("%count%") do (
+        if not "!mystr:~%%i,1!"=="" (
+            goto :intercept_str_len
+        )
     )
+    echo %0 %mystr% %count%
+    endlocal & set %~2=%count%
+goto :eof
+
+:get_char_pos
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%1
+    set char_sym=%2
+    set char_pos=%3
+    call :get_str_len %mystr% mystrlen
+    set count=%mystrlen%
+    call :color_text 4e "++++++++++++++get_char_pos++++++++++++++"
+    :intercept_char_pos
+    set /a count-=1
+    for /f %%i in ("%count%") do (
+        if not "!mystr:~%%i,1!"=="!char_sym!" (
+            goto :intercept_char_pos
+        )
+    )
+    echo %0 %mystr% %char_sym% %count%
+    endlocal & set %~3=%count%
+goto :eof
+
+:get_sub_str
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%1
+    set char_sym=%2
+    set mysubstr=%3
+    call :get_str_len %mystr% mystrlen
+    set count=%mystrlen%
+    call :color_text 4e "++++++++++++++get_char_pos++++++++++++++"
+    set substr=
+    :intercept_sub_str
+    set /a count-=1
+    for /f %%i in ("%count%") do (
+        if not "!mystr:~%%i,1!"=="!char_sym!" (
+            set /a mysubstr_len=!mystrlen! - %%i
+            set substr=!mystr:~%%i!
+            goto :intercept_sub_str
+        )
+    )
+    echo %0 %mystr% %char_sym% %count% %mysubstr_len%
+    endlocal & set %~3=%substr%
+goto :eof
+
+:tools_install
+    setlocal ENABLEDELAYEDEXPANSION
+    set tools_addr=https://eternallybored.org/misc/wget/releases/wget-1.21.2-win64.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/wget/1.11.4-1/wget-1.11.4-1-dep.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/wget/1.11.4-1/wget-1.11.4-1-bin.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/tar/1.13-1/tar-1.13-1-bin.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/unrar/3.4.3/unrar-3.4.3-bin.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/unzip/5.51-1/unzip-5.51-1-bin.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/gawk/3.1.6-1/gawk-3.1.6-1-bin.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/sed/4.2.1/sed-4.2.1-dep.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/sed/4.2.1/sed-4.2.1-bin.zip
+    set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/grep/2.5.4/grep-2.5.4-bin.zip
+
+    call :color_text 4e "++++++++++++++tools_install++++++++++++++"
+    set tools_dir=tools_dir
+    if not exist %tools_dir% (
+        md %tools_dir%
+    )
+    pushd %tools_dir%
+    for %%i in ( %tools_addr% ) do (
+        set tool_file=%%i
+        call :get_char_pos !tool_file! / char_pos
+        echo tool_file:!char_pos!:!tool_file!
+        call :get_sub_str !tool_file! / file_name
+        echo file_name:!file_name!
+        if not exist !file_name! (
+            wget %%i
+        )
+        unzip -q -o !file_name!
+    )
+    popd
     endlocal
 goto :eof
 
-@rem https://udomain.dl.sourceforge.net/project/gnuwin32/wget/1.11.4-1/wget-1.11.4-1-bin.zip
-@rem https://udomain.dl.sourceforge.net/project/gnuwin32/tar/1.13-1/tar-1.13-1-bin.zip
-@rem https://udomain.dl.sourceforge.net/project/gnuwin32/unrar/3.4.3/unrar-3.4.3-bin.zip
-@rem https://udomain.dl.sourceforge.net/project/gnuwin32/unzip/5.51-1/unzip-5.51-1-bin.zip
-@rem https://udomain.dl.sourceforge.net/project/gnuwin32/gawk/3.1.6-1/gawk-3.1.6-1-bin.zip
-@rem https://udomain.dl.sourceforge.net/project/gnuwin32/sed/4.2.1/sed-4.2.1-bin.zip
-@rem https://udomain.dl.sourceforge.net/project/gnuwin32/grep/2.5.4/grep-2.5.4-bin.zip
-
-
-
-
-
-
+:bat_start
+    setlocal ENABLEDELAYEDEXPANSION
+    call :color_text 4e "++++++++++++++bat_start++++++++++++++"
+    call :tools_install
+    for /f %%i in ( 'dir /b z*.zip' ) do (
+        set zip_file=%%i
+        @rem call :zip_file_install  !zip_file!  F:/program  "-DCMAKE_BUILD_TYPE=Debug"  ""
+    )
+    endlocal
+goto :eof
 
 
