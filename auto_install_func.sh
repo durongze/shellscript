@@ -24,7 +24,12 @@ function AutoGenInstall()
     DstDir=$2
     CurFlags="$3"
     InstallDir=$(echo $SrcDir | tr -s "." "_")
-    ./autogen.sh
+	if [ -f ./autogen.sh ];then
+    	./autogen.sh
+	elif [ -f ./buildconf ];then
+    	./buildconf
+	fi
+
 	if [[ ! -d dyzbuild ]];then
 	    mkdir dyzbuild
 	fi
@@ -69,7 +74,7 @@ function AutoInstall()
 		CMakeInstall "$SrcDir" "$DstDir" "$CurFlags"
     elif [ -f setup.py ];then
         sudo python setup.py install 
-    elif [ -f autogen.sh ];then
+    elif [ -f autogen.sh ] || [ -f buildconf ];then
 		AutoGenInstall "$SrcDir" "$DstDir" "$CurFlags"
     elif [ -f configure ];then
 		CfgInstall "$SrcDir" "$DstDir" "$CurFlags"
@@ -90,11 +95,11 @@ function SpecInstall()
     CurFlags="$3"
 	Method=$4
     InstallDir=$(echo $SrcDir | tr -s "." "_")
-	if [[ $# -ne 4 ]];then
-		echo -e "\033[31m $FUNCNAME $LINENO ARGS:$*"
+	if [[ $# -eq 4 ]];then
+		echo -e "\033[31m $FUNCNAME $LINENO ARGS:$* \033[0m"
 	fi
     pushd $SrcDir
-        case $file in
+        case $Method in
             *[Cc][Mm]ake[Ii]nstall*)
 				CMakeInstall "$SrcDir" "$DstDir" "$CurFlags" 
                 ;;
@@ -109,6 +114,9 @@ function SpecInstall()
 				;;
 			*[Pp]ython[Ii]nstall*)
         		sudo python setup.py install 
+				;;
+			*)
+				echo -e "\033[31m $FUNCNAME $LINENO Method:$Method \033[0m"
 				;;
         esac;
 	popd
@@ -270,6 +278,8 @@ function GenEnvVar()
     echo "    export CMAKE_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CMAKE_INCLUDE_PATH}" >>${BASHRC}
     echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LIBRARY_PATH}" >>${BASHRC}
     echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LIBRARY_PATH}" >>${BASHRC}
+    echo "    export LD_RUN_PATH=\${TMP_FILE_HOME}/lib:\${LD_RUN_PATH}" >>${BASHRC}
+    echo "    export LD_RUN_PATH=\${TMP_FILE_HOME}/lib64:\${LD_RUN_PATH}" >>${BASHRC}
     echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LD_LIBRARY_PATH}" >>${BASHRC}
     echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LD_LIBRARY_PATH}" >>${BASHRC}
     echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${CMAKE_LIBRARY_PATH}" >>${BASHRC}
