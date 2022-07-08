@@ -28,6 +28,8 @@ function AutoGenInstall()
     	./autogen.sh
 	elif [ -f ./buildconf ];then
     	./buildconf
+	elif [ -f ./config ];then
+    	cp ./config ./configure
 	fi
 
 	if [[ ! -d dyzbuild ]];then
@@ -74,7 +76,7 @@ function AutoInstall()
 		CMakeInstall "$SrcDir" "$DstDir" "$CurFlags"
     elif [ -f setup.py ];then
         sudo python setup.py install 
-    elif [ -f autogen.sh ] || [ -f buildconf ];then
+    elif [ -f autogen.sh ] || [ -f buildconf ] || [ -f config ] ;then
 		AutoGenInstall "$SrcDir" "$DstDir" "$CurFlags"
     elif [ -f configure ];then
 		CfgInstall "$SrcDir" "$DstDir" "$CurFlags"
