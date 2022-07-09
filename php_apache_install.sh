@@ -128,6 +128,36 @@ function PhpSslModule()
 	fi
 }
 
+function InsertCtx()
+{
+	Filter="$1"
+	CtxFile=$2
+	LineX=$3
+	IsPhp=$(grep "$Filter" ${CtxFile})
+	if [ "$IsPhp" == "" ] && [ "$LineX" != "" ] ;then
+		echo "sed -e \"${LineX}a${Filter}\" -i ${CtxFile}"
+		sed -e ''"${LineX}"'a'"${Filter}"'' -i ${CtxFile}
+	else
+		echo " CtxFile <$Filter> <$LineX> : ${CtxFile}"
+		grep -n "$Filter" ${CtxFile}
+	fi
+}
+
+function HttpdCfg()
+{
+	HTTPD_HOME_DIR=${HOME}/opt/httpd-2_4_54
+	HTTPD_CFG=${HTTPD_HOME_DIR}/conf/httpd.conf
+	HTTPD_PHP_PAGE=${HTTPD_HOME_DIR}/htdocs/index.php 
+	sed 's#    DirectoryIndex index.html#    DirectoryIndex index.php#g' -i ${HTTPD_CFG}
+	LineX=$(grep -n "AddType application" ${HTTPD_CFG} | cut -d':' -f1 | awk '{ printf $NR }')
+	PhpFilter="AddType application/x-httpd-php .php"
+	InsertCtx "${PhpFilter}" "${HTTPD_CFG}" "$LineX"
+	PhpsFilter="AddType application/x-httpd-php-source .phps"
+	InsertCtx "${PhpsFilter}" "${HTTPD_CFG}" "$LineX"
+
+	echo "<?php phpinfo(); ?>" > ${HTTPD_PHP_PAGE}
+}
+
 function TarXFFile()
 {
 	PkgFile=$1
@@ -163,8 +193,9 @@ function ManInstall()
 	
 	#TarXFFile "php-8.1.7.tar.gz" "--with-apxs2=${HTTPD_HOME_DIR}/bin/apxs --with-openssl-dir=${OPENSSL_HOME_DIR}" 
 
-	PhpSslModule #<?php phpinfo() ?>
-	GenComposerInstaller	
+	#PhpSslModule #<?php phpinfo() ?>
+	HttpdCfg
+	#GenComposerInstaller	
 }
 
 SoftwareDir="Download"
