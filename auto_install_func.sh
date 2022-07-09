@@ -1,5 +1,117 @@
 #!/bin/bash
 
+declare -A sermap=(["leptonica-1.82.0.tar.gz"]="AutoGenInstall"
+                   ["icu-release-70-1.tar.gz"]="CfgInstall"
+                   ["libxml2-2.9.14.tar.xz"]="CfgInstall"
+                   ["apr-1.7.0.tar.gz"]="CfgInstall"
+                   ["httpd-2.4.54.tar.gz"]="AutoGenInstall"
+                   ["apr-util-1.6.1.tar.gz"]="AutoGenInstall"
+				  )
+
+function GetInstallMethod()
+{
+	PkgFile=$1
+    Method=""
+    for k in ${!sermap[@]}
+    do
+        if [[ "$k" == "$PkgFile" ]];then
+            v=${sermap[$k]}
+            Method="$v"
+            break
+        fi
+    done
+	echo $Method
+}
+
+function FixPkgCtx()
+{
+    SrcDir="$1"
+    case $SrcDir in
+        *[Ll]ua*)
+            FixLuaPkg
+            ;;
+        *[Aa]pache*)
+            FixApachePkg
+            ;;
+    esac;
+}
+
+function DownloadSoftware()
+{
+	DownloadDir=$1
+	SoftwareUrls="$2"
+	if [ ! -d "$DownloadDir" ];then
+		mkdir $DownloadDir
+	fi
+	pushd $DownloadDir
+		for url in $SoftwareUrls
+		do
+			file=${url##*/}
+			if [ -f $file ];then
+				echo -e "\033[32m file : $file exist. \033[0m"
+				continue
+			fi
+			wget $url
+		done
+	popd
+}
+
+function GetTarFileDir()
+{
+	file=$1
+    FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
+	echo $FileDir
+}
+
+function TryGetZipFileDir()
+{
+	file=$1
+    FileDir=$(unzip -v $file | awk '{print $8}' | grep "/$" | uniq | sed -n '1p' | awk -F'/' '{print $1}')
+    echo $FileDir
+}
+
+function GetZipFileDir()
+{
+	file=$1
+    FileName=${file%.*}
+    FileDir=$(TryGetZipFileDir "$file")
+    if [ "$FileDir" != "$FileName" ];then
+        FileDir=$FileName
+    fi
+	echo $FileDir
+}
+
+function DecompressZipFile()
+{
+	file=$1
+    FileName=${file%.*}
+    FileDir=$(TryGetZipFileDir "$file")
+    if [ "$FileDir" == "$FileName" ];then
+        unzip -q $file 
+    else
+        mkdir $FileName
+        unzip -q $file -d $FileName
+    fi
+}
+
+function GetInstallDir()
+{
+    PkgFile=$1
+    SrcDir=""    
+	case $PkgFile in
+        *.tar.*)
+			SrcDir=$(GetTarFileDir "$PkgFile")
+            ;;
+        *.zip)
+			SrcDir=$(GetZipFileDir "$PkgFile")
+            ;;
+        *)
+            ;;
+    esac;
+    InstallDir=$(echo $SrcDir | tr -s "." "_")
+    echo $InstallDir
+}
+
 function CMakeInstall()
 {
     SrcDir=$1
@@ -10,11 +122,11 @@ function CMakeInstall()
 	    mkdir dyzbuild
 	fi
 	pushd dyzbuild
-		#echo -e "\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags \033[0m"
-		CmdStr="export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags"
+		CmdStr="\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags \033[0m"
+		#CmdStr="export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags"
 		export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags 
-		make  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr "; exit 1; }
-		make install  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr "; exit 1; }
+		make  || { echo -e "$CmdStr"; exit 1; }
+		make install  || { echo -e "$CmdStr"; exit 1; }
 	popd
 }
 
@@ -23,7 +135,7 @@ function AutoGenInstall()
     SrcDir=$1
     DstDir=$2
     CurFlags="$3"
-    InstallDir=$(echo $SrcDir | tr -s "." "_")
+
 	if [ -f ./autogen.sh ];then
     	./autogen.sh
 	elif [ -f ./buildconf ];then
@@ -31,18 +143,7 @@ function AutoGenInstall()
 	elif [ -f ./config ];then
     	cp ./config ./configure
 	fi
-
-	if [[ ! -d dyzbuild ]];then
-	    mkdir dyzbuild
-	fi
-    pushd dyzbuild
-        dos2unix ../configure && export CXXFLAGS="-fPIC"
-        #echo -e "\033[32m ../configure --prefix=$DstDir/$InstallDir $CurFlags \033[0m" 
-        CmdStr="../configure --prefix=$DstDir/$InstallDir $CurFlags" 
-        ../configure --prefix=$DstDir/$InstallDir $CurFlags  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-        make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-        make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-    popd
+    CfgInstall "$SrcDir" "$DstDir" "$CurFlags"
 }
 
 function CfgInstall()
@@ -56,13 +157,24 @@ function CfgInstall()
 	fi
     pushd dyzbuild
         dos2unix ../configure && export CXXFLAGS="-fPIC"
-        #echo -e "\033[32m ../configure --prefix=$DstDir/$InstallDir $CurFlags \033[0m" 
-        CmdStr="../configure --prefix=$DstDir/$InstallDir $CurFlags" 
-        ../configure --prefix=$DstDir/$InstallDir $CurFlags  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-        make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-        make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
+        CmdStr="\033[32m ../configure --prefix=$DstDir/$InstallDir $CurFlags \033[0m" 
+        #CmdStr="../configure --prefix=$DstDir/$InstallDir $CurFlags"
+        ../configure --prefix=$DstDir/$InstallDir $CurFlags  || { echo -e "$CmdStr"; exit 1; }
+        make   || { echo -e "$CmdStr"; exit 1; }
+        make install   || { echo -e "$CmdStr"; exit 1; }
     popd
 
+}
+
+function MakeInstall()
+{
+    SrcDir=$1
+    DstDir=$2
+    CurFlags="$3"
+    InstallDir=$(echo $SrcDir | tr -s "." "_")
+    FixPkgCtx "$SrcDir"
+    $CurFlags && make || { echo -e "\033[31m Install $SrcDir failed. \033[0m"; exit 1; }
+    make install 
 }
 
 function AutoInstall()
@@ -70,22 +182,24 @@ function AutoInstall()
     SrcDir=$1
     DstDir=$2
     CurFlags="$3"
-    InstallDir=$(echo $SrcDir | tr -s "." "_")
+
     pushd $SrcDir
-    if [ -f CMakeLists.txt ];then
-		CMakeInstall "$SrcDir" "$DstDir" "$CurFlags"
-    elif [ -f setup.py ];then
-        sudo python setup.py install 
-    elif [ -f autogen.sh ] || [ -f buildconf ] || [ -f config ] ;then
-		AutoGenInstall "$SrcDir" "$DstDir" "$CurFlags"
-    elif [ -f configure ];then
-		CfgInstall "$SrcDir" "$DstDir" "$CurFlags"
-    elif [ -f Makefile ];then
-        make $CurFlags || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
-    else
-        echo -e "\033[31m Install $InstallDir Fail, cfg file not exist !!! \033[0m"
-        exit 1
-    fi
+        if [ -f CMakeLists.txt ];then
+            CMakeInstall "$SrcDir" "$DstDir" "$CurFlags"
+        elif [ -f setup.py ];then
+            sudo python setup.py install 
+        elif [ -f autogen.sh ] || [ -f buildconf ] || [ -f config ] ;then
+            AutoGenInstall "$SrcDir" "$DstDir" "$CurFlags"
+        elif [ -f configure ];then
+            CfgInstall "$SrcDir" "$DstDir" "$CurFlags"
+        elif [ -f Makefile ];then
+            MakeInstall "$SrcDir" "$DstDir" "$CurFlags"
+        elif [ -f setup.py ];then
+            sudo python setup.py install
+        else
+            echo -e "\033[31m Install $SrcDir failed, cfg file not exist !!! \033[0m"
+            exit 1
+        fi
     popd
 }
 
@@ -96,13 +210,13 @@ function SpecInstall()
     DstDir=$2
     CurFlags="$3"
 	Method=$4
-    InstallDir=$(echo $SrcDir | tr -s "." "_")
+
 	if [[ $# -eq 4 ]];then
 		echo -e "\033[31m $FUNCNAME $LINENO ARGS:$* \033[0m"
 	fi
     pushd $SrcDir
         case $Method in
-            *[Cc][Mm]ake[Ii]nstall*)
+            [Cc][Mm]ake[Ii]nstall*)
 				CMakeInstall "$SrcDir" "$DstDir" "$CurFlags" 
                 ;;
             *[Aa]uto[Gg]en[Ii]nstall*)
@@ -111,108 +225,80 @@ function SpecInstall()
 			*[Cc]fg[Ii]nstall*)
 				CfgInstall "$SrcDir" "$DstDir" "$CurFlags" 
 				;;
-			*[Mm]ake[Ii]nstall*)
-        		make $CurFlags || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
+			[Mm]ake[Ii]nstall*)
+				MakeInstall "$SrcDir" "$DstDir" "$CurFlags" 
 				;;
 			*[Pp]ython[Ii]nstall*)
         		sudo python setup.py install 
 				;;
 			*)
-				echo -e "\033[31m $FUNCNAME $LINENO Method:$Method \033[0m"
+				echo -e "\033[31m Install $SrcDir failed, Method:$Method \033[0m"
 				;;
         esac;
 	popd
 }
 
-function GetTarFileDir()
-{
-	file=$1
-    FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
-	echo $FileDir
-}
-
 function TarAndInstall()
 {
     file=$1
-    DstDir=$2
+    DstDirPrefix=$2
     CurFlags="$3"
 	Method=$4
 	
-    FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
+    FileDir=$(GetTarFileDir "$file")
     echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
     tar xf $file
 	if [[ $Method == "" ]];then
-    	AutoInstall "$FileDir" "$DstDir" "$CurFlags"
+    	AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
 	else
-		SpecInstall "$FileDir" "$DstDir" "$CurFlags" "$Method"
+		SpecInstall "$FileDir" "$DstDirPrefix" "$CurFlags" "$Method"
 	fi
-}
-
-function GetZipFileDir()
-{
-	file=$1
-    FileDir=$(unzip -v $file |awk '{print $8}' | grep "/$" | uniq | sed -n '1p' | awk -F'/' '{print $1}')
-    FileName=${file%.*}
-    echo -e "\033[32mFile:$file Dir:$FileDir FileName:$FileName\033[0m"
-    if [ "$FileDir" = "$FileName" ];then
-        unzip -q $file 
-    else
-        mkdir $FileName
-        unzip -q $file -d $FileName
-        FileDir=$FileName
-    fi
-	echo $FileDir
 }
 
 function ZipAndInstall()
 {
     file=$1
-    DstDir=$2
+    DstDirPrefix=$2
     CurFlags="$3"
 	Method=$4
 
-    FileDir=$(unzip -v $file |awk '{print $8}' | grep "/$" | uniq | sed -n '1p' | awk -F'/' '{print $1}')
-    FileName=${file%.*}
-    echo -e "\033[32mFile:$file Dir:$FileDir FileName:$FileName\033[0m"
-    if [ "$FileDir" = "$FileName" ];then
-        unzip -q $file 
-    else
-        mkdir $FileName
-        unzip -q $file -d $FileName
-        DstDir=$FileName
-    fi
+    FileDir=$(GetZipFileDir "$file")
+    echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
+    DecompressZipFile "$file"
 	if [[ $Method == "" ]];then
-    	AutoInstall "$FileDir" "$DstDir" "$CurFlags"
+    	AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
 	else
-		SpecInstall "$FileDir" "$DstDir" "$CurFlags" "$Method"
+		SpecInstall "$FileDir" "$DstDirPrefix" "$CurFlags" "$Method"
 	fi
 }
 
-function TarXFFile()
+function InstallPkgFile()
 {
     PkgFile=$1
-    DstDir=$2
+    DstDirPrefix=$2
     CurFlags="$3"
 	Method=$4
     case $PkgFile in
         *.tar.*)
-			TarAndInstall "$PkgFile" "$DstDir" "$CurFlags" "$Method"
+			TarAndInstall "$PkgFile" "$DstDirPrefix" "$CurFlags" "$Method"
             ;;
         *.zip)
-			ZipAndInstall "$PkgFile" "$DstDir" "$CurFlags" "$Method"
+			ZipAndInstall "$PkgFile" "$DstDirPrefix" "$CurFlags" "$Method"
             ;;
     esac;
 }
 
-function TarXFDir()
+function InstallPkgDir()
 {
-	DstDir=$1
-    pushd ./
-    SrcFileList=$SrcDir
-    for file in $SrcFileList
-    do
-		TarXFFile "$file" "$DstDir" "" ""
-    done
+    PkgDir=$1
+	DstDirPrefix=$2
+    pushd $PkgDir
+        SrcFileList=$(ls)
+        for file in $SrcFileList
+        do
+            Method=$(GetInstallMethod "$file")
+            InstallPkgFile "$file" "$DstDirPrefix" "" "$Method"
+        done
     popd
 }
 
@@ -223,72 +309,88 @@ function CopyPcFile()
     PkgFile=$1
 	DstDirPrefix=$2
 
-    SrcDir=""    
-	case $PkgFile in
-        *.tar.*)
-			SrcDir=$(GetTarFileDir "$PkgFile" "$DstDir" "$CurFlags" "$Method")
-            ;;
-        *.zip)
-			SrcDir=$(GetZipFileDir "$PkgFile" "$DstDir" "$CurFlags" "$Method")
-            ;;
-    esac;
-	DstDir=$(echo $SrcDir | tr -s "." "_")
-	DstDir="$DstDirPrefix/$DstDir/lib/pkgconfig"
-	echo -e "\033[31m find $SrcDir -iname \"*.pc\" | xargs -I {} cp {} $DstDir/ \033[0m"
+	DstDir=$(GetInstallDir "$PkgFile")
+	PcFileDir="$DstDirPrefix/$DstDir/lib/pkgconfig"
+    if [ ! -d $PcFileDir ];then
+        mkdir -p $PcFileDir 
+	    echo -e "\033[31m find $SrcDir -iname \"*.pc\" | xargs -I {} cp {} $PcFileDir/ \033[0m"
+        find $SrcDir -iname "*.pc" | xargs -I {} cp {} $PcFileDir/ 
+    fi
 }
 
 ####################################环境变量配置#####################################
 
-function GenFileNameByFile()
-{
-    file="$1"
-    case $file in
-        *.tar.*)
-            FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
-            ;;
-        *.zip)
-            #FileDir=$(unzip -v $file |awk '{print $8}' | grep "/" | uniq | sed -n '1p' | awk -F'/' '{print $1}')
-            FileDir=$(unzip -v $file |awk '{print $8}' | grep "/$" | uniq | sed -n '1p' | awk -F'/' '{print $1}')
-            ;;
-    esac;
-    FileDir=$(echo $FileDir | tr -s "." "_")
-    echo $FileDir
-}
-
 function GenFileNameVar()
 {
-    FileList="$1"
-    FileDir=""
+    ENV_TXT="env.txt"
+    echo "" >${ENV_TXT}
 
-    echo "" >env.txt
-    for file in $FileList
+    SrcFileList=$(ls)
+    for file in $SrcFileList
     do
-        FileDir=$(GenFileNameByFile $file)
-        echo $FileDir >>env.txt
+        echo -e "\033[32m $file <-> $FileDir . \033[0m"
+        FileDir=$(GetInstallDir $file)
+        if [ "$FileDir" == "" ];then
+            echo -e "\033[31m $file <-> $FileDir . \033[0m"
+        else
+            echo $FileDir >>${ENV_TXT}
+        fi
     done
 }
 
 function GenEnvVar()
 {
-    BASHRC="bashrc"
-    echo "fileList=\"$(cat env.txt)\""  >>${BASHRC}
-    echo "for tmpFile in \${fileList}" >>${BASHRC}
-    echo "do" >>${BASHRC}
-    echo "    TMP_FILE_HOME=\${HOME}/opt/\${tmpFile}" >>${BASHRC}
-    echo "    export C_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${C_INCLUDE_PATH}" >>${BASHRC}
-    echo "    export CPLUS_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CPLUS_INCLUDE_PATH}" >>${BASHRC}
-    echo "    export CMAKE_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CMAKE_INCLUDE_PATH}" >>${BASHRC}
-    echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LIBRARY_PATH}" >>${BASHRC}
-    echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LIBRARY_PATH}" >>${BASHRC}
-    echo "    export LD_RUN_PATH=\${TMP_FILE_HOME}/lib:\${LD_RUN_PATH}" >>${BASHRC}
-    echo "    export LD_RUN_PATH=\${TMP_FILE_HOME}/lib64:\${LD_RUN_PATH}" >>${BASHRC}
-    echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LD_LIBRARY_PATH}" >>${BASHRC}
-    echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LD_LIBRARY_PATH}" >>${BASHRC}
-    echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${CMAKE_LIBRARY_PATH}" >>${BASHRC}
-    echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${CMAKE_LIBRARY_PATH}" >>${BASHRC}
-    echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib/pkgconfig/:\${PKG_CONFIG_PATH}" >>${BASHRC}
-    echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib64/pkgconfig/:\${PKG_CONFIG_PATH}" >>${BASHRC}
-    echo "    export CMAKE_MODULE_PATH=\${TMP_FILE_HOME}/lib/cmake/:\${CMAKE_MODULE_PATH}" >>${BASHRC}
-    echo "    export PATH=\${TMP_FILE_HOME}/bin:\${TMP_FILE_HOME}/sbin:\$PATH" >>${BASHRC}
-    echo "done" >>${BASHRC}
+    MY_BASHRC="$1"
+    ENV_TXT="env.txt"
+    if [ "$MY_BASHRC" == *.bashrc ] || [ "$MY_BASHRC" == "" ] ;then
+        MY_BASHRC="mybashrc"
+        echo "MY_BASHRC:$MY_BASHRC ."
+    fi
+    echo "fileList=\"$(cat ${ENV_TXT})\""  >${MY_BASHRC}
+    echo "for tmpFile in \${fileList}" >>${MY_BASHRC}
+    echo "do" >>${MY_BASHRC}
+    echo "    TMP_FILE_HOME=\${HOME}/opt/\${tmpFile}" >>${MY_BASHRC}
+    echo "    export C_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${C_INCLUDE_PATH}" >>${MY_BASHRC}
+    echo "    export CPLUS_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CPLUS_INCLUDE_PATH}" >>${MY_BASHRC}
+    echo "    export CMAKE_INCLUDE_PATH=\${TMP_FILE_HOME}/include:\${CMAKE_INCLUDE_PATH}" >>${MY_BASHRC}
+    echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LIBRARY_PATH}" >>${MY_BASHRC}
+    echo "    export LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LIBRARY_PATH}" >>${MY_BASHRC}
+    echo "    export LD_RUN_PATH=\${TMP_FILE_HOME}/lib:\${LD_RUN_PATH}" >>${MY_BASHRC}
+    echo "    export LD_RUN_PATH=\${TMP_FILE_HOME}/lib64:\${LD_RUN_PATH}" >>${MY_BASHRC}
+    echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${LD_LIBRARY_PATH}" >>${MY_BASHRC}
+    echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LD_LIBRARY_PATH}" >>${MY_BASHRC}
+    echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${CMAKE_LIBRARY_PATH}" >>${MY_BASHRC}
+    echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${CMAKE_LIBRARY_PATH}" >>${MY_BASHRC}
+    echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib/pkgconfig/:\${PKG_CONFIG_PATH}" >>${MY_BASHRC}
+    echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib64/pkgconfig/:\${PKG_CONFIG_PATH}" >>${MY_BASHRC}
+    echo "    export CMAKE_MODULE_PATH=\${TMP_FILE_HOME}/lib/cmake/:\${CMAKE_MODULE_PATH}" >>${MY_BASHRC}
+    echo "    export PATH=\${TMP_FILE_HOME}/bin:\${TMP_FILE_HOME}/sbin:\$PATH" >>${MY_BASHRC}
+    echo "done" >>${MY_BASHRC}
 }
+
+function AddEnvVarToBashrc()
+{
+    MY_BASHRC=$1
+    mv $MY_BASHRC ${HOME}/
+    IsExist=$(grep "$MY_BASHRC" ${HOME}/.bashrc)
+    if [ "$IsExist" == "" ];then
+        echo "source \${HOME}/$MY_BASHRC" >> ${HOME}/.bashrc
+    else
+        echo -e "\033[32m $MY_BASHRC in ${HOME}/.bashrc \033[0m"
+    fi
+    source ${HOME}/$MY_BASHRC
+    #source ${HOME}/.bashrc
+}
+
+function GenEnvVarByPkgDir()
+{
+    PkgDir=$1
+    MY_BASHRC="mybashrc"
+    pushd $PkgDir
+        GenFileNameVar 
+        GenEnvVar "$MY_BASHRC"
+        AddEnvVarToBashrc "$MY_BASHRC"
+        echo "PATH:$PATH"
+    popd
+}
+
