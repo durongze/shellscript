@@ -57,31 +57,35 @@ function GenComposerInstaller()
     echo "PHP_HOME_DIR=\$(dirname \${PHP_EXEC})/.." >> $ComposerInstallerFile
     echo "echo \"PHP_EXEC:\${PHP_EXEC}\"" >> $ComposerInstallerFile
     echo "echo \"PHP_HOME_DIR:\${PHP_HOME_DIR}\"" >> $ComposerInstallerFile
-    echo "echo \"php \${PHP_HOME_DIR}/lib/php/build/composer.php starting...\"" >> $ComposerInstallerFile
-	echo "php \${PHP_HOME_DIR}/lib/php/build/composer.php" >> $ComposerInstallerFile
+    echo "echo \"php \${PHP_HOME_DIR}/lib/php/build/composer-setup.php starting...\"" >> $ComposerInstallerFile
+	echo "php \${PHP_HOME_DIR}/lib/php/build/composer-setup.php" >> $ComposerInstallerFile
+	echo "mv $(pwd)/composer.phar ${PHP_HOME_DIR}/bin/" >> $ComposerInstallerFile
 	chmod +x $ComposerInstallerFile
 }
 
 function UsageComposer()
 {
 	HTTPD_HOME_DIR=$1
-	ComposerFile="composer"
+	ComposerFile="composer.phar"
 	echo "cd ${HTTPD_HOME_DIR}/htdocs"
 	echo "$ComposerFile config -g repo.packagist composer https://mirrors.aliyun.com/composer/"
 	echo "$ComposerFile require jaeger/querylist"
+	echo "$ComposerFile require jaeger/querylist-curl-multi"
 }
 
 function PhpComposerInstall()
 {
 	PhpHomeDir=$1
-	php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');"
+	if [ ! -f composer-setup.php ];then
+		php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');"
+	fi
+
 	if [ -f composer-setup.php ];then
-		mv composer-setup.php ${PhpHomeDir}/lib/php/build/composer-setup.php
+		cp composer-setup.php ${PhpHomeDir}/lib/php/build/composer-setup.php
 		ComposerInstallerFile="composer_installer.sh"
 		GenComposerInstaller "$ComposerInstallerFile"
 		mv $ComposerInstallerFile ${PhpHomeDir}/bin/${ComposerInstallerFile%.*}
-		echo "run ${ComposerInstallerFile%.*}, please!!!!"
-		UsageComposer
+		echo -e "\033[31m run ${ComposerInstallerFile%.*}, please!!!! \033[0m"
 	else
 		PhpIniFile="$PhpHomeDir/lib/php.ini"
 		echo -e "\033[31m PhpIniFile : ${PhpIniFile} \033[0m"
@@ -92,17 +96,23 @@ function PhpSslCfg()
 {
 	PhpSrcDir=$1
 	PhpHomeDir=$2
+	PhpCaFile="$PhpHomeDir/ext/cacert.pem"	
 	PhpIniFile="$PhpHomeDir/lib/php.ini"
+
 	echo -e "\033[31m cp $PhpSrcDir/php.ini-development ${PhpIniFile} \033[0m"
 	cp $PhpSrcDir/php.ini-development ${PhpIniFile}
 	sed 's#;extension_dir = "./"#extension_dir = "'"${PhpHomeDir}"'/lib/php/extensions/no-debug-zts-20210902/"#g' -i ${PhpIniFile}
 	grep -n "extension_dir = \"" ${PhpIniFile}
 	sed 's#;extension=openssl#extension=openssl#g' -i ${PhpIniFile}
 	grep -n "extension=openssl" ${PhpIniFile}
-	#wget https://curl.se/ca/cacert.pem
-	grep -n "cafile" ${PhpIniFile}
-	grep -n "127.0.0.1" /etc/hosts
-	grep -n "nameserver" /etc/resolv.conf
+	if [ ! -f $PhpCaFile ];then
+		wget https://curl.se/ca/cacert.pem
+		mv cacert.pem $PhpCaFile
+	fi
+	sed 's#;openssl.cafile=#openssl.cafile='"${PhpCaFile}"'#g' -i ${PhpIniFile}
+	grep -n "openssl.cafile=" ${PhpIniFile}
+	#grep -n "127.0.0.1" /etc/hosts
+	#grep -n "nameserver" /etc/resolv.conf
 }
 
 function PhpSslCompile()
@@ -145,11 +155,23 @@ function InsertCtx()
 	fi
 }
 
+function GenPhpPage()
+{
+	HTTPD_HOME_DIR=$1
+	HTTPD_PHP_PAGE=${HTTPD_HOME_DIR}/htdocs/index.php 
+	echo "<?php phpinfo(); ?>" > ${HTTPD_PHP_PAGE}
+	echo "<?php " >> ${HTTPD_PHP_PAGE}
+	echo "    require \"vendor/autoload.php\";" >> ${HTTPD_PHP_PAGE}
+	echo "    use QL\\QueryList;" >> ${HTTPD_PHP_PAGE}
+	echo "    use QL\\Ext\\CurlMulti;" >> ${HTTPD_PHP_PAGE}
+	echo "?>" >> ${HTTPD_PHP_PAGE}
+}
+
 function HttpdCfg()
 {
 	HTTPD_HOME_DIR=${HOME}/opt/httpd-2_4_54
 	HTTPD_CFG=${HTTPD_HOME_DIR}/conf/httpd.conf
-	HTTPD_PHP_PAGE=${HTTPD_HOME_DIR}/htdocs/index.php 
+
 	sed 's#    DirectoryIndex index.html#    DirectoryIndex index.php#g' -i ${HTTPD_CFG}
 	LineX=$(grep -n "AddType application" ${HTTPD_CFG} | cut -d':' -f1 | awk '{ printf $NR }')
 	PhpFilter="AddType application/x-httpd-php .php"
@@ -157,7 +179,8 @@ function HttpdCfg()
 	PhpsFilter="AddType application/x-httpd-php-source .phps"
 	InsertCtx "${PhpsFilter}" "${HTTPD_CFG}" "$LineX"
 
-	echo "<?php phpinfo(); ?>" > ${HTTPD_PHP_PAGE}
+	GenPhpPage "$HTTPD_HOME_DIR"
+	UsageComposer "$HTTPD_HOME_DIR"
 }
 
 function TarXFFile()
@@ -197,7 +220,7 @@ function ManInstall()
 	#TarXFFile "php-8.1.7.tar.gz" "--with-apxs2=${HTTPD_HOME_DIR}/bin/apxs --with-openssl-dir=${OPENSSL_HOME_DIR}" 
 
 	PhpSslModule #<?php phpinfo() ?>
-	#HttpdCfg
+	HttpdCfg
 }
 
 SoftwareDir="Download"
