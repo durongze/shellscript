@@ -71,7 +71,7 @@ function UsageComposer()
 	echo "$ComposerFile require jaeger/querylist"
 }
 
-function ComposerInstall()
+function PhpComposerInstall()
 {
 	PhpHomeDir=$1
 	php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');"
@@ -82,9 +82,9 @@ function ComposerInstall()
 		mv $ComposerInstallerFile ${PhpHomeDir}/bin/${ComposerInstallerFile%.*}
 		echo "run ${ComposerInstallerFile%.*}, please!!!!"
 		UsageComposer
-		return 0
 	else
-		return 1
+		PhpIniFile="$PhpHomeDir/lib/php.ini"
+		echo -e "\033[31m PhpIniFile : ${PhpIniFile} \033[0m"
 	fi
 }
 
@@ -96,7 +96,13 @@ function PhpSslCfg()
 	echo -e "\033[31m cp $PhpSrcDir/php.ini-development ${PhpIniFile} \033[0m"
 	cp $PhpSrcDir/php.ini-development ${PhpIniFile}
 	sed 's#;extension_dir = "./"#extension_dir = "'"${PhpHomeDir}"'/lib/php/extensions/no-debug-zts-20210902/"#g' -i ${PhpIniFile}
+	grep -n "extension_dir = \"" ${PhpIniFile}
 	sed 's#;extension=openssl#extension=openssl#g' -i ${PhpIniFile}
+	grep -n "extension=openssl" ${PhpIniFile}
+	#wget https://curl.se/ca/cacert.pem
+	grep -n "cafile" ${PhpIniFile}
+	grep -n "127.0.0.1" /etc/hosts
+	grep -n "nameserver" /etc/resolv.conf
 }
 
 function PhpSslCompile()
@@ -121,11 +127,7 @@ function PhpSslModule()
 
 	PhpSslCompile "$PhpSrcDir"
 	PhpSslCfg "$PhpSrcDir" "$PhpHomeDir"
-	ComposerInstall "$PhpHomeDir"
-	if [ $? -ne 0 ];then
-		PhpIniFile="$PhpHomeDir/lib/php.ini"
-		echo -e "\033[31m PhpIniFile : ${PhpIniFile} \033[0m"
-	fi
+	PhpComposerInstall "$PhpHomeDir"
 }
 
 function InsertCtx()
@@ -191,11 +193,11 @@ function ManInstall()
 	HTTPD_HOME_DIR="${HOME}/opt/httpd-2_4_54"
 	#TarXFFile "httpd-2.4.54.tar.gz" "--with-apr=${APR_HOME_DIR} --enable-module=most --enable-mods-shared=all --enable-so --enable-include --enable-headers"
 	
+	PHP_HOME_DIR="${HOME}/opt/php-8_1_7"
 	#TarXFFile "php-8.1.7.tar.gz" "--with-apxs2=${HTTPD_HOME_DIR}/bin/apxs --with-openssl-dir=${OPENSSL_HOME_DIR}" 
 
-	#PhpSslModule #<?php phpinfo() ?>
-	HttpdCfg
-	#GenComposerInstaller	
+	PhpSslModule #<?php phpinfo() ?>
+	#HttpdCfg
 }
 
 SoftwareDir="Download"
