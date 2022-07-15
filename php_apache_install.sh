@@ -140,6 +140,22 @@ function PhpSslModule()
 	PhpComposerInstall "$PhpHomeDir"
 }
 
+function PhpCurlModule()
+{
+	PhpSrcDir="php-8.1.7"
+	PhpHomeDir=${HOME}/opt/php-8_1_7
+	PhpMod=curl
+	pushd ${PhpSrcDir}/ext/$PhpMod
+	    if [ ! -f config.m4 ];then
+	        cp config0.m4 config.m4
+	    fi
+	    phpize
+	    ./configure --with-$PhpMod
+	    make
+	    make install
+	popd
+}
+
 function InsertCtx()
 {
 	Filter="$1"
