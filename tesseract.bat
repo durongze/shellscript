@@ -271,6 +271,11 @@ goto :eof
 :bat_start
     setlocal ENABLEDELAYEDEXPANSION
     call :color_text 4e "++++++++++++++bat_start++++++++++++++"
+	where wget
+	if %errorlevel% == 1 (
+		echo "wget does not exist ." 
+		goto :eof
+	)    
     call :tools_install
     for /f %%i in ( 'dir /b z*.zip' ) do (
         set zip_file=%%i
