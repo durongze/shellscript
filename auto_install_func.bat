@@ -1,4 +1,3 @@
-
 @echo off
 
 @rem %comspec%
@@ -15,24 +14,16 @@ set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/
 set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/grep/2.5.4/grep-2.5.4-bin.zip
 set tools_dir=tools_dir
 
-set software_urls=https://www.php.net/distributions/php-8.1.7.tar.gz
-set software_urls=%software_urls%;https://dlcdn.apache.org/httpd/httpd-2.4.54.tar.gz
-set software_urls=%software_urls%;https://fossies.org/linux/www/libxml2-2.9.14.tar.xz
-set software_urls=%software_urls%;https://tukaani.org/xz/xz-5.2.5.tar.gz
-set software_urls=%software_urls%;https://www.sqlite.org/2022/sqlite-autoconf-3390000.tar.gz
-set software_urls=%software_urls%;https://curl.se/download/curl-7.84.0.tar.gz
-set software_urls=%software_urls%;https://www.lua.org/ftp/lua-5.4.4.tar.gz
-set software_urls=%software_urls%;http://archive.apache.org/dist/apr/apr-1.7.0.tar.gz
-set software_urls=%software_urls%;http://archive.apache.org/dist/apr/apr-util-1.6.1.tar.gz
-set software_urls=%software_urls%;https://udomain.dl.sourceforge.net/project/expat/expat/2.4.8/expat-2.4.8.tar.gz
-set software_urls=%software_urls%;https://archive.apache.org/dist/httpd/apache_1.3.42.tar.gz
-set software_urls=%software_urls%;https://www.openssl.org/source/openssl-3.0.5.tar.gz
-set software_dir=php_dir
+set software_urls=https://udomain.dl.sourceforge.net/project/libpng/libpng16/1.6.37/lpng1637.zip
+set software_urls=%software_urls%;http://www.zlib.net/zlib1212.zip
+set software_urls=%software_urls%;https://udomain.dl.sourceforge.net/project/freetype/freetype2/2.12.1/ft2121.zip
+set software_urls=%software_urls%;https://jaist.dl.sourceforge.net/project/gnuwin32/tiff/3.8.2-1/tiff-3.8.2-1-src.zip
+set software_urls=%software_urls%;https://github.com/harfbuzz/harfbuzz/archive/refs/tags/5.1.0.zip
+set software_dir=soft_dir
 
 set home_dir=E:\program
 set build_type=Release
-@rem call:bat_start "%tools_addr%" "%tools_dir%"
-@rem call:bat_start "%software_urls%" "%software_dir%"
+
 call:gen_all_env %software_dir% %home_dir% all_inc all_lib all_bin
 echo all_inc:%all_inc%
 echo all_lib:%all_lib%
@@ -40,8 +31,8 @@ echo all_bin:%all_bin%
 set include=%all_inc%;%include%
 set lib=%all_lib%;%lib%
 set path=%all_bin%;%path%
-@rem call:php_server_install "%software_dir%" E:\program
 
+call :bat_start "%tools_addr%" "%tools_dir%"  %home_dir%  "%software_urls%" "%software_dir%"
 goto :eof
 
 @rem YellowBackground    6f  ef
@@ -72,13 +63,15 @@ goto :eof
     set install_dir=%dst_dir%/%src_dir%
     if not exist dyzbuild (
         md dyzbuild
+    ) else (
+        del dyzbuild/* /s /q
     )
     call:color_text 2f "++++++++++++++cmake_install++++++++++++++"
     echo %0 %src_dir% %dst_dir% %cur_flags% %install_dir%
     pushd dyzbuild
         echo cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
         cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
-        cmake --build .
+        cmake --build . --config %build_type%
         cmake --install .
     popd
     endlocal
@@ -246,15 +239,11 @@ goto :eof
     call :color_text 2f "++++++++++++++get_dir_by_zip++++++++++++++"
     @rem for /f "tokens=8 delims= " %%i in ('unzip -v %zip_file%') do ( echo %%~i )
     set FileDir=
-    set file_name=
-    echo "    unzip -v %zip_file% | gawk -F" "  "{ print $8 } " | gawk  -F"/" "{ print $1 }"    "
-    FOR /F "usebackq" %%i IN (` unzip -v %zip_file% ^| gawk -F" "  "{ print $8 } " ^| gawk  -F"/" "{ print $1 }" ^| sed -n "5p" `) DO ( set FileDir=%%i )
-    @rem echo zip_file:%zip_file% FileDir:!FileDir!
-    call :is_contain "%zip_file%" "%FileDir%" file_name
-    if "%file_name%" == "false" (
-        call :color_text 4f "-------------get_dir_by_zip--------------"
-        echo zip_file:%zip_file% FileDir:%FileDir%
-    )
+    @rem unzip -v %zip_file% | gawk -F" "  "{ print $8 } " | gawk  -F"/" "{ print $1 }" | sed -n "4p"
+    echo zip_file:%zip_file%
+    FOR /F "usebackq" %%i IN (` unzip -v %zip_file% ^| gawk -F" "  "{ print $8 } " ^| gawk  -F"/" "{ print $1 }" ^| sed -n "4p" `) DO (set FileDir=%%i)
+    echo FileDir:!FileDir!
+    echo FileDir:%FileDir%
     endlocal & set %~2=%FileDir%
 goto :eof
 
@@ -373,11 +362,11 @@ goto :eof
     endlocal & set %~3=%ret%
 goto :eof
 
-:download_package
+:tools_install
     setlocal ENABLEDELAYEDEXPANSION
     set tools_addr="%1"
     set tools_dir="%2"
-    call :color_text 2f "++++++++++++++download_package++++++++++++++"
+    call :color_text 2f "++++++++++++++tools_install++++++++++++++"
     echo %tools_addr%    %tools_dir%
     if not exist %tools_dir% (
         md %tools_dir%
@@ -392,7 +381,7 @@ goto :eof
         if not exist !file_name! (
             wget %%i
         )
-        @rem unzip -q -o !file_name!
+        unzip -q -o !file_name!
     )
     popd
     endlocal
@@ -407,11 +396,11 @@ goto :eof
     call :get_suf_sub_str !package_name! . ext_name
     echo ext_name:!ext_name!
     if "%ext_name%" == "zip" (
-        call :zip_file_install  !package_name!  !home_dir!  "-DCMAKE_BUILD_TYPE=%build_type%"  ""
+        call :zip_file_install  !package_name!  !home_dir!  -DCMAKE_BUILD_TYPE=%build_type%  ""
     ) else if "%ext_name%" == "gz" (
-        call :tar_file_install  !package_name!  !home_dir!  "-DCMAKE_BUILD_TYPE=%build_type%"  ""
+        call :tar_file_install  !package_name!  !home_dir!  -DCMAKE_BUILD_TYPE=%build_type%  ""
     ) else if "%ext_name%" == "xz" (
-        call :tar_file_install  !package_name!  !home_dir!  "-DCMAKE_BUILD_TYPE=%build_type%"  ""
+        call :tar_file_install  !package_name!  !home_dir!  -DCMAKE_BUILD_TYPE=%build_type%  ""
     ) else (
         echo "%ext_name%"
     )
@@ -423,48 +412,20 @@ goto :eof
     set tools_addr="%1"
     set tools_dir="%2"
     set home_dir=%3
+    set soft_addr="%4"
+    set soft_dir="%5"
     call :color_text 2f "++++++++++++++bat_start++++++++++++++"
-    echo %tools_addr%    %tools_dir%
-    @rem call :download_package "%tools_addr%" "%tools_dir%"
-    if not exist %tools_dir% (
-        md %tools_dir%
-    )
-    pushd %tools_dir%
+    echo "%tools_addr%" "%tools_dir%" %home_dir%
+    call :tools_install "%tools_addr%" "%tools_dir%"
+    call :tools_install "%soft_addr%" "%soft_dir%"
+    pushd %soft_dir%
     for /f %%i in ( 'dir /b *.zip' ) do (
         set zip_file=%%i
-        call :zip_file_install  !zip_file!  %home_dir%  "-DCMAKE_BUILD_TYPE=%build_type%"  ""
-    )
-    for /f %%i in ( 'dir /b *.tar.*' ) do (
-        set tar_file=%%i
-        call :tar_file_install  !tar_file!  %home_dir%  "-DCMAKE_BUILD_TYPE=%build_type%"  ""
+        call :zip_file_install  !zip_file!  !home_dir!  "-DCMAKE_BUILD_TYPE=!build_type!"  ""
     )
     popd
     endlocal
+    pause
 goto :eof
 
-:php_server_install
-    set tools_dir=%1
-    set home_dir=%2
-    pushd %tools_dir%
-        call:install_package xz-5.2.5.tar.gz       "%home_dir%"
-        call:install_package libiconv-1.17.tar.gz  "%home_dir%" 
-        call:install_package libxml2-2.9.14.tar.gz "%home_dir%" "" "$(GetInstallMethod "libxml2-2.9.14.tar.xz")"
-        @rem CopyPcFile "libxml2-2.9.14.tar.gz"    "%home_dir%"
-        call:install_package sqlite-autoconf-3390000.tar.gz "%home_dir%"
-        call:install_package openssl-3.0.5.tar.gz           "%home_dir%"
-        call:install_package curl-7.84.0.tar.gz             "%home_dir%"
-        call:install_package lua-5.4.4.tar.gz               "%home_dir%"  #INSTALL_TOP=%home_dir%/lua54
-        call:install_package apr-1.7.0.tar.gz               "%home_dir%"  "" "$(GetInstallMethod "apr-1.7.0.tar.gz")"
-        call:install_package expat-2.4.8.tar.gz             "%home_dir%"  "" "$(GetInstallMethod "expat-2.4.8.tar.gz")"
-        call:install_package apr-util-1.6.1.tar.gz          "%home_dir%"  "--with-apr=%home_dir%/apr-1_7_0" "$(GetInstallMethod "apr-util-1.6.1.tar.gz")"
-        @rem FixApachePkg
-        call:install_package apache_1.3.42.tar.gz           "%home_dir%"  "" "$(GetInstallMethod "apache_1.3.42.tar.gz")"
-        call:install_package httpd-2.4.54.tar.gz            "%home_dir%"  "--with-apr=%home_dir%/apr-1_7_0 --enable-module=most --enable-mods-shared=all --enable-so --enable-include --enable-headers" "$(GetInstallMethod "httpd-2.4.54.tar.gz")" 
-        call:install_package php-8.1.7.tar.gz               "%home_dir%"  "--with-apxs2=%home_dir%/httpd-2_4_54/bin/apxs --with-openssl-dir=%home_dir%/openssl-3_0_5 --with-curl=%home_dir%/curl-7_84_0" ""
-        @rem PhpSslModule #<?php phpinfo() ?>
-        @rem PhpCurlModule
-        @rem GenComposerInstaller
-        call:install_package xdebug-3.1.5.tar.gz "%home_dir%" "--enable-xdebug --enable-xdebug-dev"
-    popd
-goto :eof
 
