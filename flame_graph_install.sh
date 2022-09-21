@@ -16,11 +16,14 @@ function FlameGraphInstall()
     # wget https://codeload.github.com/brendangregg/FlameGraph/zip/refs/heads/master -O FlameGraph-master.zip
     unzip FlameGraph-master.zip
 }
-CUR_USER_HOME_DIR=${HOME}
+CUR_USER_HOME_DIR=/home/duyongze #${HOME}
 PERF_HOME="${CUR_USER_HOME_DIR}/flame/perf-5.15.0/tools/perf"
+#PERF_HOME="/usr/bin"
+#PERF_HOME="/usr/src/linux-source-5.4.0/linux-source-5.4.0/tools/perf"
 FLAME_GRAPH_HOME="${CUR_USER_HOME_DIR}/flame/FlameGraph-master"
 EXEC_PATH="$(pwd)/enum_test" # 长时间运行
 
+${PERF_HOME}/perf test
 g++ $(pwd)/enum.cc -ggdb -Wl,--build-id -o ${EXEC_PATH}
 
 #cat /proc/version_signature
@@ -42,8 +45,9 @@ function FlameGraphExec()
     echo -e "\033[32m ${PERF_HOME}/perf buildid-cache -a $(GetBuildIdDir ${ExecPath}) \033[0m"
     #perf record -F 99 -g --call-graph dwarf ${ExecPath}
     ${PERF_HOME}/perf record -g -a -F 99 -o ${ExecPath}.data ${ExecPath}
-    #sudo chown du:du ${ExecPath}.data
+    #sudo chown duyongze:duyongze ${ExecPath}.data
     ${PERF_HOME}/perf buildid-list -i ${ExecPath}.data
+    ${PERF_HOME}/perf report -i ${ExecPath}.data
     ${PERF_HOME}/perf script -i ${ExecPath}.data > ${ExecPath}.perf
     #sudo chown root:root ${ExecPath}.perf
 
@@ -53,9 +57,11 @@ function FlameGraphExec()
 
 function FlameGraphCfg()
 {
+    sudo echo 0 > /proc/sys/kernel/kptr_restrict
     #sudo sh -c "echo -1 > /proc/sys/kernel/perf_event_paranoid"
-    #sudo sysctl -w kernel.perf_event_paranoid=-1
-    #sudo cat /proc/sys/kernel/perf_event_paranoid
+    sudo sysctl -w kernel.perf_event_paranoid=-1
+    sudo cat /proc/sys/kernel/perf_event_paranoid
+    sudo cat /proc/sys/kernel/kptr_restrict
     #sudo ls  /sys/kernel/debug/tracing/events
     #${PERF_HOME}/perf report --stdio
     ${PERF_HOME}/perf buildid-cache -l
