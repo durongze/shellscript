@@ -10,61 +10,78 @@ echo "set CXX_FLAGS=-g"
 #https://www.spinics.net/lists//linux-perf-users/msg04247.html
 #https://www.php.cn/manual/view/35171.html
 #https://blog.csdn.net/wonderdaydream/article/details/120998132
+#https://blog.csdn.net/lihui49/article/details/124998574
 
 function FlameGraphInstall()
 {
     # wget https://codeload.github.com/brendangregg/FlameGraph/zip/refs/heads/master -O FlameGraph-master.zip
     unzip FlameGraph-master.zip
 }
-CUR_USER_HOME_DIR=/home/duyongze #${HOME}
-PERF_HOME="${CUR_USER_HOME_DIR}/flame/perf-5.15.0/tools/perf"
-#PERF_HOME="/usr/bin"
-#PERF_HOME="/usr/src/linux-source-5.4.0/linux-source-5.4.0/tools/perf"
-FLAME_GRAPH_HOME="${CUR_USER_HOME_DIR}/flame/FlameGraph-master"
-EXEC_PATH="$(pwd)/enum_test" # 长时间运行
-
-${PERF_HOME}/perf test
-g++ $(pwd)/enum.cc -ggdb -Wl,--build-id -o ${EXEC_PATH}
-
-#cat /proc/version_signature
-# sudo apt-get install linux-image-$(uname -r)-dbgsym
-# ls "/usr/lib/debug/boot/vmlinux-$(uname -r)"
 
 function GetBuildIdDir()
 {
     ProcName=$1
     BuildIdDirPrefix="/usr/lib/debug/.build-id"
+    BuildIdDirPrefix="/home/${CUR_USER_NAME}/.debug/.build-id"
     BuildId=$(readelf -n ${ProcName} | grep "Build ID" | cut -d':' -f2)
-    echo "$BuildIdDirPrefix/$BuildId"
+    echo "$BuildIdDirPrefix/${BuildId}"
+}
+
+function FlameGraphTest()
+{
+    FlameGraphHome=$1
+    ExecPath=$2
+    CaseName=$3
+    sudo ${PERF_HOME}/perf test
+    sudo ${PERF_HOME}/perf record -g -a -F 99 -o ${CaseName}.data ${ExecPath} "x" *
+    sudo chown ${CUR_USER_NAME}:${CUR_USER_NAME} ${CaseName}.data
+    ${PERF_HOME}/perf buildid-list -i ${CaseName}.data
+    ${PERF_HOME}/perf report -i ${CaseName}.data
 }
 
 function FlameGraphExec()
 {
     FlameGraphHome=$1
     ExecPath=$2
+    CaseName=$3
     echo -e "\033[32m ${PERF_HOME}/perf buildid-cache -a $(GetBuildIdDir ${ExecPath}) \033[0m"
     #perf record -F 99 -g --call-graph dwarf ${ExecPath}
-    ${PERF_HOME}/perf record -g -a -F 99 -o ${ExecPath}.data ${ExecPath}
-    #sudo chown duyongze:duyongze ${ExecPath}.data
-    ${PERF_HOME}/perf buildid-list -i ${ExecPath}.data
-    ${PERF_HOME}/perf report -i ${ExecPath}.data
-    ${PERF_HOME}/perf script -i ${ExecPath}.data > ${ExecPath}.perf
-    #sudo chown root:root ${ExecPath}.perf
+    ${PERF_HOME}/perf record -g -a -F 99 -o ${CaseName}.data ${ExecPath} "x" *
+    #sudo chown ${CUR_USER_NAME}:${CUR_USER_NAME} ${CaseName}.data
+    ${PERF_HOME}/perf buildid-list -i ${CaseName}.data
+    #${PERF_HOME}/perf report -i ${CaseName}.data
+    ${PERF_HOME}/perf script -i ${CaseName}.data > ${CaseName}.perf
+    #sudo chown ${CUR_USER_NAME}:${CUR_USER_NAME} ${CaseName}.perf
 
-    ${FlameGraphHome}/stackcollapse-perf.pl ${ExecPath}.perf > ${ExecPath}.folded
-    ${FlameGraphHome}/flamegraph.pl ${ExecPath}.folded > ${ExecPath}.svg
+    ${FlameGraphHome}/stackcollapse-perf.pl ${CaseName}.perf > ${CaseName}.folded
+    ${FlameGraphHome}/flamegraph.pl ${CaseName}.folded > ${CaseName}.svg
+}
+
+function FlameGraphCfgShow()
+{
+    echo -e "\033[32m =================================== \033[0m"
+    sudo cat /proc/sys/kernel/perf_event_paranoid
+    sudo cat /proc/sys/kernel/kptr_restrict
+    sudo cat /proc/kallsyms | head -10
+    cat /proc/modules | head -5
+
+    #sudo ls  /sys/kernel/debug/tracing/events
+    #${PERF_HOME}/perf report --stdio
+    ${PERF_HOME}/perf buildid-cache -l
 }
 
 function FlameGraphCfg()
 {
-    sudo echo 0 > /proc/sys/kernel/kptr_restrict
+    # /etc/sysctl.conf # kernel.kptr_restrict=0         # sysctl -p /etc/sysctl.conf
+    # /etc/sysctl.conf # kernel.perf_event_paranoid=-1  # sysctl -p /etc/sysctl.conf
+
+    #sudo echo 0 > /proc/sys/kernel/kptr_restrict
     #sudo sh -c "echo -1 > /proc/sys/kernel/perf_event_paranoid"
+
+    FlameGraphCfgShow
+    sudo sysctl -w kernel.kptr_restrict=0  
     sudo sysctl -w kernel.perf_event_paranoid=-1
-    sudo cat /proc/sys/kernel/perf_event_paranoid
-    sudo cat /proc/sys/kernel/kptr_restrict
-    #sudo ls  /sys/kernel/debug/tracing/events
-    #${PERF_HOME}/perf report --stdio
-    ${PERF_HOME}/perf buildid-cache -l
+    FlameGraphCfgShow
 }
 
 function LibDwarfInstall()
@@ -222,6 +239,30 @@ function PreCfgEnv()
     mkdir ${CUR_USER_HOME_DIR}/opt/{libelf,libcap,zstd,elfutils,binutils,numactl,elfutils,libdwarf,dwarf,libunwind,libarchive,xz}
 }
 
+export LIBDW_DIR=${CUR_USER_HOME_DIR}/opt/elfutils
+
+fileList="bin binutils boost_1_72_0 dwarf elfutils flame_graph libbfd libcap libelf libtool libunwind numactl openssl_1_0_0s"
+fileList="" # ${fileList} openssl_1_1_1p_bak p7zip perf python_2_7_18 python_2_7_18_a qt_5_15_5 ruby ruby_1_8_7 xz zstd"
+for tmpFile in ${fileList}
+do
+    TMP_FILE_HOME=${CUR_USER_HOME_DIR}/opt/${tmpFile}
+    export C_INCLUDE_PATH=${TMP_FILE_HOME}/include:${C_INCLUDE_PATH}
+    export CPLUS_INCLUDE_PATH=${TMP_FILE_HOME}/include:${CPLUS_INCLUDE_PATH}
+    export CMAKE_INCLUDE_PATH=${TMP_FILE_HOME}/include:${CPLUS_INCLUDE_PATH}
+    export LIBRARY_PATH=${TMP_FILE_HOME}/lib:${LIBRARY_PATH}
+    export LIBRARY_PATH=${TMP_FILE_HOME}/lib64:${LIBRARY_PATH}
+    export CMAKE_LIBRARY_PATH=${TMP_FILE_HOME}/lib:${LIBRARY_PATH}
+    export CMAKE_LIBRARY_PATH=${TMP_FILE_HOME}/lib64:${LIBRARY_PATH}
+    export LD_LIBRARY_PATH=${TMP_FILE_HOME}/lib:${LD_LIBRARY_PATH}
+    export LD_LIBRARY_PATH=${TMP_FILE_HOME}/lib64:${LD_LIBRARY_PATH}
+    export PKG_CONFIG_PATH=${TMP_FILE_HOME}/lib/pkgconfig/:${PKG_CONFIG_PATH}
+    export PKG_CONFIG_PATH=${TMP_FILE_HOME}/lib64/pkgconfig/:${PKG_CONFIG_PATH}
+    export CMAKE_MODULE_PATH=${TMP_FILE_HOME}/lib/cmake/:${CMAKE_MODULE_PATH}
+    export PATH=${TMP_FILE_HOME}/bin:${TMP_FILE_HOME}/sbin:$PATH
+done
+
+
+
 #PreCfgEnv
 #exit 
 
@@ -238,9 +279,30 @@ function PreCfgEnv()
 #LibarchiveInstall
 #SystemTabInstall
 #FlameGraphInstall
-PerfInstall
+#PerfInstall
 #FlameGraphCfg
-ELF_LIB_DIR="${CUR_USER_HOME_DIR}/opt/elfutils/lib"
-export LD_LIBRARY_PATH=${ELF_LIB_DIR}:$LD_LIBRARY_PATH
-ls ${ELF_LIB_DIR}
-FlameGraphExec "$FLAME_GRAPH_HOME" "$EXEC_PATH"
+
+CUR_USER_NAME="duyongze" #${HOME}
+CUR_USER_HOME_DIR="/home/${CUR_USER_NAME}" #${HOME}
+
+PERF_HOME="${CUR_USER_HOME_DIR}/flame/perf-5.15.0/tools/perf"
+#PERF_HOME="/usr/bin"
+#PERF_HOME="/usr/src/linux-source-5.4.0/linux-source-5.4.0/tools/perf"
+FLAME_GRAPH_HOME="${CUR_USER_HOME_DIR}/flame/FlameGraph-master"
+
+EXEC_PATH="$(pwd)/enum_test" # 长时间运行
+
+g++ -g $(pwd)/enum.cc -ggdb -Wl,--build-id -o enum_test
+
+#cat /proc/version_signature
+# sudo apt-get install linux-image-$(uname -r)-dbgsym
+# ls "/usr/lib/debug/boot/vmlinux-$(uname -r)"
+
+WorkDir=(pwd)
+WorkDir=${CUR_USER_HOME_DIR}/code/
+pushd ${WorkDir}
+    make
+    EXEC_PATH=main_test
+    FlameGraphExec "$FLAME_GRAPH_HOME" "$EXEC_PATH"  "10"
+    #FlameGraphTest "$FLAME_GRAPH_HOME" "$EXEC_PATH" "10"
+popd
