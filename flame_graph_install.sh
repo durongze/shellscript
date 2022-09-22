@@ -22,7 +22,7 @@ function GetBuildIdDir()
 {
     ProcName=$1
     BuildIdDirPrefix="/usr/lib/debug/.build-id"
-    BuildIdDirPrefix="/home/${CUR_USER_NAME}/.debug/.build-id"
+    BuildIdDirPrefix="${CUR_USER_HOME_DIR}/.debug/.build-id"
     BuildId=$(readelf -n ${ProcName} | grep "Build ID" | cut -d':' -f2)
     echo "$BuildIdDirPrefix/${BuildId}"
 }
@@ -33,7 +33,7 @@ function FlameGraphTest()
     ExecPath=$2
     CaseName=$3
     sudo ${PERF_HOME}/perf test
-    sudo ${PERF_HOME}/perf record -g -a -F 99 -o ${CaseName}.data ${ExecPath} "x" *
+    sudo ${PERF_HOME}/perf record -g -a -F 99 -o ${CaseName}.data ${ExecPath} "*${CaseName}*"
     sudo chown ${CUR_USER_NAME}:${CUR_USER_NAME} ${CaseName}.data
     ${PERF_HOME}/perf buildid-list -i ${CaseName}.data
     ${PERF_HOME}/perf report -i ${CaseName}.data
@@ -46,7 +46,7 @@ function FlameGraphExec()
     CaseName=$3
     echo -e "\033[32m ${PERF_HOME}/perf buildid-cache -a $(GetBuildIdDir ${ExecPath}) \033[0m"
     #perf record -F 99 -g --call-graph dwarf ${ExecPath}
-    ${PERF_HOME}/perf record -g -a -F 99 -o ${CaseName}.data ${ExecPath} "x" *
+    ${PERF_HOME}/perf record -g -a -F 99 -o ${CaseName}.data ${ExecPath} "*${CaseName}*"
     #sudo chown ${CUR_USER_NAME}:${CUR_USER_NAME} ${CaseName}.data
     ${PERF_HOME}/perf buildid-list -i ${CaseName}.data
     #${PERF_HOME}/perf report -i ${CaseName}.data
@@ -226,7 +226,7 @@ function LibarchiveInstall()
 
 function XzLzmaInstall()
 {
-        wget https://udomain.dl.sourceforge.net/project/lzmautils/xz-5.2.6.tar.gz
+        #wget https://udomain.dl.sourceforge.net/project/lzmautils/xz-5.2.6.tar.gz
         tar xf xz-5.2.5.tar.gz
         pushd xz-5.2.5
         ./configure --prefix=${CUR_USER_HOME_DIR}/opt/xz  --enable-shared
@@ -262,47 +262,58 @@ do
 done
 
 
+function InstallFlameGraphDep()
+{
+    #PreCfgEnv
+    #XzLzmaInstall
+    #ZstdInstall
+    #LibunwindInstall
+    #LibelfInstall
+    #ElfUtilsInstall
+    #NumaInstall
+    #LibbfdInstall
+    #LibDwarfInstall
+    #DwarfInstall
+    #LibcapInstall
+    #LibarchiveInstall
+    #SystemTabInstall
+    #FlameGraphInstall
+    PerfInstall
+    #FlameGraphCfg
 
-#PreCfgEnv
-#exit 
+    # cat /proc/version_signature
+    # sudo apt-get install linux-image-$(uname -r)-dbgsym
+    # ls "/usr/lib/debug/boot/vmlinux-$(uname -r)"
+}
 
-#XzLzmaInstall
-#ZstdInstall
-#LibunwindInstall
-#LibelfInstall
-#ElfUtilsInstall
-#NumaInstall
-#LibbfdInstall
-#LibDwarfInstall
-#DwarfInstall
-#LibcapInstall
-#LibarchiveInstall
-#SystemTabInstall
-#FlameGraphInstall
-#PerfInstall
-#FlameGraphCfg
+function RunProj()
+{
+    WorkDir=$1
+    CaseName=$2
+    pushd ${WorkDir}
+        make
+        EXEC_PATH=main_test
+        FlameGraphExec "$FLAME_GRAPH_HOME" "$EXEC_PATH"  "${CaseName}"
+        #FlameGraphTest "$FLAME_GRAPH_HOME" "$EXEC_PATH" "${CaseName}"
+    popd
+}
+
+function RunTest()
+{
+    g++ -g $(pwd)/enum.cc -ggdb -Wl,--build-id -o enum_test
+    EXEC_PATH="$(pwd)/enum_test"
+    FlameGraphExec "$FLAME_GRAPH_HOME" "$EXEC_PATH"  "10"
+    #FlameGraphTest "$FLAME_GRAPH_HOME" "$EXEC_PATH" "10"
+}
 
 CUR_USER_NAME="duyongze" #${HOME}
 CUR_USER_HOME_DIR="/home/${CUR_USER_NAME}" #${HOME}
 
 PERF_HOME="${CUR_USER_HOME_DIR}/flame/perf-5.15.0/tools/perf"
-#PERF_HOME="/usr/bin"
-#PERF_HOME="/usr/src/linux-source-5.4.0/linux-source-5.4.0/tools/perf"
+PERF_HOME="${CUR_USER_HOME_DIR}/opt/perf/bin"
+
 FLAME_GRAPH_HOME="${CUR_USER_HOME_DIR}/flame/FlameGraph-master"
 
-EXEC_PATH="$(pwd)/enum_test" # 长时间运行
+# InstallFlameGraphDep
+RunProj "${CUR_USER_HOME_DIR}/code/" "case_name"
 
-g++ -g $(pwd)/enum.cc -ggdb -Wl,--build-id -o enum_test
-
-#cat /proc/version_signature
-# sudo apt-get install linux-image-$(uname -r)-dbgsym
-# ls "/usr/lib/debug/boot/vmlinux-$(uname -r)"
-
-WorkDir=(pwd)
-WorkDir=${CUR_USER_HOME_DIR}/code/
-pushd ${WorkDir}
-    make
-    EXEC_PATH=main_test
-    FlameGraphExec "$FLAME_GRAPH_HOME" "$EXEC_PATH"  "10"
-    #FlameGraphTest "$FLAME_GRAPH_HOME" "$EXEC_PATH" "10"
-popd
