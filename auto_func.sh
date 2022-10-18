@@ -5,17 +5,21 @@ function CMakeInstall()
     SrcDir=$1
     DstDir=$2
     CurFlags="$3"
-    InstallDir=$(echo $SrcDir | tr -s "." "_")
+    InstallDir=$(echo $DstDir/$SrcDir | tr -s "." "_")
+    InstallDir=${InstallDir//\/_\///}
+
     if [[ ! -d dyzbuild ]];then
         mkdir dyzbuild
-    fi
+    fi  
     pushd dyzbuild
-        #export CXXFLAGS="-fPIC" && cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags    ..
-        #echo -e "\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags \033[0m"
-        CmdStr="export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags"
-        export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags 
-        make  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr "; exit 1; }
-        make install  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr "; exit 1; }
+        #export CXXFLAGS="-fPIC" && cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -DCMAKE_INSTALL_PREFIX=$InstallDir $CurFlags    ..
+        #echo -e "\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$InstallDir $CurFlags \033[0m"
+        CmdStr="\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$InstallDir $CurFlags \033[0m"
+        ErrStr="$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr "
+        echo -e "$CmdStr"
+        export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=$InstallDir $CurFlags 
+        make  || { echo -e "$ErrStr"; exit 1; }
+        make install  || { echo -e "$ErrStr"; exit 1; }
     popd
 }
 
