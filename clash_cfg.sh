@@ -59,7 +59,7 @@ function UpdateClashYaml()
 	
 	for yamlFile in $(ls $yamlDir)
     do
-		echo "mv $yamlDir/$yamlFile $CLASH_CFG_FILE "
+		echo "cp $yamlDir/$yamlFile $CLASH_CFG_FILE "
 	done
 }
 
