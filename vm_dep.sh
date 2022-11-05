@@ -53,17 +53,48 @@ function FtpGnuDownloadDep()
     done
 }
 
+function UnzipAllPkg()
+{
+    PkgDirName=$1
+    AllPkgFile=$(ls -l | grep "^-")
+    for pkg in $AllPkgFile
+    do
+        case $pkg in
+            *.zip)
+                unzip $pkg 
+                ;;
+            *.tar.*)
+                tar xf $pkg
+                ;;
+            *)
+                ;;
+        esac;
+    done
+}
+
+function GetSubDirList()
+{
+    PkgDirName=$1
+    AllPkgDir=$(ls -l $PkgDirName | grep "^d" | awk -F' ' '{print $NF}')
+    echo "${AllPkgDir}"
+}
 function CompilePkgByDir()
 {
     PkgDirName=$1
     DstDirPrefix=$2
-    for dir in $(ls -d ${PkgDirName}/*/)
+    AllPkgDir=$(GetSubDirList "${PkgDirName}")
+    if [ "$AllPkgDir" == "" ];then
+        UnzipAllPkg "$PkgDirName"
+        AllPkgDir=$(GetSubDirList "${PkgDirName}")
+    fi
+    for dir in $AllPkgDir
     do
-        if [[ $dir == *pthread-win32* ]];then
+        if [[ $dir != *zlib* ]];then
             echo "Skip $dir..........................."
             continue
+        else
+            AutoInstall "$dir" "$DstDirPrefix" ""
         fi
-        AutoInstall "$dir" "$DstDirPrefix" ""
     done
 }
 
