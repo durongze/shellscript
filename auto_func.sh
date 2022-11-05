@@ -1,22 +1,33 @@
 #!/bin/bash
 
+function MakeDir()
+{
+    SrcDir=$1
+    if [ ! -d $SrcDir ];then
+        mkdir -p $SrcDir
+    fi
+    pushd $SrcDir >>/dev/null
+    pwd $SrcDir
+    popd >>/dev/null
+}
+
 function CMakeInstall()
 {
     SrcDir=$1
     DstDir=$2
     CurFlags="$3"
-    InstallDir=$(echo $DstDir/$SrcDir | tr -s "." "_")
-    InstallDir=${InstallDir//\/_\///}
-
+    InstallDir=$(echo "$DstDir/$SrcDir" | tr -s "." "_")
+    InstallDir=${InstallDir/\/\_\//}
+    echo $InstallDir
     if [[ ! -d dyzbuild ]];then
         mkdir dyzbuild
-    fi  
+    fi
     pushd dyzbuild
         #export CXXFLAGS="-fPIC" && cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -DCMAKE_INSTALL_PREFIX=$InstallDir $CurFlags    ..
         #echo -e "\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$InstallDir $CurFlags \033[0m"
         CmdStr="\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$InstallDir $CurFlags \033[0m"
+        echo -e $CmdStr
         ErrStr="$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr "
-        echo -e "$CmdStr"
         export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=$InstallDir $CurFlags 
         make  || { echo -e "$ErrStr"; exit 1; }
         make install  || { echo -e "$ErrStr"; exit 1; }
@@ -28,7 +39,8 @@ function AutoGenInstall()
     SrcDir=$1
     DstDir=$2
     CurFlags="$3"
-    InstallDir=$(echo $SrcDir | tr -s "." "_")
+    InstallDir=$(echo "$DstDir/$SrcDir" | tr -s "." "_")
+    InstallDir=${InstallDir/\/\_\//}
     if [ -f ./autogen.sh ];then
         ./autogen.sh
     elif [ -f ./buildconf ];then
@@ -42,11 +54,12 @@ function AutoGenInstall()
     fi
     pushd dyzbuild
         dos2unix ../configure && export CXXFLAGS="-fPIC"
-        #echo -e "\033[32m ../configure --prefix=$DstDir/$InstallDir $CurFlags \033[0m" 
-        CmdStr="../configure --prefix=$DstDir/$InstallDir $CurFlags" 
-        ../configure --prefix=$DstDir/$InstallDir $CurFlags  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-        make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-        make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
+        CmdStr="\033[32m ../configure --prefix=$InstallDir $CurFlags \033[0m" 
+        echo -e $CmdStr
+        ErrStr="$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr "
+        ../configure --prefix=$InstallDir $CurFlags  || { echo -e "$ErrStr"; exit 1; }
+        make   || { echo -e "$ErrStr"; exit 1; }
+        make install   || { echo -e "$ErrStr"; exit 1; }
     popd
 }
 
@@ -55,17 +68,19 @@ function CfgInstall()
     SrcDir=$1
     DstDir=$2
     CurFlags="$3"
-    InstallDir=$(echo $SrcDir | tr -s "." "_")
+    InstallDir=$(echo "$DstDir/$SrcDir" | tr -s "." "_")
+    InstallDir=${InstallDir/\/\_\//}
     if [[ ! -d dyzbuild ]];then
         mkdir dyzbuild
     fi
     pushd dyzbuild
         dos2unix ../configure && export CXXFLAGS="-fPIC"
-        echo -e "\033[32m ../configure --prefix=$DstDir/$InstallDir $CurFlags \033[0m" 
-        CmdStr="../configure --prefix=$DstDir/$InstallDir $CurFlags" 
-        ../configure --prefix=$DstDir/$InstallDir $CurFlags  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-        make   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
-        make install   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr"; exit 1; }
+        CmdStr="\033[32m ../configure --prefix=$InstallDir $CurFlags \033[0m" 
+        echo -e $CmdStr
+        ErrStr="$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} $CmdStr "
+        ../configure --prefix=$InstallDir $CurFlags  || { echo -e "$ErrStr"; exit 1; }
+        make   || { echo -e "$CmdStr"; exit 1; }
+        make install   || { echo -e "$CmdStr"; exit 1; }
     popd
 
 }
@@ -75,7 +90,10 @@ function AutoInstall()
     SrcDir=$1
     DstDir=$2
     CurFlags="$3"
-    InstallDir=$(echo $SrcDir | tr -s "." "_")
+
+    DstDir=$(MakeDir "$DstDir")
+    InstallDir=$(echo "$DstDir/$SrcDir" | tr -s "." "_")
+    InstallDir=${InstallDir/\/\_\//}
     pushd $SrcDir
     if [ -f CMakeLists.txt ];then
         CMakeInstall "$SrcDir" "$DstDir" "$CurFlags"
@@ -101,6 +119,8 @@ function SpecInstall()
     DstDir=$2
     CurFlags="$3"
     Method=$4
+
+    DstDir=$(MakeDir "$DstDir")
     InstallDir=$(echo $SrcDir | tr -s "." "_")
     if [[ $# -eq 4 ]];then
         echo -e "\033[32m $FUNCNAME $LINENO [$#]ARGS:$* \033[0m"
@@ -199,6 +219,7 @@ function TarXFFile()
     DstDir=$2
     CurFlags="$3"
     Method=$4
+    DstDir=$(MakeDir "$DstDir")
     case $PkgFile in
         *.tar.*)
             TarAndInstall "$PkgFile" "$DstDir" "$CurFlags" "$Method"
@@ -301,4 +322,3 @@ function GenEnvVar()
     echo "    export PATH=\${TMP_FILE_HOME}/bin:\${TMP_FILE_HOME}/sbin:\$PATH" >>${BASHRC}
     echo "done" >>${BASHRC}
 }
-
