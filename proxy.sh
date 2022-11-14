@@ -78,8 +78,13 @@ function FixDns()
 {
 
 } 
-#DownloadCode "$libev_url"
-CompileCode "$libev_dir"
-Run "$libev_dir/debian/config.json"
-ShareToWifi "192.168.137.11"
-SharedToSelf "serverip"
+
+#https://www.cnblogs.com/l-uz/p/15743040.html
+function SsrCfg()
+{
+  #DownloadCode "$libev_url"
+  CompileCode "$libev_dir"
+  Run "$libev_dir/debian/config.json"
+  ShareToWifi "192.168.137.11"
+  SharedToSelf "serverip"
+}
