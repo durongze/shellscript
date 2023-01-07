@@ -1,4 +1,5 @@
 #!/system/bin/sh
+#https://bulianglin.com/archives/android-gateway.html
 
 tun='tun0' #虚拟接口名称
 dev='wlan0' #物理接口名称，eth0、wlan0
