@@ -27,3 +27,6 @@ sudo docker load -i vmware_10.tar.gz
 #登录
 sudo docker login 192.168.99.141:1180
 sudo docker push 192.168.99.141:1180/vmware/photon:1.1
+#删除容器
+docker stop $(docker ps -a -q)
+docker rm $(docker ps -a -q)
