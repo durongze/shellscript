@@ -6,11 +6,11 @@ declare -A sermap=(["leptonica-1.82.0.tar.gz"]="AutoGenInstall"
                    ["apr-1.7.0.tar.gz"]="CfgInstall"
                    ["httpd-2.4.54.tar.gz"]="AutoGenInstall"
                    ["apr-util-1.6.1.tar.gz"]="AutoGenInstall"
-				  )
+                  )
 
 function GetInstallMethod()
 {
-	PkgFile=$1
+    PkgFile=$1
     Method=""
     for k in ${!sermap[@]}
     do
@@ -20,7 +20,7 @@ function GetInstallMethod()
             break
         fi
     done
-	echo $Method
+    echo $Method
 }
 
 function FixPkgCtx()
@@ -38,52 +38,52 @@ function FixPkgCtx()
 
 function DownloadSoftware()
 {
-	DownloadDir=$1
-	SoftwareUrls="$2"
-	if [ ! -d "$DownloadDir" ];then
-		mkdir $DownloadDir
-	fi
-	pushd $DownloadDir
-		for url in $SoftwareUrls
-		do
-			file=${url##*/}
-			if [ -f $file ];then
-				echo -e "\033[32m file : $file exist. \033[0m"
-				continue
-			fi
-			wget $url
-		done
-	popd
+    DownloadDir=$1
+    SoftwareUrls="$2"
+    if [ ! -d "$DownloadDir" ];then
+        mkdir $DownloadDir
+    fi
+    pushd $DownloadDir
+        for url in $SoftwareUrls
+        do
+            file=${url##*/}
+            if [ -f $file ];then
+                echo -e "\033[32m file : $file exist. \033[0m"
+                continue
+            fi
+            wget $url
+        done
+    popd
 }
 
 function GetTarFileDir()
 {
-	file=$1
+    file=$1
     FileDir=$(tar -tf $file | cut -f1 -d'/' | uniq | sed -n '1p')
-	echo $FileDir
+    echo $FileDir
 }
 
 function TryGetZipFileDir()
 {
-	file=$1
+    file=$1
     FileDir=$(unzip -v $file | awk '{print $8}' | grep "/$" | uniq | sed -n '1p' | awk -F'/' '{print $1}')
     echo $FileDir
 }
 
 function GetZipFileDir()
 {
-	file=$1
+    file=$1
     FileName=${file%.*}
     FileDir=$(TryGetZipFileDir "$file")
     if [ "$FileDir" != "$FileName" ];then
         FileDir=$FileName
     fi
-	echo $FileDir
+    echo $FileDir
 }
 
 function DecompressZipFile()
 {
-	file=$1
+    file=$1
     FileName=${file%.*}
     FileDir=$(TryGetZipFileDir "$file")
     if [ "$FileDir" == "$FileName" ];then
@@ -97,13 +97,13 @@ function DecompressZipFile()
 function GetInstallDir()
 {
     PkgFile=$1
-    SrcDir=""    
-	case $PkgFile in
+    SrcDir=""
+    case $PkgFile in
         *.tar.*)
-			SrcDir=$(GetTarFileDir "$PkgFile")
+            SrcDir=$(GetTarFileDir "$PkgFile")
             ;;
         *.zip)
-			SrcDir=$(GetZipFileDir "$PkgFile")
+            SrcDir=$(GetZipFileDir "$PkgFile")
             ;;
         *)
             ;;
@@ -118,16 +118,16 @@ function CMakeInstall()
     DstDir=$2
     CurFlags="$3"
     InstallDir=$(echo $SrcDir | tr -s "." "_")
-	if [[ ! -d dyzbuild ]];then
-	    mkdir dyzbuild
-	fi
-	pushd dyzbuild
-		CmdStr="\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags \033[0m"
-		#CmdStr="export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags"
-		export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags 
-		make  || { echo -e "$CmdStr"; exit 1; }
-		make install  || { echo -e "$CmdStr"; exit 1; }
-	popd
+    if [[ ! -d dyzbuild ]];then
+        mkdir dyzbuild
+    fi
+    pushd dyzbuild
+        CmdStr="\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags \033[0m"
+        #CmdStr="export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags"
+        export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags 
+        make  || { echo -e "$CmdStr"; exit 1; }
+        make install  || { echo -e "$CmdStr"; exit 1; }
+    popd
 }
 
 function AutoGenInstall()
@@ -136,13 +136,13 @@ function AutoGenInstall()
     DstDir=$2
     CurFlags="$3"
 
-	if [ -f ./autogen.sh ];then
-    	./autogen.sh
-	elif [ -f ./buildconf ];then
-    	./buildconf
-	elif [ -f ./config ];then
-    	cp ./config ./configure
-	fi
+    if [ -f ./autogen.sh ];then
+        ./autogen.sh
+    elif [ -f ./buildconf ];then
+        ./buildconf
+    elif [ -f ./config ];then
+        cp ./config ./configure
+    fi
     CfgInstall "$SrcDir" "$DstDir" "$CurFlags"
 }
 
@@ -152,9 +152,9 @@ function CfgInstall()
     DstDir=$2
     CurFlags="$3"
     InstallDir=$(echo $SrcDir | tr -s "." "_")
-	if [[ ! -d dyzbuild ]];then
-	    mkdir dyzbuild
-	fi
+    if [[ ! -d dyzbuild ]];then
+        mkdir dyzbuild
+    fi
     pushd dyzbuild
         dos2unix ../configure && export CXXFLAGS="-fPIC"
         CmdStr="\033[32m ../configure --prefix=$DstDir/$InstallDir $CurFlags \033[0m" 
@@ -209,33 +209,33 @@ function SpecInstall()
     SrcDir=$1
     DstDir=$2
     CurFlags="$3"
-	Method=$4
+    Method=$4
 
-	if [[ $# -eq 4 ]];then
-		echo -e "\033[31m $FUNCNAME $LINENO ARGS:$* \033[0m"
-	fi
+    if [[ $# -eq 4 ]];then
+        echo -e "\033[31m $FUNCNAME $LINENO ARGS:$* \033[0m"
+    fi
     pushd $SrcDir
         case $Method in
             [Cc][Mm]ake[Ii]nstall*)
-				CMakeInstall "$SrcDir" "$DstDir" "$CurFlags" 
+                CMakeInstall "$SrcDir" "$DstDir" "$CurFlags" 
                 ;;
             *[Aa]uto[Gg]en[Ii]nstall*)
-				AutoGenInstall "$SrcDir" "$DstDir" "$CurFlags" 
+                AutoGenInstall "$SrcDir" "$DstDir" "$CurFlags" 
                 ;;
-			*[Cc]fg[Ii]nstall*)
-				CfgInstall "$SrcDir" "$DstDir" "$CurFlags" 
-				;;
-			[Mm]ake[Ii]nstall*)
-				MakeInstall "$SrcDir" "$DstDir" "$CurFlags" 
-				;;
-			*[Pp]ython[Ii]nstall*)
-        		sudo python setup.py install 
-				;;
-			*)
-				echo -e "\033[31m Install $SrcDir failed, Method:$Method \033[0m"
-				;;
+            *[Cc]fg[Ii]nstall*)
+                CfgInstall "$SrcDir" "$DstDir" "$CurFlags" 
+                ;;
+            [Mm]ake[Ii]nstall*)
+                MakeInstall "$SrcDir" "$DstDir" "$CurFlags" 
+                ;;
+            *[Pp]ython[Ii]nstall*)
+                sudo python setup.py install 
+                ;;
+            *)
+                echo -e "\033[31m Install $SrcDir failed, Method:$Method \033[0m"
+                ;;
         esac;
-	popd
+    popd
 }
 
 function TarAndInstall()
@@ -243,16 +243,16 @@ function TarAndInstall()
     file=$1
     DstDirPrefix=$2
     CurFlags="$3"
-	Method=$4
-	
+    Method=$4
+    
     FileDir=$(GetTarFileDir "$file")
     echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
     tar xf $file
-	if [[ $Method == "" ]];then
-    	AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
-	else
-		SpecInstall "$FileDir" "$DstDirPrefix" "$CurFlags" "$Method"
-	fi
+    if [[ $Method == "" ]];then
+        AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
+    else
+        SpecInstall "$FileDir" "$DstDirPrefix" "$CurFlags" "$Method"
+    fi
 }
 
 function ZipAndInstall()
@@ -260,16 +260,16 @@ function ZipAndInstall()
     file=$1
     DstDirPrefix=$2
     CurFlags="$3"
-	Method=$4
+    Method=$4
 
     FileDir=$(GetZipFileDir "$file")
     echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
     DecompressZipFile "$file"
-	if [[ $Method == "" ]];then
-    	AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
-	else
-		SpecInstall "$FileDir" "$DstDirPrefix" "$CurFlags" "$Method"
-	fi
+    if [[ $Method == "" ]];then
+        AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
+    else
+        SpecInstall "$FileDir" "$DstDirPrefix" "$CurFlags" "$Method"
+    fi
 }
 
 function InstallPkgFile()
@@ -277,13 +277,13 @@ function InstallPkgFile()
     PkgFile=$1
     DstDirPrefix=$2
     CurFlags="$3"
-	Method=$4
+    Method=$4
     case $PkgFile in
         *.tar.*)
-			TarAndInstall "$PkgFile" "$DstDirPrefix" "$CurFlags" "$Method"
+            TarAndInstall "$PkgFile" "$DstDirPrefix" "$CurFlags" "$Method"
             ;;
         *.zip)
-			ZipAndInstall "$PkgFile" "$DstDirPrefix" "$CurFlags" "$Method"
+            ZipAndInstall "$PkgFile" "$DstDirPrefix" "$CurFlags" "$Method"
             ;;
     esac;
 }
@@ -291,7 +291,7 @@ function InstallPkgFile()
 function InstallPkgDir()
 {
     PkgDir=$1
-	DstDirPrefix=$2
+    DstDirPrefix=$2
     pushd $PkgDir
         SrcFileList=$(ls)
         for file in $SrcFileList
@@ -307,13 +307,13 @@ function InstallPkgDir()
 function CopyPcFile()
 {
     PkgFile=$1
-	DstDirPrefix=$2
+    DstDirPrefix=$2
 
-	DstDir=$(GetInstallDir "$PkgFile")
-	PcFileDir="$DstDirPrefix/$DstDir/lib/pkgconfig"
+    DstDir=$(GetInstallDir "$PkgFile")
+    PcFileDir="$DstDirPrefix/$DstDir/lib/pkgconfig"
     if [ ! -d $PcFileDir ];then
         mkdir -p $PcFileDir 
-	    echo -e "\033[31m find $SrcDir -iname \"*.pc\" | xargs -I {} cp {} $PcFileDir/ \033[0m"
+        echo -e "\033[31m find $SrcDir -iname \"*.pc\" | xargs -I {} cp {} $PcFileDir/ \033[0m"
         find $SrcDir -iname "*.pc" | xargs -I {} cp {} $PcFileDir/ 
     fi
 }

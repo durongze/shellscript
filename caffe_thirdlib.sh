@@ -1,19 +1,11 @@
 #!/bin/bash
-
+#boost 
+urls=$urls:https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip
 THIRD_LIBS=thirdlib
 
 function remove_tmp_dir()
 {
     ls -F | grep "/$" | xargs rm -rf 
-}
-
-function install_protobuf()
-{
-    echo -e "\033[32m $FUNCNAME \033[0m"
-    tar xf protobuf-2.6.1.tar.gz
-    pushd protobuf-2.6.1
-    ./configure --prefix=${HOME}/opt/protobuf261 && make && make install
-    popd
 }
 
 function install_leveldb()
@@ -31,13 +23,13 @@ function install_leveldb()
 function install_lmdb()
 {
     echo -e "\033[32m $FUNCNAME \033[0m"
-    tar xf lmdb-LMDB_0.9.18.tar.gz 
+    tar xf lmdb-LMDB_0.9.18.tar.gz
     pushd lmdb-LMDB_0.9.18/libraries/liblmdb
     mkdir ${HOME}/opt/liblmdb/lib -p
-    mkdir ${HOME}/opt/liblmdb/include -p  
+    mkdir ${HOME}/opt/liblmdb/include -p
     make
-    cp *.so *.a ${HOME}/opt/liblmdb/lib/  
-    cp *.h ${HOME}/opt/liblmdb/include/   
+    cp *.so *.a ${HOME}/opt/liblmdb/lib/
+    cp *.h ${HOME}/opt/liblmdb/include/
     popd
 }
 
@@ -49,6 +41,26 @@ function install_openblas()
     make clean
     make DYNAMIC_ARCH=1  NO_AFFINITY=1 NO_LAPACKE=1  NO_AVX2=1 
     make PREFIX=${HOME}/opt/OpenBLAS install
+    popd
+}
+
+function install_boost()
+{
+    echo -e "\033[32m $FUNCNAME \033[0m"
+    tar xf boost_1_64_0.tar.gz 
+    pushd boost_1_64_0
+    ./bootstrap.sh
+    ./b2
+    ./b2 install --prefix=${HOME}/opt/boost 
+    popd
+}
+
+function install_protobuf()
+{
+    echo -e "\033[32m $FUNCNAME \033[0m"
+    tar xf protobuf-2.6.1.tar.gz
+    pushd protobuf-2.6.1
+    ./configure --prefix=${HOME}/opt/protobuf261 && make && make install
     popd
 }
 
@@ -107,17 +119,6 @@ function install_python()
     ./configure --prefix=${HOME}/opt/python2714/   || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
     make  || { echo "$FUNCNAME $LINENO failed,${FUNCNAME[1]} ${BASH_LINENO[1]} "; exit 1; }
     make install
-    popd
-}
-
-function install_boost()
-{
-    echo -e "\033[32m $FUNCNAME \033[0m"
-    tar xf boost_1_64_0.tar.gz 
-    pushd boost_1_64_0
-    ./bootstrap.sh
-    ./b2
-    ./b2 install --prefix=${HOME}/opt/boost 
     popd
 }
 
@@ -211,6 +212,32 @@ function check_libs()
             #echo -e "\033[32mlib: $libfilter is exist.\033[0m" 
         fi  
     done    
+}
+
+function create_caffe_dep()
+{
+    #libboost_filesystem.so.1.64.0
+    #libboost_system.so.1.64.0
+    #libboost_thread.so.1.64.0
+    #libcaffe.so.1.0.0
+    #libcublas.so.8.0
+    #libcudart.so.8.0
+    #libcurand.so.8.0
+    ln -sf libgfortran.so.3 libgfortran.so
+    ln -sf libglog.so.0 libglog.so
+    ln -sf libhdf5_hl.so.0 libhdf5_hl.so
+    ln -sf libhdf5.so.5 libhdf5.so
+    ln -sf libleveldb.so.1 libleveldb.so
+    ln -sf libopenblas.so.0 libopenblas.so
+    ln -sf libopencv_core.so.3.3 libopencv_core.so
+    ln -sf libopencv_highgui.so.3.3 libopencv_highgui.so
+    ln -sf libopencv_imgcodecs.so.3.3 libopencv_imgcodecs.so
+    ln -sf libopencv_imgproc.so.3.3 libopencv_imgproc.so
+    ln -sf libopencv_ml.so.3.3 libopencv_ml.so
+    ln -sf libopencv_objdetect.so.3.3 libopencv_objdetect.so
+    ln -sf libopencv_videoio.so.3.3 libopencv_videoio.so
+    ln -sf libprotobuf.so.9 libprotobuf.so
+    ln -sf libsnappy.so.1 libsnappy.so
 }
 
 #pushd $THIRD_LIBS >>/dev/null
