@@ -1,4 +1,8 @@
 #!/bin/bash
+#boost 
+urls=$urls:https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip
+
+export OUT_DIR=${HOME}/opt
 
 . auto_install_func.sh
 
@@ -8,9 +12,10 @@ function install_leveldb()
     echo -e "\033[32m $FUNCNAME \033[0m"
     FileDir=$(GenFileNameByFile "$file")
     pushd $(echo $FileDir | tr -s "_" ".")
-    mkdir ${HOME}/opt/${FileDir} -p
-    cp out-shared ${HOME}/opt/${FileDir}/lib -a
-    cp include ${HOME}/opt/${FileDir}/ -a
+    AbsFileDir=${OUT_DIR}/${FileDir}
+    mkdir ${AbsFileDir} -p
+    cp out-shared ${AbsFileDir}/lib -a
+    cp include ${AbsFileDir}/ -a
     popd
 }
 
@@ -19,11 +24,13 @@ function install_lmdb()
     echo -e "\033[32m $FUNCNAME \033[0m"
     tar xf lmdb-LMDB_0.9.18.tar.gz
     pushd lmdb-LMDB_0.9.18/libraries/liblmdb
-    mkdir ${HOME}/opt/liblmdb/lib -p
-    mkdir ${HOME}/opt/liblmdb/include -p
+    FileDir=liblmdb
+    AbsFileDir=${OUT_DIR}/${FileDir}
+    mkdir ${AbsFileDir}/lib -p
+    mkdir ${AbsFileDir}/include -p
     make
-    cp *.so *.a ${HOME}/opt/liblmdb/lib/
-    cp *.h ${HOME}/opt/liblmdb/include/
+    cp *.so *.a ${AbsFileDir}/lib/
+    cp *.h ${AbsFileDir}/include/
     popd
 }
 
@@ -33,20 +40,22 @@ function install_openblas()
     echo -e "\033[32m $FUNCNAME \033[0m"
     FileDir=$(GenFileNameByFile "$file")
     pushd $(echo $FileDir | tr -s "_" ".")
-    make PREFIX=${HOME}/opt/${FileDir} install
+    AbsFileDir=${OUT_DIR}/${FileDir}
+    make PREFIX=${AbsFileDir} install
     popd
 }
 
 function install_boost()
 {
-    file=boost_1_69_0.tar.gz
+    file=$1
     echo -e "\033[32m $FUNCNAME \033[0m"
     tar xf $file 
     FileDir=$(GenFileNameByFile "$file")
     pushd $FileDir
+    AbsFileDir=${OUT_DIR}/${FileDir}
     ./bootstrap.sh
     ./b2
-    ./b2 install --prefix=${HOME}/opt/$FileDir
+    ./b2 install --prefix=${AbsFileDir}
     popd
 }
 
@@ -57,14 +66,14 @@ function install_caffe()
     pushd caffe-libcaffe-decode
     make clean
     make 
-    mkdir ${HOME}/opt -p
+    mkdir ${OUT_DIR} -p
     grep "CPU_ONLY" Makefile.config | grep "#" 
     if [ 0 -eq $? ];then
-        cp .build_release  ${HOME}/opt/caffe_gpu -a
-        cp include  ${HOME}/opt/caffe_gpu/ -a
+        cp .build_release  ${OUT_DIR}/caffe_gpu -a
+        cp include  ${OUT_DIR}/caffe_gpu/ -a
     else
-        cp .build_release  ${HOME}/opt/caffe_cpu -a
-        cp include  ${HOME}/opt/caffe_cpu/ -a
+        cp .build_release  ${OUT_DIR}/caffe_cpu -a
+        cp include  ${OUT_DIR}/caffe_cpu/ -a
     fi  
     popd
 }
@@ -115,25 +124,25 @@ GenFileNameVar "$(ls *.tar.* )"
 function install_all()
 {
     #sudo apt-get install autoconf libtool
-    #TarXFFile "cmake-3.3.2.tar.gz" "${HOME}/opt" ""
-    #TarXFFile "Python-2.7.14.tgz" "${HOME}/opt" ""
-    #TarXFFile "zlib-1.2.3.tar.gz" "${HOME}/opt" "--shared"
-    #TarXFFile "protobuf-3.6.1.tar.gz" "${HOME}/opt" ""
-    #TarXFFile "gflags-2.2.2.tar.gz" "${HOME}/opt" " CXXFLAGS=-fPIC "
-    #TarXFFile "glog-0.3.5.tar.gz" "${HOME}/opt" ""
-    #TarXFFile "googletest-release-1.8.1.tar.gz" "${HOME}/opt" ""
-    #TarXFFile "snappy-1.1.3.tar.gz" "${HOME}/opt" ""
-    #TarXFFile "leveldb-1.20.tar.gz" "${HOME}/opt" ""   # cp out-shared ${HOME}/opt/leveldb/lib -a # cp include ${HOME}/opt/leveldb -a
-    #install_leveldb
-    #install_lmdb
-    #TarXFFile "OpenBLAS-0.2.20.tar.gz" "${HOME}/opt" "DYNAMIC_ARCH=1  NO_AFFINITY=1 NO_LAPACKE=1  NO_AVX2=1" 
-    #install_openblas
-    #TarXFFile "hdf5-1.8.4.tar.bz2" "${HOME}/opt" "CFLAGS=-fPIC CXXFLAGS=-fPIC"
-    #TarXFFile "opencv-3.4.0.tar.gz" "${HOME}/opt" "-D WITH_CUDA=OFF "
-    install_boost
-    #TarXFFile "termcap-1.3.1.tar.gz" "${HOME}/opt" ""
-    #TarXFFile "cuda-gdb-8.0.61.src.tar.gz" "${HOME}/opt" "--disable-werror"
-    #TarXFFile "cuda-gdb-9.1.85.src.tar.gz" "${HOME}/opt" ""
+    #InstallPkgFile "cmake-3.3.2.tar.gz" "${OUT_DIR}" ""
+    #InstallPkgFile "Python-2.7.14.tgz" "${OUT_DIR}" ""
+    #InstallPkgFile "zlib-1.2.3.tar.gz" "${OUT_DIR}" "--shared"
+    #InstallPkgFile "protobuf-3.6.1.tar.gz" "${OUT_DIR}" ""
+    #InstallPkgFile "gflags-2.2.2.tar.gz" "${OUT_DIR}" " CXXFLAGS=-fPIC "
+    #InstallPkgFile "glog-0.3.5.tar.gz" "${OUT_DIR}" ""
+    #InstallPkgFile "googletest-release-1.8.1.tar.gz" "${OUT_DIR}" ""
+    #InstallPkgFile "snappy-1.1.3.tar.gz" "${OUT_DIR}" ""
+    #InstallPkgFile "leveldb-1.20.tar.gz" "${OUT_DIR}" ""   # cp out-shared ${OUT_DIR}/leveldb/lib -a # cp include ${OUT_DIR}/leveldb -a
+    #install_leveldb "leveldb-1.20.tar.gz"
+    #install_lmdb ""
+    #InstallPkgFile "OpenBLAS-0.2.20.tar.gz" "${OUT_DIR}" "DYNAMIC_ARCH=1  NO_AFFINITY=1 NO_LAPACKE=1  NO_AVX2=1" 
+    #install_openblas "OpenBLAS-0.2.20.tar.gz"
+    #InstallPkgFile "hdf5-1.8.4.tar.bz2" "${OUT_DIR}" "CFLAGS=-fPIC CXXFLAGS=-fPIC"
+    #InstallPkgFile "opencv-3.4.0.tar.gz" "${OUT_DIR}" "-D WITH_CUDA=OFF "
+    #install_boost "boost_1_74_0.zip"
+    #InstallPkgFile "termcap-1.3.1.tar.gz" "${OUT_DIR}" ""
+    #InstallPkgFile "cuda-gdb-8.0.61.src.tar.gz" "${OUT_DIR}" "--disable-werror"
+    #InstallPkgFile "cuda-gdb-9.1.85.src.tar.gz" "${OUT_DIR}" ""
 }
 
 function check_libs()
