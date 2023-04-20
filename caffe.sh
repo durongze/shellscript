@@ -1,6 +1,13 @@
 #!/bin/bash
 #boost 
-urls=$urls:https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip
+urls="$urls https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip"
+urls="$urls https://codeload.github.com/protocolbuffers/protobuf/zip/refs/tags/v3.21.9"
+urls="$urls https://codeload.github.com/HDFGroup/hdf5/zip/refs/tags/hdf5-1_12_2"
+urls="$urls https://github.com/xianyi/OpenBLAS/releases/download/v0.3.23/OpenBLAS-0.3.23.zip"
+urls="$urls https://github.com/LMDB/lmdb/archive/refs/tags/LMDB_0.9.29.zip"
+urls="$urls https://github.com/google/leveldb/archive/refs/tags/1.23.zip"
+urls="$urls https://github.com/google/snappy/archive/refs/tags/1.1.10.zip"
+urls="$urls https://github.com/opencv/opencv/archive/refs/tags/3.4.19.zip"
 
 export OUT_DIR=${HOME}/opt
 
@@ -10,9 +17,10 @@ function install_leveldb()
 {
     file=$1
     echo -e "\033[32m $FUNCNAME \033[0m"
-    FileDir=$(GenFileNameByFile "$file")
-    pushd $(echo $FileDir | tr -s "_" ".")
-    AbsFileDir=${OUT_DIR}/${FileDir}
+    DecompressFile "$file"
+    FileDir=$(GetFileDir "$file")
+    pushd $FileDir
+    AbsFileDir=${OUT_DIR}/${FileDir//./_}
     mkdir ${AbsFileDir} -p
     cp out-shared ${AbsFileDir}/lib -a
     cp include ${AbsFileDir}/ -a
@@ -21,11 +29,13 @@ function install_leveldb()
 
 function install_lmdb()
 {
+    file=$1
     echo -e "\033[32m $FUNCNAME \033[0m"
-    tar xf lmdb-LMDB_0.9.18.tar.gz
-    pushd lmdb-LMDB_0.9.18/libraries/liblmdb
+    DecompressFile "$file"
+    FileDir=$(GetFileDir "$file")
+    pushd ${FileDir}/libraries/liblmdb
     FileDir=liblmdb
-    AbsFileDir=${OUT_DIR}/${FileDir}
+    AbsFileDir=${OUT_DIR}/${FileDir//./_}
     mkdir ${AbsFileDir}/lib -p
     mkdir ${AbsFileDir}/include -p
     make
@@ -38,10 +48,11 @@ function install_openblas()
 {
     file=$1
     echo -e "\033[32m $FUNCNAME \033[0m"
-    FileDir=$(GenFileNameByFile "$file")
-    pushd $(echo $FileDir | tr -s "_" ".")
-    AbsFileDir=${OUT_DIR}/${FileDir}
-    make PREFIX=${AbsFileDir} install
+    DecompressFile "$file"
+    FileDir=$(GetFileDir "$file")
+    pushd $FileDir
+    AbsFileDir=${OUT_DIR}/${FileDir//./_}
+    make PREFIX=${AbsFileDir} && make PREFIX=${AbsFileDir} install
     popd
 }
 
@@ -49,13 +60,26 @@ function install_boost()
 {
     file=$1
     echo -e "\033[32m $FUNCNAME \033[0m"
-    tar xf $file 
-    FileDir=$(GenFileNameByFile "$file")
-    pushd $FileDir
-    AbsFileDir=${OUT_DIR}/${FileDir}
+    DecompressFile "$file" 
+    FileDir=$(GetFileDir "$file")
+    pushd ${FileDir}
+    AbsFileDir=${OUT_DIR}/${FileDir//./_}
     ./bootstrap.sh
     ./b2
     ./b2 install --prefix=${AbsFileDir}
+    popd
+}
+
+function install_protobuf()
+{
+    file=$1
+    echo -e "\033[32m $FUNCNAME \033[0m"
+    DecompressFile "$file" 
+    FileDir=$(GetFileDir "$file")
+    mkdir $FileDir/dyzbuild
+    pushd $FileDir/dyzbuild
+    AbsFileDir=${OUT_DIR}/${FileDir//./_}
+    export CXXFLAGS="-fPIC" && cmake ../cmake -DCMAKE_INSTALL_PREFIX=${AbsFileDir} -Dprotobuf_BUILD_TESTS=OFF && make && make install
     popd
 }
 
@@ -118,26 +142,24 @@ function record_install()
     sudo ln -sf  /usr/bin/nvcc /usr/local/cuda-10.0/bin/
 }
 
-GenFileNameVar "$(ls *.tar.* )"
-#GenEnvVar
-
 function install_all()
 {
     #sudo apt-get install autoconf libtool
     #InstallPkgFile "cmake-3.3.2.tar.gz" "${OUT_DIR}" ""
     #InstallPkgFile "Python-2.7.14.tgz" "${OUT_DIR}" ""
     #InstallPkgFile "zlib-1.2.3.tar.gz" "${OUT_DIR}" "--shared"
-    #InstallPkgFile "protobuf-3.6.1.tar.gz" "${OUT_DIR}" ""
+    #InstallPkgFile "protobuf-3.21.9.zip" "${OUT_DIR}" "-Dprotobuf_BUILD_TESTS=OFF " ""
+    #install_protobuf "protobuf-3.22.3.zip"
     #InstallPkgFile "gflags-2.2.2.tar.gz" "${OUT_DIR}" " CXXFLAGS=-fPIC "
     #InstallPkgFile "glog-0.3.5.tar.gz" "${OUT_DIR}" ""
     #InstallPkgFile "googletest-release-1.8.1.tar.gz" "${OUT_DIR}" ""
-    #InstallPkgFile "snappy-1.1.3.tar.gz" "${OUT_DIR}" ""
-    #InstallPkgFile "leveldb-1.20.tar.gz" "${OUT_DIR}" ""   # cp out-shared ${OUT_DIR}/leveldb/lib -a # cp include ${OUT_DIR}/leveldb -a
-    #install_leveldb "leveldb-1.20.tar.gz"
-    #install_lmdb ""
+    #InstallPkgFile "snappy-1.1.10.zip" "${OUT_DIR}" " -DSNAPPY_BUILD_TESTS=OFF -DSNAPPY_BUILD_BENCHMARKS=OFF "
+    #InstallPkgFile "leveldb-1.23.zip" "${OUT_DIR}" " -DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF "   # cp out-shared ${OUT_DIR}/leveldb/lib -a # cp include ${OUT_DIR}/leveldb -a
+    #install_leveldb "leveldb-1.23.zip"
+    #install_lmdb "lmdb-LMDB_0.9.29.zip"
     #InstallPkgFile "OpenBLAS-0.2.20.tar.gz" "${OUT_DIR}" "DYNAMIC_ARCH=1  NO_AFFINITY=1 NO_LAPACKE=1  NO_AVX2=1" 
-    #install_openblas "OpenBLAS-0.2.20.tar.gz"
-    #InstallPkgFile "hdf5-1.8.4.tar.bz2" "${OUT_DIR}" "CFLAGS=-fPIC CXXFLAGS=-fPIC"
+    #install_openblas "OpenBLAS-0.3.23.zip"
+    #InstallPkgFile "hdf5-hdf5-1_12_2.zip" "${OUT_DIR}" " CFLAGS=-fPIC CXXFLAGS=-fPIC "
     #InstallPkgFile "opencv-3.4.0.tar.gz" "${OUT_DIR}" "-D WITH_CUDA=OFF "
     #install_boost "boost_1_74_0.zip"
     #InstallPkgFile "termcap-1.3.1.tar.gz" "${OUT_DIR}" ""
@@ -148,7 +170,7 @@ function install_all()
 function check_libs()
 {
     if [ ! -d "$HOME/opt" ];then
-        echo "all libs is not exist"‘
+        echo "all libs is not exist"
         exit 2
     fi  
     all_libs="boost_system boost_thread protobuf openblas glog 
@@ -191,3 +213,7 @@ function create_caffe_dep()
     ln -sf libprotobuf.so.9 libprotobuf.so
     ln -sf libsnappy.so.1 libsnappy.so
 }
+
+#GenFileNameVar "$(ls *.tar.* )"
+#GenEnvVar
+install_all

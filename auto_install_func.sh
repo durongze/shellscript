@@ -94,7 +94,20 @@ function DecompressZipFile()
     fi
 }
 
-function GetInstallDir()
+function DecompressFile()
+{
+    local PkgFile=$1
+    case $PkgFile in
+        *.tar.*)
+            tar xf $PkgFile
+            ;;
+        *.zip)
+            DecompressZipFile "$PkgFile"
+            ;;
+    esac;
+}
+
+function GetFileDir()
 {
     PkgFile=$1
     SrcDir=""
@@ -108,6 +121,13 @@ function GetInstallDir()
         *)
             ;;
     esac;
+    echo $SrcDir
+}
+
+function GetInstallDir()
+{
+    PkgFile=$1
+    SrcDir=$(GetFileDir "$PkgFile")
     InstallDir=$(echo $SrcDir | tr -s "." "_")
     echo $InstallDir
 }
@@ -142,6 +162,10 @@ function AutoGenInstall()
         ./buildconf
     elif [ -f ./config ];then
         cp ./config ./configure
+    fi
+    if [[ $? -ne 0 ]];then
+        echo -e "\033[31m Install $SrcDir failed, gen cfg error !!! \033[0m"
+        exit 1;
     fi
     CfgInstall "$SrcDir" "$DstDir" "$CurFlags"
 }
@@ -246,7 +270,7 @@ function TarAndInstall()
     Method=$4
     
     FileDir=$(GetTarFileDir "$file")
-    echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
+    echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir  \033[32mMethod:\033[0m$Method"
     tar xf $file
     if [[ $Method == "" ]];then
         AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
