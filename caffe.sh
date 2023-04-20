@@ -50,6 +50,25 @@ function install_boost()
     popd
 }
 
+function install_caffe()
+{
+    echo -e "\033[32m $FUNCNAME \033[0m"
+    tar xf caffe-libcaffe-decode.tar.gz 
+    pushd caffe-libcaffe-decode
+    make clean
+    make 
+    mkdir ${HOME}/opt -p
+    grep "CPU_ONLY" Makefile.config | grep "#" 
+    if [ 0 -eq $? ];then
+        cp .build_release  ${HOME}/opt/caffe_gpu -a
+        cp include  ${HOME}/opt/caffe_gpu/ -a
+    else
+        cp .build_release  ${HOME}/opt/caffe_cpu -a
+        cp include  ${HOME}/opt/caffe_cpu/ -a
+    fi  
+    popd
+}
+
 function record_install()
 {
     sudo apt-get install flex bison
@@ -92,23 +111,74 @@ function record_install()
 
 GenFileNameVar "$(ls *.tar.* )"
 #GenEnvVar
-#sudo apt-get install autoconf libtool
-#TarXFFile "cmake-3.3.2.tar.gz" "${HOME}/opt" ""
-#TarXFFile "Python-2.7.14.tgz" "${HOME}/opt" ""
-#TarXFFile "zlib-1.2.3.tar.gz" "${HOME}/opt" "--shared"
-#TarXFFile "protobuf-3.6.1.tar.gz" "${HOME}/opt" ""
-#TarXFFile "gflags-2.2.2.tar.gz" "${HOME}/opt" " CXXFLAGS=-fPIC "
-#TarXFFile "glog-0.3.5.tar.gz" "${HOME}/opt" ""
-#TarXFFile "googletest-release-1.8.1.tar.gz" "${HOME}/opt" ""
-#TarXFFile "snappy-1.1.3.tar.gz" "${HOME}/opt" ""
-#TarXFFile "leveldb-1.20.tar.gz" "${HOME}/opt" ""   # cp out-shared ${HOME}/opt/leveldb/lib -a # cp include ${HOME}/opt/leveldb -a
-#install_leveldb
-#install_lmdb
-#TarXFFile "OpenBLAS-0.2.20.tar.gz" "${HOME}/opt" "DYNAMIC_ARCH=1  NO_AFFINITY=1 NO_LAPACKE=1  NO_AVX2=1" 
-#install_openblas
-#TarXFFile "hdf5-1.8.4.tar.bz2" "${HOME}/opt" "CFLAGS=-fPIC CXXFLAGS=-fPIC"
-#TarXFFile "opencv-3.4.0.tar.gz" "${HOME}/opt" "-D WITH_CUDA=OFF "
-install_boost
-#TarXFFile "termcap-1.3.1.tar.gz" "${HOME}/opt" ""
-#TarXFFile "cuda-gdb-8.0.61.src.tar.gz" "${HOME}/opt" "--disable-werror"
-#TarXFFile "cuda-gdb-9.1.85.src.tar.gz" "${HOME}/opt" ""
+
+function install_all()
+{
+    #sudo apt-get install autoconf libtool
+    #TarXFFile "cmake-3.3.2.tar.gz" "${HOME}/opt" ""
+    #TarXFFile "Python-2.7.14.tgz" "${HOME}/opt" ""
+    #TarXFFile "zlib-1.2.3.tar.gz" "${HOME}/opt" "--shared"
+    #TarXFFile "protobuf-3.6.1.tar.gz" "${HOME}/opt" ""
+    #TarXFFile "gflags-2.2.2.tar.gz" "${HOME}/opt" " CXXFLAGS=-fPIC "
+    #TarXFFile "glog-0.3.5.tar.gz" "${HOME}/opt" ""
+    #TarXFFile "googletest-release-1.8.1.tar.gz" "${HOME}/opt" ""
+    #TarXFFile "snappy-1.1.3.tar.gz" "${HOME}/opt" ""
+    #TarXFFile "leveldb-1.20.tar.gz" "${HOME}/opt" ""   # cp out-shared ${HOME}/opt/leveldb/lib -a # cp include ${HOME}/opt/leveldb -a
+    #install_leveldb
+    #install_lmdb
+    #TarXFFile "OpenBLAS-0.2.20.tar.gz" "${HOME}/opt" "DYNAMIC_ARCH=1  NO_AFFINITY=1 NO_LAPACKE=1  NO_AVX2=1" 
+    #install_openblas
+    #TarXFFile "hdf5-1.8.4.tar.bz2" "${HOME}/opt" "CFLAGS=-fPIC CXXFLAGS=-fPIC"
+    #TarXFFile "opencv-3.4.0.tar.gz" "${HOME}/opt" "-D WITH_CUDA=OFF "
+    install_boost
+    #TarXFFile "termcap-1.3.1.tar.gz" "${HOME}/opt" ""
+    #TarXFFile "cuda-gdb-8.0.61.src.tar.gz" "${HOME}/opt" "--disable-werror"
+    #TarXFFile "cuda-gdb-9.1.85.src.tar.gz" "${HOME}/opt" ""
+}
+
+function check_libs()
+{
+    if [ ! -d "$HOME/opt" ];then
+        echo "all libs is not exist"‘
+        exit 2
+    fi  
+    all_libs="boost_system boost_thread protobuf openblas glog 
+                  opencv_core opencv_imgproc opencv_highgui opencv_ml
+                  opencv_imgcodecs opencv_videoio opencv_objdetect caffe "
+    for libfilter in $all_libs 
+    do  
+        curlib=$(find $HOME/opt -iname "lib$libfilter*.so*")
+        if [ -z "$curlib" ];then
+            echo -e "\033[31mlib: $libfilter is not exist.\033[0m" 
+            #exit 3
+        #else
+            #echo -e "\033[32mlib: $libfilter is exist.\033[0m" 
+        fi  
+    done    
+}
+
+function create_caffe_dep()
+{
+    #libboost_filesystem.so.1.64.0
+    #libboost_system.so.1.64.0
+    #libboost_thread.so.1.64.0
+    #libcaffe.so.1.0.0
+    #libcublas.so.8.0
+    #libcudart.so.8.0
+    #libcurand.so.8.0
+    ln -sf libgfortran.so.3 libgfortran.so
+    ln -sf libglog.so.0 libglog.so
+    ln -sf libhdf5_hl.so.0 libhdf5_hl.so
+    ln -sf libhdf5.so.5 libhdf5.so
+    ln -sf libleveldb.so.1 libleveldb.so
+    ln -sf libopenblas.so.0 libopenblas.so
+    ln -sf libopencv_core.so.3.3 libopencv_core.so
+    ln -sf libopencv_highgui.so.3.3 libopencv_highgui.so
+    ln -sf libopencv_imgcodecs.so.3.3 libopencv_imgcodecs.so
+    ln -sf libopencv_imgproc.so.3.3 libopencv_imgproc.so
+    ln -sf libopencv_ml.so.3.3 libopencv_ml.so
+    ln -sf libopencv_objdetect.so.3.3 libopencv_objdetect.so
+    ln -sf libopencv_videoio.so.3.3 libopencv_videoio.so
+    ln -sf libprotobuf.so.9 libprotobuf.so
+    ln -sf libsnappy.so.1 libsnappy.so
+}
