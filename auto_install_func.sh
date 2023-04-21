@@ -8,6 +8,18 @@ declare -A sermap=(["leptonica-1.82.0.tar.gz"]="AutoGenInstall"
                    ["apr-util-1.6.1.tar.gz"]="AutoGenInstall"
                   )
 
+function EchoError()
+{
+    local str="$1"
+    echo -e "\033[31m $str \033[0m"
+}
+
+function EchoInfo()
+{
+    local str="$1"
+    echo -e "\033[32m $str \033[0m"
+}
+
 function GetInstallMethod()
 {
     PkgFile=$1
@@ -142,11 +154,10 @@ function CMakeInstall()
         mkdir dyzbuild
     fi
     pushd dyzbuild
-        CmdStr="\033[32m export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags \033[0m"
-        #CmdStr="export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags"
-        export CXXFLAGS="-fPIC" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags 
-        make  || { echo -e "$CmdStr"; exit 1; }
-        make install  || { echo -e "$CmdStr"; exit 1; }
+        CmdStr="export CXXFLAGS=\"-fPIC\" && cmake .. -DCMAKE_INSTALL_PREFIX=$DstDir/$InstallDir $CurFlags"
+        eval ${CmdStr//\\//}
+        cmake --build . || { EchoError "$CmdStr"; exit 1; }
+        cmake --install . || { EchoError "$CmdStr"; exit 1; }
     popd
 }
 
@@ -210,8 +221,6 @@ function AutoInstall()
     pushd $SrcDir
         if [ -f CMakeLists.txt ];then
             CMakeInstall "$SrcDir" "$DstDir" "$CurFlags"
-        elif [ -f setup.py ];then
-            sudo python setup.py install 
         elif [ -f autogen.sh ] || [ -f buildconf ] || [ -f config ] ;then
             AutoGenInstall "$SrcDir" "$DstDir" "$CurFlags"
         elif [ -f configure ];then
@@ -270,7 +279,7 @@ function TarAndInstall()
     Method=$4
     
     FileDir=$(GetTarFileDir "$file")
-    echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir  \033[32mMethod:\033[0m$Method"
+    echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir  \033[32mMethod:\033[0m$Method \033[32mDstDirPrefix:\033[0m$DstDirPrefix \033[32mCurFlags:\033[0m$CurFlags"
     tar xf $file
     if [[ $Method == "" ]];then
         AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
@@ -287,7 +296,7 @@ function ZipAndInstall()
     Method=$4
 
     FileDir=$(GetZipFileDir "$file")
-    echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir"
+    echo -e "\033[32mFile:\033[0m$file \033[32mDir:\033[0m$FileDir \033[32mDstDirPrefix:\033[0m$DstDirPrefix \033[32mCurFlags:\033[0m$CurFlags"
     DecompressZipFile "$file"
     if [[ $Method == "" ]];then
         AutoInstall "$FileDir" "$DstDirPrefix" "$CurFlags"
