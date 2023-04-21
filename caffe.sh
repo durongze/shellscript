@@ -8,6 +8,8 @@ urls="$urls https://github.com/LMDB/lmdb/archive/refs/tags/LMDB_0.9.29.zip"
 urls="$urls https://github.com/google/leveldb/archive/refs/tags/1.23.zip"
 urls="$urls https://github.com/google/snappy/archive/refs/tags/1.1.10.zip"
 urls="$urls https://github.com/opencv/opencv/archive/refs/tags/3.4.19.zip"
+urls="$urls https://github.com/google/glog/archive/refs/tags/v0.6.0.zip"
+urls="$urls https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.zip"
 
 export OUT_DIR=${HOME}/opt
 
@@ -150,8 +152,8 @@ function install_all()
     #InstallPkgFile "zlib-1.2.3.tar.gz" "${OUT_DIR}" "--shared"
     #InstallPkgFile "protobuf-3.21.9.zip" "${OUT_DIR}" "-Dprotobuf_BUILD_TESTS=OFF " ""
     #install_protobuf "protobuf-3.22.3.zip"
-    #InstallPkgFile "gflags-2.2.2.tar.gz" "${OUT_DIR}" " CXXFLAGS=-fPIC "
-    #InstallPkgFile "glog-0.3.5.tar.gz" "${OUT_DIR}" ""
+    InstallPkgFile "gflags-2.2.2.zip" "${OUT_DIR}" " -DBUILD_TESTING=OFF "
+    InstallPkgFile "glog-0.6.0.zip" "${OUT_DIR}" ""
     #InstallPkgFile "googletest-release-1.8.1.tar.gz" "${OUT_DIR}" ""
     #InstallPkgFile "snappy-1.1.10.zip" "${OUT_DIR}" " -DSNAPPY_BUILD_TESTS=OFF -DSNAPPY_BUILD_BENCHMARKS=OFF "
     #InstallPkgFile "leveldb-1.23.zip" "${OUT_DIR}" " -DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF "   # cp out-shared ${OUT_DIR}/leveldb/lib -a # cp include ${OUT_DIR}/leveldb -a
@@ -159,8 +161,8 @@ function install_all()
     #install_lmdb "lmdb-LMDB_0.9.29.zip"
     #InstallPkgFile "OpenBLAS-0.2.20.tar.gz" "${OUT_DIR}" "DYNAMIC_ARCH=1  NO_AFFINITY=1 NO_LAPACKE=1  NO_AVX2=1" 
     #install_openblas "OpenBLAS-0.3.23.zip"
-    #InstallPkgFile "hdf5-hdf5-1_12_2.zip" "${OUT_DIR}" " CFLAGS=-fPIC CXXFLAGS=-fPIC "
-    #InstallPkgFile "opencv-3.4.0.tar.gz" "${OUT_DIR}" "-D WITH_CUDA=OFF "
+    #InstallPkgFile "hdf5-hdf5-1_12_2.zip" "${OUT_DIR}" " CFLAGS=-fPIC CXXFLAGS=-fPIC -DHDF5_BUILD_CPP_LIB=ON "
+    #InstallPkgFile "opencv-3.4.19.zip" "${OUT_DIR}" " -DWITH_CUDA=OFF "
     #install_boost "boost_1_74_0.zip"
     #InstallPkgFile "termcap-1.3.1.tar.gz" "${OUT_DIR}" ""
     #InstallPkgFile "cuda-gdb-8.0.61.src.tar.gz" "${OUT_DIR}" "--disable-werror"
