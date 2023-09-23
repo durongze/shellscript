@@ -227,8 +227,10 @@ goto :eof
     set zip_file="%~1"
     set HomeDir="%~2"
     set FileDir=
+
     call :get_pre_sub_str !zip_file! . file_name
-    echo file_name:!file_name!
+	call :get_last_char_pos !zip_file! . ext_name_pos
+    echo file_name:!file_name! ext_name_pos:!ext_name_pos!
     call :get_suf_sub_str !zip_file! . ext_name
     echo ext_name:!ext_name!
     if "%ext_name%" == "zip" (
@@ -270,7 +272,7 @@ goto :eof
 
 :get_str_len
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr="%~1"
+    set mystr=%~1
     set mystrlen="%~2"
     set count=0
     call :color_text 2f "++++++++++++++get_str_len++++++++++++++"
@@ -285,19 +287,39 @@ goto :eof
     endlocal & set %~2=%count%
 goto :eof
 
-:get_char_pos
+:get_first_char_pos
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr="%~1"
-    set char_sym="%~2"
+    set mystr=%~1
+    set char_sym=%~2
+    set char_pos="%~3"
+    call :get_str_len %mystr% mystrlen
+    set count=0
+    call :color_text 2f "++++++++++++++get_first_char_pos++++++++++++++"
+    :intercept_first_char_pos
+    for /f %%i in ("%count%") do (
+        set /a count+=1	
+        if not "!mystr:~%%i,1!"=="!char_sym!" (
+            goto :intercept_first_char_pos
+        )
+    )
+    echo %0 %mystr% %char_sym% %count%
+    endlocal & set %~3=%count%
+goto :eof
+
+:get_last_char_pos
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%~1
+    set char_sym=%~2
     set char_pos="%~3"
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
-    call :color_text 2f "++++++++++++++get_char_pos++++++++++++++"
-    :intercept_char_pos
-    set /a count-=1
+    call :color_text 2f "++++++++++++++get_last_char_pos++++++++++++++"
+    @rem set /a count-=1	
+    :intercept_last_char_pos
     for /f %%i in ("%count%") do (
         if not "!mystr:~%%i,1!"=="!char_sym!" (
-            goto :intercept_char_pos
+            set /a count-=1			
+            goto :intercept_last_char_pos
         )
     )
     echo %0 %mystr% %char_sym% %count%
@@ -344,11 +366,11 @@ goto :eof
     call :color_text 2f "++++++++++++++get_suf_sub_str++++++++++++++"
     set substr=
     :intercept_suf_sub_str
-    set /a count-=1
     for /f %%i in ("%count%") do (
         if not "!mystr:~%%i,1!"=="!char_sym!" (
             set /a mysubstr_len=!mystrlen! - %%i
             set substr=!mystr:~%%i!
+            set /a count-=1	
             goto :intercept_suf_sub_str
         )
     )
@@ -380,7 +402,7 @@ goto :eof
     pushd %tools_dir%
     for %%i in ( %tools_addr% ) do (
         set tool_file=%%i
-        call :get_char_pos !tool_file! / char_pos
+        call :get_last_char_pos !tool_file! / char_pos
         echo tool_file:!char_pos!:!tool_file!
         call :get_suf_sub_str !tool_file! / file_name
         echo file_name:!file_name!
