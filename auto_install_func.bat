@@ -27,9 +27,9 @@ goto :eof
 
 :cmake_install
     setlocal ENABLEDELAYEDEXPANSION
-    set src_dir=%1
-    set dst_dir=%2
-    set cur_flags=%3
+    set src_dir=%~1
+    set dst_dir=%~2
+    set cur_flags=%~3
     set install_dir=%dst_dir%/%src_dir%
     if not exist dyzbuild (
         md dyzbuild
@@ -47,9 +47,9 @@ goto :eof
 
 :auto_gen_install
     setlocal ENABLEDELAYEDEXPANSION
-    set src_dir=%1
-    set dst_dir=%2
-    set cur_flags=%3
+    set src_dir="%~1"
+    set dst_dir="%~2"
+    set cur_flags="%~3"
     set install_dir=%dst_dir%\%src_dir%
     if not exist dyzbuild (
         md dyzbuild
@@ -64,9 +64,9 @@ goto :eof
 
 :cfg_install
     setlocal ENABLEDELAYEDEXPANSION
-    set src_dir=%1
-    set dst_dir=%2
-    set cur_flags=%3
+    set src_dir="%~1"
+    set dst_dir="%~2"
+    set cur_flags="%~3"
     set install_dir=%dst_dir%\%src_dir%
     if not exist dyzbuild (
         md dyzbuild
@@ -80,9 +80,9 @@ goto :eof
 
 :auto_install
     setlocal ENABLEDELAYEDEXPANSION
-    set src_dir=%1
-    set dst_dir=%2
-    set cur_flags=%3
+    set src_dir="%~1"
+    set dst_dir="%~2"
+    set cur_flags="%~3"
 
     if not exist %src_dir% (
         echo %0 path '%src_dir%' does not exist.
@@ -91,6 +91,9 @@ goto :eof
     call:color_text 2f "++++++++++++++auto_install++++++++++++++"
     echo %0 %src_dir% %dst_dir% %cur_flags%
     pushd %src_dir%
+        if exist ..\..\pre_call_back.bat (
+            call ..\..\pre_call_back.bat
+        )
         if exist CMakeLists.txt (
             call :cmake_install %src_dir% %dst_dir% %cur_flags%
         ) else (
@@ -113,9 +116,9 @@ goto :eof
 
 :spec_install
     setlocal ENABLEDELAYEDEXPANSION
-    set src_dir=%1
-    set dst_dir=%2
-    set cur_flags=%3
+    set src_dir="%~1"
+    set dst_dir="%~2"
+    set cur_flags="%~3"
 
     if not exist %src_dir% (
         echo %0 path '%src_dir%' does not exist.
@@ -139,10 +142,10 @@ goto :eof
 
 :zip_file_install
     setlocal ENABLEDELAYEDEXPANSION
-    set zip_file=%1
-    set DstDir=%2
-    set CurFlags=%3
-    set Spec=%4
+    set zip_file="%~1"
+    set DstDir="%~2"
+    set CurFlags="%~3"
+    set Spec="%~4"
     set FileDir=
     call :get_dir_by_zip %zip_file% FileDir
 
@@ -162,10 +165,10 @@ goto :eof
 
 :tar_file_install
     setlocal ENABLEDELAYEDEXPANSION
-    set tar_file=%1
-    set DstDir=%2
-    set CurFlags=%3
-    set Spec=%4
+    set tar_file="%~1"
+    set DstDir="%~2"
+    set CurFlags="%~3"
+    set Spec="%~4"
     set FileDir=
     call :get_dir_by_tar %tar_file% FileDir
 
@@ -185,7 +188,7 @@ goto :eof
 
 :get_dir_by_tar
     setlocal ENABLEDELAYEDEXPANSION
-    set tar_file=%1
+    set tar_file="%~1"
     call :color_text 2f "++++++++++++++get_dir_by_tar++++++++++++++"
     @rem for /f "tokens=8 delims= " %%i in ('tar -tf %tar_file%') do ( echo %%~i )
     set FileDir=
@@ -203,7 +206,7 @@ goto :eof
 
 :get_dir_by_zip
     setlocal ENABLEDELAYEDEXPANSION
-    set zip_file=%1
+    set zip_file="%~1"
     call :color_text 2f "++++++++++++++get_dir_by_zip++++++++++++++"
     @rem for /f "tokens=8 delims= " %%i in ('unzip -v %zip_file%') do ( echo %%~i )
     set FileDir=
@@ -211,7 +214,7 @@ goto :eof
     echo "    unzip -v %zip_file% | gawk -F" "  "{ print $8 } " | gawk  -F"/" "{ print $1 }"    "
     FOR /F "usebackq" %%i IN (` unzip -v %zip_file% ^| gawk -F" "  "{ print $8 } " ^| gawk  -F"/" "{ print $1 }" ^| sed -n "5p" `) DO (set FileDir=%%i)
     @rem echo zip_file:%zip_file% FileDir:!FileDir!
-    call :is_contain "%zip_file%" "%FileDir%" file_name
+    call :is_contain %zip_file% %FileDir% file_name
     if "%file_name%" == "false" (
         call :color_text 4f "-------------get_dir_by_zip--------------"
         echo zip_file:%zip_file% FileDir:%FileDir%
@@ -221,8 +224,8 @@ goto :eof
 
 :gen_env_by_file
     setlocal ENABLEDELAYEDEXPANSION
-    set zip_file=%1
-    set HomeDir=%2
+    set zip_file="%~1"
+    set HomeDir="%~2"
     set FileDir=
     call :get_pre_sub_str !zip_file! . file_name
     echo file_name:!file_name!
@@ -245,8 +248,8 @@ goto :eof
 
 :gen_all_env
     setlocal ENABLEDELAYEDEXPANSION
-    set tools_dir=%1
-    set home_dir=%2
+    set tools_dir="%~1"
+    set home_dir="%~2"
     set DstDirWithHome=
     call :color_text 2f "++++++++++++++gen_all_env++++++++++++++"
     pushd %tools_dir%
@@ -267,8 +270,8 @@ goto :eof
 
 :get_str_len
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set mystrlen=%2
+    set mystr="%~1"
+    set mystrlen="%~2"
     set count=0
     call :color_text 2f "++++++++++++++get_str_len++++++++++++++"
     :intercept_str_len
@@ -284,9 +287,9 @@ goto :eof
 
 :get_char_pos
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set char_sym=%2
-    set char_pos=%3
+    set mystr="%~1"
+    set char_sym="%~2"
+    set char_pos="%~3"
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
     call :color_text 2f "++++++++++++++get_char_pos++++++++++++++"
@@ -303,9 +306,9 @@ goto :eof
 
 :get_pre_sub_str
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set char_sym=%2
-    set mysubstr=%3
+    set mystr=%~1
+    set char_sym=%~2
+    set mysubstr="%~3"
     call :get_str_len %mystr% mystrlen
     set count=0
     call :color_text 2f "++++++++++++++get_pre_sub_str++++++++++++++"
@@ -333,9 +336,9 @@ goto :eof
 
 :get_suf_sub_str
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set char_sym=%2
-    set mysubstr=%3
+    set mystr=%~1
+    set char_sym=%~2
+    set mysubstr="%~3"
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
     call :color_text 2f "++++++++++++++get_suf_sub_str++++++++++++++"
@@ -355,8 +358,8 @@ goto :eof
 
 :is_contain
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set mysubstr=%2
+    set mystr="%~1"
+    set mysubstr="%~2"
     set ret=false
     call :color_text 2f "++++++++++++++is_contain++++++++++++++"
     @rem echo " echo %mystr% | findstr %mysubstr% > nul && set ret=true "
@@ -367,8 +370,8 @@ goto :eof
 
 :download_package
     setlocal ENABLEDELAYEDEXPANSION
-    set tools_addr="%1"
-    set tools_dir="%2"
+    set tools_addr="%~1"
+    set tools_dir="%~2"
     call :color_text 2f "++++++++++++++download_package++++++++++++++"
     echo %tools_addr%    %tools_dir%
     if not exist %tools_dir% (
@@ -384,7 +387,7 @@ goto :eof
         if not exist !file_name! (
             wget %%i
         )
-        @rem unzip -q -o !file_name!
+        unzip -q -o !file_name!
     )
     popd
     endlocal
@@ -392,8 +395,8 @@ goto :eof
 
 :install_package
     setlocal ENABLEDELAYEDEXPANSION
-    set package_name=%1
-    set home_dir=%2
+    set package_name="%~1"
+    set home_dir="%~2"
     call :color_text 2f "++++++++++++++install_package++++++++++++++"
     echo %package_name% 
     call :get_suf_sub_str !package_name! . ext_name
@@ -412,9 +415,9 @@ goto :eof
 
 :install_all_package
     setlocal ENABLEDELAYEDEXPANSION
-    set tools_addr="%1"
-    set tools_dir="%2"
-    set home_dir=%3
+    set tools_addr="%~1"
+    set tools_dir="%~2"
+    set home_dir="%~3"
     call :color_text 2f "++++++++++++++bat_start++++++++++++++"
     echo %tools_addr%    %tools_dir%
     @rem call :download_package "%tools_addr%" "%tools_dir%"
