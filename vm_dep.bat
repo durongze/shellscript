@@ -1,5 +1,14 @@
 @echo off
-set cur_dir=%cd%
+
+set PerlPath=F:\program\Perl\bin
+set NASMPath=F:\program\nasm
+set CMakePath=F:\program\cmake\bin
+
+set path=%NASMPath%;%PerlPath%;%CMakePath%;%path%
+
+set cur_dir=%~dp0
+set ProjDir=%cur_dir:~0,-1%\..
+echo ProjDir %ProjDir%
 dir
 pause
 set tools_addr=https://eternallybored.org/misc/wget/releases/wget-1.21.2-win64.zip
@@ -16,14 +25,14 @@ set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/
 @rem set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/libiconv/1.9.2-1/libiconv-1.9.2-1-lib.zip
 @rem set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/libiconv/1.9.2-1/libiconv-1.9.2-1-dep.zip
 set tools_addr=%tools_addr%;https://www.7-zip.org/a/lzma2201.7z
-set tools_dir=%cd%\tools_dir
+set tools_dir=%cur_dir%\tools_dir
 
 set software_urls=https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz
-set software_dir=%cd%\
+set software_dir=%cur_dir%\
 
-set home_dir=%cd%\..\out\windows
+set home_dir=%ProjDir%\out\windows
 set build_type=Release
-set auto_install_func=%cd%\auto_func.bat
+set auto_install_func=%cur_dir%\auto_func.bat
 call %auto_install_func% gen_all_env %software_dir% %home_dir% all_inc all_lib all_bin
 echo all_inc:%all_inc%
 echo all_lib:%all_lib%
@@ -40,15 +49,17 @@ set CMAKE_LIBRARY_PATH=%lib%;
 
 @rem call %auto_install_func% install_all_package "%tools_addr%" "%tools_dir%"
 @rem call %auto_install_func% install_all_package "%software_urls%" "%software_dir%"
-call :thirdparty_lib_install "%software_dir%" %home_dir%
+call :thirdparty_lib_install %software_dir% %home_dir%
+pause
 goto :eof
 
 @rem objdump -S E:\program\xz-5.2.6\lib\liblzma.lib | grep -C 5 "lzma_auto_decoder"
 
 :thirdparty_lib_install
-    set lib_dir=%software_dir%
-    set home_dir=%2
+    set lib_dir="%~1"
+    set home_dir="%~2"
     pushd %lib_dir%
+        @rem call %auto_install_func% install_package pthread-win32.zip "%home_dir%"
         @rem call %auto_install_func% install_package zlib-1.2.12.tar.gz "%home_dir%"
         @rem call %auto_install_func% install_package capstone-master.zip "%home_dir%"
         @rem call %auto_install_func% install_package SDL-release-2.24.0.zip "%home_dir%"
