@@ -47,9 +47,9 @@ goto :eof
 
 :auto_gen_install
     setlocal ENABLEDELAYEDEXPANSION
-    set src_dir="%~1"
-    set dst_dir="%~2"
-    set cur_flags="%~3"
+    set src_dir=%~1
+    set dst_dir=%~2
+    set cur_flags=%~3
     set install_dir=%dst_dir%\%src_dir%
     if not exist dyzbuild (
         md dyzbuild
@@ -64,9 +64,9 @@ goto :eof
 
 :cfg_install
     setlocal ENABLEDELAYEDEXPANSION
-    set src_dir="%~1"
-    set dst_dir="%~2"
-    set cur_flags="%~3"
+    set src_dir=%~1
+    set dst_dir=%~2
+    set cur_flags=%~3
     set install_dir=%dst_dir%\%src_dir%
     if not exist dyzbuild (
         md dyzbuild
@@ -211,7 +211,7 @@ goto :eof
     @rem for /f "tokens=8 delims= " %%i in ('unzip -v %zip_file%') do ( echo %%~i )
     set FileDir=
     set file_name=
-    echo "    unzip -v %zip_file% | gawk -F" "  "{ print $8 } " | gawk  -F"/" "{ print $1 }"    "
+    echo "    unzip -v %zip_file% | gawk -F" "  "{ print $8 } " | gawk  -F"/" "{ print $1 }" | sed -n "5p"  "
     FOR /F "usebackq" %%i IN (` unzip -v %zip_file% ^| gawk -F" "  "{ print $8 } " ^| gawk  -F"/" "{ print $1 }" ^| sed -n "5p" `) DO (set FileDir=%%i)
     @rem echo zip_file:%zip_file% FileDir:!FileDir!
     call :is_contain %zip_file% %FileDir% file_name
@@ -225,11 +225,11 @@ goto :eof
 :gen_env_by_file
     setlocal ENABLEDELAYEDEXPANSION
     set zip_file="%~1"
-    set HomeDir="%~2"
+    set HomeDir=%~2
     set FileDir=
 
     call :get_pre_sub_str !zip_file! . file_name
-	call :get_last_char_pos !zip_file! . ext_name_pos
+    call :get_last_char_pos !zip_file! . ext_name_pos
     echo file_name:!file_name! ext_name_pos:!ext_name_pos!
     call :get_suf_sub_str !zip_file! . ext_name
     echo ext_name:!ext_name!
