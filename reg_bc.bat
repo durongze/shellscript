@@ -1,4 +1,6 @@
-pushd "C:\Users\%UserName%\AppData\Roaming\Scooter Software\Beyond Compare 4"
+
+@rem pushd "C:\Users\%UserName%\AppData\Roaming\Scooter Software\Beyond Compare 4"
+pushd "%USERPROFILE%\AppData\Roaming\Scooter Software\Beyond Compare 4"
 del *  /q
 popd
 
@@ -8,6 +10,12 @@ reg query HKEY_CURRENT_USER\SOFTWARE\Scooter" "Software\Beyond" "Compare" "4 /v 
 
 reg delete HKEY_CURRENT_USER\SOFTWARE\Scooter" "Software\Beyond" "Compare" "4 /v CacheID /f
 
-@rem reg add HKEY_CURRENT_USER\SOFTWARE\Scooter" "Software\Beyond" "Compare" "4 /v CacheID /f /t REG_BINARY /d 0 
+reg add HKEY_CURRENT_USER\SOFTWARE\Scooter" "Software\Beyond" "Compare" "4 /v CacheID /f /t REG_BINARY /d 0 
 
-pause
+set CurDir=%~dp0
+
+set ProjDir=%CurDir:~0,-1%
+echo ProjDir %ProjDir%
+
+set BC_DIR=%ProjDir%
+call "%BC_DIR%\BComp.exe"
