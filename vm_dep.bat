@@ -9,8 +9,7 @@ set path=%NASMPath%;%PerlPath%;%CMakePath%;%path%
 set cur_dir=%~dp0
 set ProjDir=%cur_dir:~0,-1%\..
 echo ProjDir %ProjDir%
-dir
-pause
+
 set tools_addr=https://eternallybored.org/misc/wget/releases/wget-1.21.2-win64.zip
 set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/wget/1.11.4-1/wget-1.11.4-1-dep.zip
 set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/wget/1.11.4-1/wget-1.11.4-1-bin.zip
@@ -49,7 +48,7 @@ set CMAKE_LIBRARY_PATH=%lib%;
 
 @rem call %auto_install_func% install_all_package "%tools_addr%" "%tools_dir%"
 @rem call %auto_install_func% install_all_package "%software_urls%" "%software_dir%"
-call :thirdparty_lib_install %software_dir% %home_dir%
+call :thirdparty_lib_install "%software_dir%" %home_dir%
 pause
 goto :eof
 
@@ -67,5 +66,131 @@ goto :eof
     popd
 goto :eof
 
+@rem YellowBackground    6f  ef
+@rem BlueBackground      9f  bf   3f
+@rem GreenBackground     af  2f
+@rem RedBackground       4f  cf
+@rem GreyBackground      7f  8f
+@rem PurpleBackground    5f
 
+:color_text
+    setlocal EnableDelayedExpansion
+    for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
+        set "DEL=%%a"
+    )
+    echo off
+    <nul set /p ".=%DEL%" > "%~2"
+    findstr /v /a:%1 /R "^$" "%~2" nul
+    del "%~2" > nul 2>&1
+    endlocal
+    echo .
+goto :eof
+
+:get_str_len
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%1
+    set mystrlen=%2
+    set count=0
+    call :color_text 2f "++++++++++++++get_str_len++++++++++++++"
+    :intercept_str_len
+    set /a count+=1
+    for /f %%i in ("%count%") do (
+        if not "!mystr:~%%i,1!"=="" (
+            goto :intercept_str_len
+        )
+    )
+    echo %0 %mystr% %count%
+    endlocal & set %~2=%count%
+goto :eof
+
+:get_first_char_pos
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%~1
+    set char_sym=%~2
+    set char_pos="%~3"
+    call :get_str_len %mystr% mystrlen
+    set count=0
+    call :color_text 2f "++++++++++++++get_first_char_pos++++++++++++++"
+    :intercept_first_char_pos
+    for /f %%i in ("%count%") do (
+        set /a count+=1	
+        if not "!mystr:~%%i,1!"=="!char_sym!" (
+            goto :intercept_first_char_pos
+        )
+    )
+    echo %0 %mystr% %char_sym% %count%
+    endlocal & set %~3=%count%
+goto :eof
+
+:get_last_char_pos
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%~1
+    set char_sym=%~2
+    set char_pos="%~3"
+    call :get_str_len %mystr% mystrlen
+    set count=%mystrlen%
+    call :color_text 2f "++++++++++++++get_last_char_pos++++++++++++++"
+    @rem set /a count-=1	
+    :intercept_last_char_pos
+    for /f %%i in ("%count%") do (
+        if not "!mystr:~%%i,1!"=="!char_sym!" (
+            set /a count-=1			
+            goto :intercept_last_char_pos
+        )
+    )
+    echo %0 %mystr% %char_sym% %count%
+    endlocal & set %~3=%count%
+goto :eof
+
+:get_pre_sub_str
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%1
+    set char_sym=%2
+    set mysubstr=%3
+    call :get_str_len %mystr% mystrlen
+    set count=0
+    call :color_text 2f "++++++++++++++get_pre_sub_str++++++++++++++"
+    set substr=
+    :intercept_pre_sub_str
+    for /f %%i in ("%count%") do (
+        set /a count+=1
+        if not "!mystr:~%%i,1!"=="!char_sym!" (
+            set /a mysubstr_len=%%i
+            set substr=!mystr:~0,%%i!
+            if "%count%" == "%mystrlen%" (
+                goto :pre_sub_str_break
+            )
+            goto :intercept_pre_sub_str
+        ) else (
+            set /a mysubstr_len=%%i
+            set substr=!mystr:~0,%%i!
+            goto :pre_sub_str_break
+        )
+    )
+    :pre_sub_str_break
+    echo %0 %mystr% %char_sym% %count% %mysubstr_len%
+    endlocal & set %~3=%substr%
+goto :eof
+
+:get_suf_sub_str
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%1
+    set char_sym=%2
+    set mysubstr=%3
+    call :get_str_len %mystr% mystrlen
+    set count=%mystrlen%
+    call :color_text 2f "++++++++++++++get_suf_sub_str++++++++++++++"
+    set substr=
+    :intercept_suf_sub_str
+    set /a count-=1
+    for /f %%i in ("%count%") do (
+        if not "!mystr:~%%i,1!"=="!char_sym!" (
+            set /a mysubstr_len=!mystrlen! - %%i
+            set substr=!mystr:~%%i!
+            goto :intercept_suf_sub_str
+        )
+    )
+    echo %0 %mystr% %char_sym% %count% %mysubstr_len%
+    endlocal & set %~3=%substr%
+goto :eof
 
