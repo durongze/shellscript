@@ -1,12 +1,17 @@
 
-call :RustEnvInfo RUST_HOME_DIR
-set PATH=%RUST_HOME_DIR%
+call :RustEnvInfo PATH_DIR RUSTUP_HOME_DIR CARGO_HOME_DIR
+set PATH=%PATH_DIR%
+set RUSTUP_HOME=%RUSTUP_HOME_DIR%
+set CARGO_HOME=%CARGO_HOME_DIR%
 rustc.exe
 pause
 
 :RustEnvInfo
     setlocal EnableDelayedExpansion
-    set RUST_HOME=%~1
+    set PATH_DIR=%~1
+    set RUSTUP_HOME_DIR=%~2
+    set CARGO_HOME_DIR=%~3
+
     set USER_HOME=%USERPROFILE%
     set USER_HOME=F:\program\rust
     set RUSTUP_HOME=%USER_HOME%\.rustup
@@ -19,7 +24,7 @@ pause
     call :color_text 2f "+++++++++++++++++++++PATH+++++++++++++++++++++++"
     echo %path%
     call :color_text 2f "---------------------PATH-----------------------"
-    endlocal & set %~1=%path%
+    endlocal & set %~1=%path%& set %~2=%RUSTUP_HOME%& set %~3=%CARGO_HOME%
 goto :eof
 
 :ShowUserInfo
