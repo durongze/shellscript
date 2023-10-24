@@ -98,12 +98,47 @@ goto :eof
             sc stop %ProjName%
         ) else (
             call :color_text 4f "++++++++++++++RunWinSvr net start error ++++++++++++++"
+            %BinPath%
         )
         @rem sc delete %ProjName%
     )
     endlocal
 goto :eof
 
+:SetProjEnv
+    setlocal ENABLEDELAYEDEXPANSION
+    set loc_dir=%~1
+    set loc_inc=%2
+    set loc_lib=%3
+    set loc_bin=%4
+    set auto_install_func=%software_dir%\auto_func.bat
+
+    call %auto_install_func% gen_all_env %software_dir% %HomeDir% loc_inc loc_lib loc_bin
+    set all_inc=%loc_inc%;%include%;%loc_dir%\include;
+    set all_lib=%loc_lib%;%lib%;%loc_dir%\lib;%loc_dir%\bin;
+    set all_bin=%loc_bin%;%path%;%loc_dir%\bin;
+    endlocal & set %~2=%all_inc% & set %~3=%all_lib% & set %~4=%all_bin%
+goto :eof
+
+:ShowProjEnv
+    setlocal ENABLEDELAYEDEXPANSION
+    call :color_text 9f "++++++++++++++ShowProjEnv++++++++++++++"
+    echo include:%include%
+    echo lib:%lib%
+    echo path:%path%
+    call :color_text 9f "--------------ShowProjEnv--------------"
+    endlocal
+goto :eof
+
+:ResetSystemEnv
+    setlocal ENABLEDELAYEDEXPANSION
+    call :color_text 9f "++++++++++++++ResetSystemEnv++++++++++++++"
+    @rem set include=%old_sys_include%
+    @rem set lib=%old_sys_lib%
+    @rem set path=%old_sys_path%
+    call :color_text 9f "--------------ResetSystemEnv--------------"
+    endlocal
+goto :eof
 
 :ShowUserInfo
     echo %date:~6,4%_%date:~0,2%_%date:~3,2%
@@ -146,8 +181,8 @@ goto :eof
 
 :get_str_len
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set mystrlen=%2
+    set mystr=%~1
+    set mystrlen="%~2"
     set count=0
     call :color_text 2f "++++++++++++++get_str_len++++++++++++++"
     :intercept_str_len
@@ -161,19 +196,39 @@ goto :eof
     endlocal & set %~2=%count%
 goto :eof
 
-:get_char_pos
+:get_first_char_pos
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set char_sym=%2
-    set char_pos=%3
+    set mystr=%~1
+    set char_sym=%~2
+    set char_pos="%~3"
+    call :get_str_len %mystr% mystrlen
+    set count=0
+    call :color_text 2f "++++++++++++++get_first_char_pos++++++++++++++"
+    :intercept_first_char_pos
+    for /f %%i in ("%count%") do (
+        set /a count+=1	
+        if not "!mystr:~%%i,1!"=="!char_sym!" (
+            goto :intercept_first_char_pos
+        )
+    )
+    echo %0 %mystr% %char_sym% %count%
+    endlocal & set %~3=%count%
+goto :eof
+
+:get_last_char_pos
+    setlocal ENABLEDELAYEDEXPANSION
+    set mystr=%~1
+    set char_sym=%~2
+    set char_pos="%~3"
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
-    call :color_text 2f "++++++++++++++get_char_pos++++++++++++++"
-    :intercept_char_pos
-    set /a count-=1
+    call :color_text 2f "++++++++++++++get_last_char_pos++++++++++++++"
+    @rem set /a count-=1	
+    :intercept_last_char_pos
     for /f %%i in ("%count%") do (
         if not "!mystr:~%%i,1!"=="!char_sym!" (
-            goto :intercept_char_pos
+            set /a count-=1			
+            goto :intercept_last_char_pos
         )
     )
     echo %0 %mystr% %char_sym% %count%
@@ -182,9 +237,9 @@ goto :eof
 
 :get_pre_sub_str
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set char_sym=%2
-    set mysubstr=%3
+    set mystr=%~1
+    set char_sym=%~2
+    set mysubstr="%~3"
     call :get_str_len %mystr% mystrlen
     set count=0
     call :color_text 2f "++++++++++++++get_pre_sub_str++++++++++++++"
@@ -212,22 +267,35 @@ goto :eof
 
 :get_suf_sub_str
     setlocal ENABLEDELAYEDEXPANSION
-    set mystr=%1
-    set char_sym=%2
-    set mysubstr=%3
+    set mystr=%~1
+    set char_sym=%~2
+    set mysubstr="%~3"
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
     call :color_text 2f "++++++++++++++get_suf_sub_str++++++++++++++"
     set substr=
     :intercept_suf_sub_str
-    set /a count-=1
     for /f %%i in ("%count%") do (
         if not "!mystr:~%%i,1!"=="!char_sym!" (
             set /a mysubstr_len=!mystrlen! - %%i
             set substr=!mystr:~%%i!
+            set /a count-=1	
             goto :intercept_suf_sub_str
         )
     )
     echo %0 %mystr% %char_sym% %count% %mysubstr_len%
     endlocal & set %~3=%substr%
+goto :eof
+
+:GetCurSysTime
+    setlocal EnableDelayedExpansion
+    set dateStr=
+    set timeStr=
+    set year=%date:~6,4%
+    set month=%date:~4,2%
+    set day=%date:~0,2%
+    set dateStr=%year%_%month%_%day%
+    set dateStr=%dateStr:/=%
+    set timeStr=%time::=%
+    endlocal & set %~1=%dateStr%_%timeStr%
 goto :eof
