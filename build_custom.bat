@@ -1,5 +1,11 @@
 @rem set VSCMD_DEBUG=2
 @rem %comspec% /k "F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
+
+set PerlPath=F:\program\Perl\bin
+set NASMPath=F:\program\nasm
+set CMakePath=F:\program\cmake\bin
+set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PATH%
+
 set CurDir=%~dp0
 
 set ProjDir=%CurDir:~0,-1%
@@ -15,13 +21,15 @@ set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\
 set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\vcvars32.bat"
 set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\vcvars64.bat"
 
-set VisualStudioCmd="E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
 set VisualStudioCmd="E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+set VisualStudioCmd="E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
 
-set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
 set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+
 set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
 
+set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
 set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 set auto_install_func=%software_dir%\auto_func.bat
@@ -33,8 +41,6 @@ echo all_bin:%all_bin%
 set include=%all_inc%;%include%;%tools_dir%\include;
 set lib=%all_lib%;%lib%;%tools_dir%\lib;%tools_dir%\bin;
 set path=%all_bin%;%path%;%tools_dir%\bin;
-
-set PATH=F:\program\cmake\bin;%PATH%
 
 set SystemBinDir=.\
 set BuildDir=dyzbuild
