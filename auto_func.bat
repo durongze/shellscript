@@ -211,7 +211,8 @@ goto :eof
     @rem for /f "tokens=8 delims= " %%i in ('unzip -v %zip_file%') do ( echo %%~i )
     set FileDir=
     set file_name=
-    echo "    unzip -v %zip_file% | gawk -F" "  "{ print $8 } " | gawk  -F"/" "{ print $1 }"    "
+    @rem unzip -v %zip_file% | gawk -F" "  "{ print $8 } " | gawk  -F"/" "{ print $1 }" | sed -n "5p"
+    echo zip_file:%zip_file%
     FOR /F "usebackq" %%i IN (` unzip -v %zip_file% ^| gawk -F" "  "{ print $8 } " ^| gawk  -F"/" "{ print $1 }" ^| sed -n "5p" `) DO (set FileDir=%%i)
     @rem echo zip_file:%zip_file% FileDir:!FileDir!
     call :is_contain %zip_file% %FileDir% file_name
@@ -268,6 +269,15 @@ goto :eof
     echo lib:%lib%
     echo bin:%bin%
     endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin%
+goto :eof
+
+:show_all_env
+    setlocal ENABLEDELAYEDEXPANSION
+    call :color_text 2f "++++++++++++++show_all_env++++++++++++++"
+    echo all_inc:%all_inc%
+    echo all_lib:%all_lib%
+    echo all_bin:%all_bin%
+    endlocal
 goto :eof
 
 :get_str_len
@@ -421,6 +431,10 @@ goto :eof
     set home_dir="%~2"
     call :color_text 2f "++++++++++++++install_package++++++++++++++"
     echo %package_name% 
+    if not exist %package_name% (
+        echo %package_name% does not exist!
+        goto :eof
+    )
     call :get_suf_sub_str !package_name! . ext_name
     echo ext_name:!ext_name!
     if "%ext_name%" == "zip" (
