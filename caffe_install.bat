@@ -24,7 +24,7 @@ set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\Co
 set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
 set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-set VS142COMNTOOLS="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+set VS143COMNTOOLS="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
 
 set tools_addr=https://eternallybored.org/misc/wget/releases/wget-1.21.2-win64.zip
 set tools_addr=%tools_addr%;https://udomain.dl.sourceforge.net/project/gnuwin32/wget/1.11.4-1/wget-1.11.4-1-dep.zip
@@ -51,10 +51,11 @@ set include=%all_inc%;%include%;%tools_dir%\include;
 set lib=%all_lib%;%lib%;%tools_dir%\lib;%tools_dir%\bin;
 set path=%all_bin%;%path%;%tools_dir%\bin;
 
-set PerlPath=F:\program\Perl\bin
-set NASMPath=F:\program\nasm
-set CMakePath=F:\program\cmake\bin
-set PythonHome=F:\program\python
+set ProgramDir=F:\program
+set PerlPath=%ProgramDir%\Perl\bin
+set NASMPath=%ProgramDir%\nasm
+set CMakePath=%ProgramDir%\cmake\bin
+set PythonHome=%ProgramDir%\python
 set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PATH%
 
 set cur_dir=%~dp0
@@ -610,15 +611,15 @@ goto :eof
     @rem vs2015 <-> toolset=msvc-14.0
     @rem vs2017 <-> toolset=msvc-15.0
     @rem vs2019 <-> toolset=msvc-16.0
-    @rem vs2022 <-> toolset=msvc-17.0
+    @rem vs2022 <-> toolset=msvc-17.0  @rem 143
     pushd boost_1_83_0
         if exist .\b2.exe (
-            .\b2.exe install --prefix="%HomeDir%/boost_1_83_0/" --build-type=complete --toolset=msvc-17.0 variant=%BuildType%  link=shared threading=multi runtime-link=shared address-model=%BitNum%
+            .\b2.exe install --prefix="%HomeDir%/boost_1_83_0/" --build-type=complete --toolset=msvc-14.3 variant=%BuildType%  link=shared threading=multi runtime-link=shared address-model=%BitNum%
         ) else (
             echo .\b2.exe doesn't exist!
         )
         if exist .\bootstrap.bat (
-            .\bootstrap.bat vc142
+            .\bootstrap.bat vc143
         ) else (
             echo .\bootstrap.bat doesn't exist!
         )
