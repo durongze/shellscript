@@ -259,16 +259,23 @@ goto :eof
         for /f %%i in ( 'dir /b *.tar.* *.zip' ) do (
             set tar_file=%%i
             call :gen_env_by_file !tar_file! !home_dir! DstDirWithHome
-            set inc=!DstDirWithHome!/include;!inc!
-            set lib=!DstDirWithHome!/lib;!lib!
-            set bin=!DstDirWithHome!/bin;!bin!
+            set inc=!DstDirWithHome!\include;!inc!
+            set lib=!DstDirWithHome!\lib;!lib!
+            set bin=!DstDirWithHome!\bin;!bin!
+            set CMAKE_INCLUDE_PATH=!DstDirWithHome!\include;!CMAKE_INCLUDE_PATH!
+            set CMAKE_LIBRARY_PATH=!DstDirWithHome!\lib;!CMAKE_LIBRARY_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\lib\cmake;!CMAKE_MODULE_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
         )
     popd
     call :color_text 9f "++++++++++++++gen_all_env++++++++++++++"
     echo inc:%inc%
     echo lib:%lib%
     echo bin:%bin%
-    endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin%
+    echo CMAKE_INCLUDE_PATH:%CMAKE_INCLUDE_PATH%
+    echo CMAKE_LIBRARY_PATH:%CMAKE_LIBRARY_PATH%
+    echo CMAKE_MODULE_PATH:%CMAKE_MODULE_PATH%
+    endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin% & set %~6=%CMAKE_INCLUDE_PATH% & set %~7=%CMAKE_LIBRARY_PATH% & set %~8=%CMAKE_MODULE_PATH%
 goto :eof
 
 :show_all_env
