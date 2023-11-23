@@ -8,14 +8,19 @@ set mac_addrs=
 
 
 set quartus_root_dir=%CurDir%
-set quartus_lic_file=%CurDir%\license32.dat
 set quartus_bin_dir=%quartus_root_dir%\quartus\bin
 set quartus_exec=%quartus_bin_dir%\quartus.exe
 set PATH=%quartus_bin_dir%;%PATH%
-set LM_LICENSE_FILE=%quartus_lic_file%
 
 call :get_mac_addrs mac_addrs
 echo mac_addrs : %mac_addrs%
+
+set quartus_lic_file=%CurDir%\license32.dat
+set LM_LICENSE_FILE=%quartus_lic_file%
+call :fix_lic_by_mac "%mac_addrs%" %quartus_lic_file%
+
+set quartus_lic_file=%CurDir%\license64.dat
+set LM_LICENSE_FILE=%quartus_lic_file%
 call :fix_lic_by_mac "%mac_addrs%" %quartus_lic_file%
 
 if exist %quartus_exec% (
