@@ -612,6 +612,9 @@ goto :eof
     @rem vs2017 <-> toolset=msvc-15.0
     @rem vs2019 <-> toolset=msvc-16.0
     @rem vs2022 <-> toolset=msvc-17.0  @rem 143
+    if not exist boost_1_83_0 (
+        unzip boost_1_83_0.zip
+    )
     pushd boost_1_83_0
         if exist .\b2.exe (
             .\b2.exe install --prefix="%HomeDir%/boost_1_83_0/" --build-type=complete --toolset=msvc-14.3 variant=%BuildType%  link=shared threading=multi runtime-link=shared address-model=%BitNum%
@@ -622,6 +625,11 @@ goto :eof
             .\bootstrap.bat vc143
         ) else (
             echo .\bootstrap.bat doesn't exist!
+        )
+        if exist .\b2.exe (
+            .\b2.exe install --prefix="%HomeDir%/boost_1_83_0/" --build-type=complete --toolset=msvc-14.3 variant=%BuildType%  link=shared threading=multi runtime-link=shared address-model=%BitNum%
+        ) else (
+            echo .\b2.exe doesn't exist!
         )
         echo BuildType=%BuildType%, BitNum=%BitNum%
         set BuildDir=%BuildType%_win%BitNum%
