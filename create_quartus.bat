@@ -5,10 +5,10 @@ set ProjDir=%CurDir:~0,-1%
 call :get_suf_sub_str %ProjDir% \ ProjName
 echo ProjName %ProjName%
 
-call :CreateQuartusDir "%ProjDir%"
-@rem call :CleanQuartusDir "%ProjDir%"
-call :QuartusProjFile "%ProjDir%"
-call :QuartusSetFile "%ProjDir%"
+@rem call :CreateQuartusDir "%ProjDir%"
+call :CleanAllQuartusDir "%ProjDir%"
+@rem call :QuartusProjFile "%ProjDir%"
+@rem call :QuartusSetFile "%ProjDir%"
 pause
 goto :eof
 
@@ -35,22 +35,39 @@ goto :eof
     endlocal
 goto :eof
 
-
-pause
-goto :eof
-
-:CleanQuartusDir
+:CleanAllSubQuartusDir
     setlocal ENABLEDELAYEDEXPANSION
     set CodeRootDir=%~1
-    Set CodeProjDir=%CodeRootDir%\prj
+
+	for /f %%j in (' dir /ad /b %CodeRootDir% ') do (
+		call :CleanAllQuartusDir "%CodeRootDir%\%%j"
+	)
+
+    endlocal
+goto :eof
+
+:CleanAllQuartusDir
+    setlocal ENABLEDELAYEDEXPANSION
+    set CodeRootDir=%~1
+
+	for /f %%j in (' dir /ad /b %CodeRootDir% ') do (
+		call :CleanQuartusDir "%CodeRootDir%\%%j"
+	)
+
+    endlocal
+goto :eof
+
+:CleanQuartusProjDir
+    setlocal ENABLEDELAYEDEXPANSION
+    set CodeProjDir=%~1
 
     if not exist %CodeProjDir% (
-        call :color_text 4f "++++++++++++++CleanQuartusDir++++++++++++++"
+        call :color_text 4f "++++++++++++++CleanQuartusProjDir++++++++++++++"
         echo Dir '%CodeProjDir%' does not exist!
         goto :eof
     )
     pushd %CodeProjDir%
-        for %%j in (bpm ddb qmsg smsg summary hsd idb kpt rpt db_info hb_info cdb hdb logdb rdb ammdb dfp dpi rcfdb sig sof pin sft vho sdo) do (
+        for %%j in ( tdb tdf bpm ddb qmsg smsg summary hsd idb kpt rpt db_info hb_info cdb hdb logdb rdb ammdb dfp dpi rcfdb sig sof pin sft vho sdo wlf vo do ) do (
             set extName=%%j
             echo file type !extName!
             for /f %%i in ('dir /s /b "%CodeProjDir%\*.!extName!"') do ( 
@@ -59,6 +76,16 @@ goto :eof
             )
         )
     popd
+
+    endlocal
+goto :eof
+
+:CleanQuartusDir
+    setlocal ENABLEDELAYEDEXPANSION
+    set CodeRootDir=%~1
+
+    call :CleanQuartusProjDir "%CodeRootDir%\q_prj"
+    call :CleanQuartusProjDir "%CodeRootDir%\prj"
 
     endlocal
 goto :eof

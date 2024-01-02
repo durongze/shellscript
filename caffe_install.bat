@@ -66,12 +66,12 @@ set home_dir=%cur_dir%\..\out\windows
 
 CALL %VisualStudioCmd%
 
-@rem call :gen_all_env %software_dir% %home_dir% all_inc all_lib all_bin
+call :gen_all_env %software_dir% %home_dir% all_inc all_lib all_bin
 @rem call :get_suf_sub_str %cur_dir% \ proj_name
 @rem call :get_last_char_pos %cur_dir% \ char_pos
 
-@rem call :bat_main "%tools_addr%" "%tools_dir%"  %home_dir%  "%software_urls%" "%software_dir%"
-call :install_boost1830  "debug"  "64"  "%home_dir%"
+call :bat_main "%tools_addr%" "%tools_dir%"  %home_dir%  "%software_urls%" "%software_dir%"
+@rem call :install_boost1830  "debug"  "64"  "%home_dir%"
 
 pause
 goto :eof
@@ -553,11 +553,13 @@ goto :eof
 
     call :color_text 2f "++++++++++++++bat_main++++++++++++++"
     pushd %soft_dir%%
-    @rem call :zip_file_install  "protobuf-3.21.9.zip"  !home_dir!  " -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=!build_type! "  ""
+    call :zip_file_install  "protobuf-3.21.9.zip"  !home_dir!  " -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=!build_type!  -DBUILD_SHARED_LIBS=ON -DPROTOBUF_USE_DLLS=ON"  ""
     @rem call :zip_file_install  "gflags-2.2.2.zip"  !home_dir!  " -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=!build_type!"  ""
     @rem call :zip_file_install  "glog-0.6.0.zip"  !home_dir!  "-DCMAKE_BUILD_TYPE=!build_type!"  ""
     @rem call :zip_file_install  "snappy-1.1.10.zip"  !home_dir!  "  -DSNAPPY_BUILD_TESTS=OFF -DSNAPPY_BUILD_BENCHMARKS=OFF  -DCMAKE_BUILD_TYPE=!build_type!"  ""
-    @rem call :zip_file_install  "hdf5-hdf5-1_12_2.zip"  !home_dir!  " -DCMAKE_BUILD_TYPE=!build_type! "  ""
+    call :color_text 4f "++++++++++++++bat_main++++++++++++++"
+    echo hdf5-hdf5-1_12_2   option (HDF5_BUILD_CPP_LIB  "Build HDF5 C++ Library" ON)
+    @rem call :zip_file_install  "hdf5-hdf5-1_12_2.zip"  !home_dir!  " -DCMAKE_BUILD_TYPE=!build_type!  -DHDF5_BUILD_CPP_LIB=ON "  ""
     @rem call :zip_file_install  "leveldb-1.23.zip"  !home_dir!  "  -DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF  -DCMAKE_BUILD_TYPE=!build_type!"  ""
     @rem call :zip_file_install  "lmdb-LMDB_0.9.29.zip"  !home_dir!  "-DCMAKE_BUILD_TYPE=!build_type!"  ""
     @rem call :zip_file_install  "OpenBLAS-0.3.23.zip"  !home_dir!  "-DCMAKE_BUILD_TYPE=!build_type!"  ""
@@ -591,6 +593,11 @@ goto :eof
             .\bootstrap.bat vc142
         ) else (
             echo .\bootstrap.bat doesn't exist!
+        )
+        if exist .\b2.exe (
+            .\b2.exe install --prefix="%HomeDir%/boost_1_74_0/" --build-type=complete --toolset=msvc-17.0 variant=%BuildType%  link=shared threading=multi runtime-link=shared address-model=%BitNum%
+        ) else (
+            echo .\b2.exe doesn't exist!
         )
         echo BuildType=%BuildType%, BitNum=%BitNum%
         set BuildDir=%BuildType%_win%BitNum%
