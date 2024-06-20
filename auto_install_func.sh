@@ -52,17 +52,20 @@ function DownloadSoftware()
 {
     DownloadDir=$1
     SoftwareUrls="$2"
+    Idx=0
     if [ ! -d "$DownloadDir" ];then
         mkdir $DownloadDir
     fi
     pushd $DownloadDir
         for url in $SoftwareUrls
         do
+	    Idx=$(expr $Idx + 1)
             file=${url##*/}
             if [ -f $file ];then
-                echo -e "\033[32m file : $file exist. \033[0m"
+                echo -e "\033[32m <$Idx> file : $file exist. \033[0m"
                 continue
             fi
+            echo -e "\033[33m <$Idx> file : $file downloading. \033[0m"
             wget $url
         done
     popd
@@ -170,12 +173,15 @@ function AutoGenInstall()
     if [ -f ./autogen.sh ];then
         ./autogen.sh
     elif [ -f ./buildconf ];then
-        ./buildconf
+        ./buildconf 
     elif [ -f ./config ];then
         cp ./config ./configure
     fi
-    if [[ $? -ne 0 ]];then
-        echo -e "\033[31m Install $SrcDir failed, gen cfg error !!! \033[0m"
+    CurStat=$?
+    if [[ $CurStat -ne 0 ]];then
+        echo -e "\033[31m [$FUNCNAME:$LINENO]Install $SrcDir failed, gen cfg error $CurStat!!! \033[0m"
+        echo -e "\033[31m DstDir $DstDir !!! \033[0m"
+        echo -e "\033[31m CurFlags $CurFlags !!! \033[0m"
         exit 1;
     fi
     CfgInstall "$SrcDir" "$DstDir" "$CurFlags"
@@ -192,11 +198,11 @@ function CfgInstall()
     fi
     pushd dyzbuild
         dos2unix ../configure && export CXXFLAGS="-fPIC"
-        CmdStr="\033[32m ../configure --prefix=$DstDir/$InstallDir $CurFlags \033[0m" 
-        #CmdStr="../configure --prefix=$DstDir/$InstallDir $CurFlags"
-        ../configure --prefix=$DstDir/$InstallDir $CurFlags  || { echo -e "$CmdStr"; exit 1; }
-        make   || { echo -e "$CmdStr"; exit 1; }
-        make install   || { echo -e "$CmdStr"; exit 1; }
+        CmdStr="../configure --prefix=$DstDir/$InstallDir $CurFlags" 
+        EchoInfo "$CmdStr"
+        eval $CmdStr  || { EchoError "$CmdStr"; exit 1; }
+        make   || { EchoError "$CmdStr"; exit 2; }
+        make install   || { EchoError "$CmdStr"; exit 3; }
     popd
 
 }
@@ -210,6 +216,27 @@ function MakeInstall()
     FixPkgCtx "$SrcDir"
     $CurFlags && make || { echo -e "\033[31m Install $SrcDir failed. \033[0m"; exit 1; }
     make install 
+}
+
+function PythonInstall()
+{
+    SrcDir=$1
+    DstDir=$2
+    CurFlags="$3"
+    InstallDir=$(echo $SrcDir | tr -s "." "_")
+    CmdStr="sudo python setup.py install"
+    eval $CmdStr  || { EchoError "$CmdStr"; exit 1; }
+}
+
+function MesonInstall()
+{
+    SrcDir=$1
+    DstDir=$2
+    CurFlags="$3"
+    InstallDir=$(echo $SrcDir | tr -s "." "_")
+    echo "pwd:$(pwd) DstDir:$DstDir"
+    CmdStr="meson build/ \"--prefix=$DstDir\"" 
+    eval $CmdStr  || { EchoError "$CmdStr"; exit 1; }
 }
 
 function AutoInstall()
@@ -228,9 +255,11 @@ function AutoInstall()
         elif [ -f Makefile ];then
             MakeInstall "$SrcDir" "$DstDir" "$CurFlags"
         elif [ -f setup.py ];then
-            sudo python setup.py install
+            PythonInstall "$SrcDir" "$DstDir" "$CurFlags"
+        elif [ -f meson.build ];then
+            MesonInstall "$SrcDir" "$DstDir" "$CurFlags"
         else
-            echo -e "\033[31m Install $SrcDir failed, cfg file not exist !!! \033[0m"
+            EchoError "Install $SrcDir failed, cfg file not exist !!!"
             exit 1
         fi
     popd
@@ -244,8 +273,8 @@ function SpecInstall()
     CurFlags="$3"
     Method=$4
 
-    if [[ $# -eq 4 ]];then
-        echo -e "\033[31m $FUNCNAME $LINENO ARGS:$* \033[0m"
+    if [[ $# -ne 4 ]];then
+        echo -e "\033[31m[$FUNCNAME:$LINENO] $# ARGS:$* \033[0m"
     fi
     pushd $SrcDir
         case $Method in
@@ -262,10 +291,13 @@ function SpecInstall()
                 MakeInstall "$SrcDir" "$DstDir" "$CurFlags" 
                 ;;
             *[Pp]ython[Ii]nstall*)
-                sudo python setup.py install 
+                PythonInstall "$SrcDir" "$DstDir" "$CurFlags"
+                ;;
+            *[Mm]eson[Ii]nstall*)
+                MesonInstall "$SrcDir" "$DstDir" "$CurFlags"
                 ;;
             *)
-                echo -e "\033[31m Install $SrcDir failed, Method:$Method \033[0m"
+                EchoError "Install $SrcDir failed, Method:$Method"
                 ;;
         esac;
     popd
@@ -348,6 +380,9 @@ function CopyPcFile()
         mkdir -p $PcFileDir 
         echo -e "\033[31m find $SrcDir -iname \"*.pc\" | xargs -I {} cp {} $PcFileDir/ \033[0m"
         find $SrcDir -iname "*.pc" | xargs -I {} cp {} $PcFileDir/ 
+    else
+        echo -e "\033[32m ls $PcFileDir/ \033[0m"
+        ls $PcFileDir/
     fi
 }
 
@@ -394,6 +429,8 @@ function GenEnvVar()
     echo "    export LD_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${LD_LIBRARY_PATH}" >>${MY_BASHRC}
     echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib:\${CMAKE_LIBRARY_PATH}" >>${MY_BASHRC}
     echo "    export CMAKE_LIBRARY_PATH=\${TMP_FILE_HOME}/lib64:\${CMAKE_LIBRARY_PATH}" >>${MY_BASHRC}
+    echo "    export PKG_CONFIG=\${TMP_FILE_HOME}/lib/pkgconfig/:\${PKG_CONFIG}" >>${MY_BASHRC}
+    echo "    export PKG_CONFIG=\${TMP_FILE_HOME}/lib64/pkgconfig/:\${PKG_CONFIG}" >>${MY_BASHRC}
     echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib/pkgconfig/:\${PKG_CONFIG_PATH}" >>${MY_BASHRC}
     echo "    export PKG_CONFIG_PATH=\${TMP_FILE_HOME}/lib64/pkgconfig/:\${PKG_CONFIG_PATH}" >>${MY_BASHRC}
     echo "    export CMAKE_MODULE_PATH=\${TMP_FILE_HOME}/lib/cmake/:\${CMAKE_MODULE_PATH}" >>${MY_BASHRC}
