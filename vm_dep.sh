@@ -89,11 +89,13 @@ function CompilePkgByDir()
     fi
     for dir in $AllPkgDir
     do
-        if [[ $dir != *zlib* ]];then
+        if [[ $dir == *SDL* ]];then
+            AutoInstallStr="AutoInstall \"$dir\" \"$DstDirPrefix\" \"  -DSDL_TESTS=ON -DSDL_X11_XRANDR=OFF -DSDL_OPENGL=OFF -DSDL_OPENGLES=OFF \" "
+            echo "$AutoInstallStr"
+            eval $AutoInstallStr
+        else
             echo "Skip $dir..........................."
             continue
-        else
-            AutoInstall "$dir" "$DstDirPrefix" ""
         fi
     done
 }
