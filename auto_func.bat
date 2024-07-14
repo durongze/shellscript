@@ -98,6 +98,7 @@ goto :eof
             call :cmake_install %src_dir% %dst_dir% %cur_flags%
         ) else (
             call:color_text 6f "++++++++++++++auto_install++++++++++++++"
+            echo "CMakeLists.txt doesn't exist."
             echo skip %src_dir% %dst_dir% %cur_flags%
         )
 goto :to_skip
@@ -249,13 +250,17 @@ goto :eof
     endlocal & set %~3=%DstDirWithHome%
 goto :eof
 
-:gen_all_env
+:gen_all_env_by_file
     setlocal ENABLEDELAYEDEXPANSION
-    set tools_dir="%~1"
+    set thridparty_dir="%~1"
     set home_dir="%~2"
     set DstDirWithHome=
-    call :color_text 2f "++++++++++++++gen_all_env++++++++++++++"
-    pushd %tools_dir%
+    call :color_text 2f "++++++++++++++gen_all_env_by_file++++++++++++++"
+    if not exist %thridparty_dir% (
+        echo Dir '%thridparty_dir%' doesn't exist!
+        goto :eof
+    )
+    pushd %thridparty_dir%
         for /f %%i in ( 'dir /b *.tar.* *.zip' ) do (
             set tar_file=%%i
             call :gen_env_by_file !tar_file! !home_dir! DstDirWithHome
@@ -268,13 +273,51 @@ goto :eof
             set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
         )
     popd
-    call :color_text 9f "++++++++++++++gen_all_env++++++++++++++"
+    call :color_text 9f "++++++++++++++gen_all_env_by_file++++++++++++++"
     echo inc:%inc%
     echo lib:%lib%
     echo bin:%bin%
-    echo CMAKE_INCLUDE_PATH:%CMAKE_INCLUDE_PATH%
-    echo CMAKE_LIBRARY_PATH:%CMAKE_LIBRARY_PATH%
-    echo CMAKE_MODULE_PATH:%CMAKE_MODULE_PATH%
+    endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin% & set %~6=%CMAKE_INCLUDE_PATH% & set %~7=%CMAKE_LIBRARY_PATH% & set %~8=%CMAKE_MODULE_PATH%
+goto :eof
+
+:gen_env_by_dir
+    setlocal ENABLEDELAYEDEXPANSION
+    set FileDir=%~1
+    set HomeDir=%~2
+    set DstDirWithHome=%3
+
+    call :color_text 9f "++++++++++++++gen_env_by_dir++++++++++++++"
+    set DstDirWithHome=%HomeDir%\%FileDir%
+    echo %0 %zip_file% %DstDirWithHome%
+    endlocal & set %~3=%DstDirWithHome%
+goto :eof
+
+:gen_all_env_by_dir
+    setlocal ENABLEDELAYEDEXPANSION
+    set thridparty_dir="%~1"
+    set home_dir="%~2"
+    set DstDirWithHome=
+    call :color_text 2f "++++++++++++++gen_all_env_by_dir++++++++++++++"
+    if not exist %thridparty_dir% (
+        echo Dir '%thridparty_dir%' doesn't exist!
+        goto :eof
+    )
+    pushd %thridparty_dir%
+        for /f %%i in ( 'dir /b /ad ' ) do (
+            set soft_dir=%%i
+            call :gen_env_by_dir !soft_dir! !home_dir! DstDirWithHome
+            set inc=!DstDirWithHome!\include;!inc!
+            set lib=!DstDirWithHome!\lib;!lib!
+            set bin=!DstDirWithHome!\bin;!bin!
+            set CMAKE_INCLUDE_PATH=!DstDirWithHome!\include;!CMAKE_INCLUDE_PATH!
+            set CMAKE_LIBRARY_PATH=!DstDirWithHome!\lib;!CMAKE_LIBRARY_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
+        )
+    popd
+    call :color_text 9f "++++++++++++++gen_all_env_by_dir++++++++++++++"
+    echo inc:%inc%
+    echo lib:%lib%
+    echo bin:%bin%
     endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin% & set %~6=%CMAKE_INCLUDE_PATH% & set %~7=%CMAKE_LIBRARY_PATH% & set %~8=%CMAKE_MODULE_PATH%
 goto :eof
 
@@ -284,6 +327,9 @@ goto :eof
     echo all_inc:%all_inc%
     echo all_lib:%all_lib%
     echo all_bin:%all_bin%
+    echo CMAKE_INCLUDE_PATH:%CMAKE_INCLUDE_PATH%
+    echo CMAKE_LIBRARY_PATH:%CMAKE_LIBRARY_PATH%
+    echo CMAKE_MODULE_PATH:%CMAKE_MODULE_PATH%
     endlocal
 goto :eof
 
