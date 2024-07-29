@@ -1,4 +1,4 @@
-
+call :DetectVsPath VisualStudioCmd
 
 @rem copy compiler\mr_helper.mrp compiler\mr_helpere.mrp
 
@@ -35,22 +35,25 @@ set ARMINC=%ARMHOME%\include
 set ARMLIB=%ARMHOME%\lib
 set path=%ArmHome%\bin;%path%
 
-set FrameworkLib=WS2_32.lib;winmm.lib;vfw32.lib;
+set VCInstallDir=F:\Program Files (x86)\Microsoft Visual Studio 8\VC
+set VscLib=msvcmrtd.lib;msvcrtd.lib;
+set VscDir=%VCInstallDir%\lib
+set VsAtlmfcLib=mfcs80d.lib atlsd.lib mfc80d.lib
+set VsAtlmfcDir=%VCInstallDir%\atlmfc\lib
+set FrameworkLib=kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;WS2_32.lib;winmm.lib;vfw32.lib;
+set FrameworkDir=%VCInstallDir%\PlatformSDK\lib
 set SkySdkLib=dsound.lib;dxguid.lib;simulator.lib;simlib.lib;jpeg_sim.lib;SIM_mr_helperexb.lib;data_codec_sim.lib;SIM_mr_helperexbnp.lib;
-set VscLib=kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;
-
-call :DetectVsPath VisualStudioCmd
 
 call %VisualStudioCmd%
 
 call :ShowVS2022InfoOnWin10
 
-set VCInstallDir=F:\Program Files (x86)\Microsoft Visual Studio 8\VC
-@rem call :CheckLibInDir         "%FrameworkLib%"  "%FrameworkDir%"
-call :CheckLibInDir         "%FrameworkLib%"  "%VCInstallDir%\PlatformSDK\lib"
 @rem call :CheckLibInDir         "%VscLib%"        "%WindowsSdkDir%"
-call :CheckLibInDir         "%VscLib%"        "%VCInstallDir%\PlatformSDK\Lib"
-call :CheckLibInDir         "%SkySdkLib%"     "%SkySdkDir%\Simulator\lib"
+call :CheckLibInDir         "%VscLib%"             "%VscDir%"
+call :CheckLibInDir         "%VsAtlmfcLib%"        "%VsAtlmfcDir%"
+call :CheckLibInDir         "%FrameworkLib%"       "%FrameworkDir%"
+
+@rem call :CheckLibInDir         "%SkySdkLib%"     "%SkySdkDir%\Simulator\lib"
 pause
 goto :eof
 
@@ -58,7 +61,10 @@ goto :eof
     setlocal EnableDelayedExpansion
     set Libs=%~1
     set LibDir="%~2"
-
+    set MyPlatformSDK=%ProjDir%\lib
+    if not exist "%MyPlatformSDK%" (
+        mkdir %MyPlatformSDK%
+    )
     call :color_text 2f "+++++++++++++++++++CheckLibInDir+++++++++++++++++++++++"
     echo LibDir %LibDir%
     if not exist %LibDir% (
@@ -72,7 +78,11 @@ goto :eof
         set /a idx+=1
         set CurLib=%%i
         echo [!idx!] !LibDir!\!CurLib!
-        if not exist !LibDir!\!CurLib! (echo !LibDir!\!CurLib!)
+        if not exist !LibDir!\!CurLib! (
+            echo !LibDir!\!CurLib!
+        ) else (
+            copy !LibDir!\!CurLib! %MyPlatformSDK%
+        )
     )
     popd
     call :color_text 2f "--------------------CheckLibInDir-----------------------"
