@@ -92,43 +92,39 @@ goto :eof
 :DetectVsPath
     setlocal EnableDelayedExpansion
     set VsBatFileVar=%~1
-
-    set VisualStudioCmdSet="F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
-
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-    
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"E:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
-    
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\vcvars32.bat"
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\vcvars64.bat"
-
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\vcvars32.bat"
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64\vcvars64.bat"
-
-    set VisualStudioCmdSet=%VisualStudioCmdSet%;"C:\Program Files (x86)\Microsoft Visual Studio 8\VC\vcvarsall.bat"
-
-    call :color_text 2f "+++++++++++++++++++DetectVsPath+++++++++++++++++++++++"
-    set CurBat=
-    set idx=0
-    for %%i in (%VisualStudioCmdSet%) do (
-        set /a idx+=1
-        set CurBat=%%i
-        echo [!idx!] !CurBat!
-        if exist !CurBat! (
-            goto DetectVsPathBreak
+    set VSDiskSet=C;D;E;F;G;
+    set AllProgramsPathSet=program
+    set AllProgramsPathSet=%AllProgramsPathSet%;programs
+    set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files"
+    set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files (x86)"
+    set VCPathSet=SkySdk\VS2005\VC
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 12.0\VC\bin"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 14.0\VC\bin"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
+    set idx_a=0
+    for %%C in (%VCPathSet%) do (
+        set /a idx_a+=1
+        set idx_b=0
+        for %%B in (!AllProgramsPathSet!) do (
+            set /a idx_b+=1
+            set idx_c=0
+            for %%A in (!VSDiskSet!) do (
+                set /a idx_c+=1
+                set CurBatFile=%%A:\%%B\%%C\vcvarsall.bat
+                echo [!idx_a!][!idx_b!][!idx_c!] !CurBatFile!
+                if exist !CurBatFile! (
+                    goto DetectVsPathBreak
+                )
+            )
         )
     )
     :DetectVsPathBreak
-    echo Use:%CurBat%
+    echo Use:%CurBatFile%
     call :color_text 2f "--------------------DetectVsPath-----------------------"
-    endlocal & set "%~1=%CurBat%"
+    endlocal & set "%~1=%CurBatFile%"
 goto :eof
 
 @rem YellowBackground    6f  ef
