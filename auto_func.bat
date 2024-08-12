@@ -40,7 +40,8 @@ goto :eof
         echo cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
         cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
         cmake --build . --config %build_type%
-        cmake --install .
+        @rem cmake --install .
+        cmake --build . --target INSTALL --config %build_type%
     popd
     endlocal
 goto :eof
