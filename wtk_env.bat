@@ -24,7 +24,7 @@ goto :eof
 
     set JAVA_HOME=%JavaLocDir%
     set CLASSPATH=.;%JAVA_HOME%\lib;%JAVA_HOME%\lib\tools.jar;
-    set PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin;
+    set PATH=%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin;%PATH%;
 
     endlocal & set %~2=%JAVA_HOME% & set %~3=%CLASSPATH% & set %~4=%PATH%
 goto :eof
@@ -42,7 +42,7 @@ goto :eof
     set WtkLocDir=%~1
     set EnvPath=%~2
 
-    set PATH=%PATH%;%WtkLocDir%\bin;
+    set PATH=%WtkLocDir%\bin;%PATH%;
 
     endlocal & set %~2=%PATH%
 goto :eof
