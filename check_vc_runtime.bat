@@ -8,10 +8,10 @@ set CurDir=%~dp0
 
 set ProjDir=%CurDir:~0,-1%
 echo ProjDir %ProjDir%
-
-call :GetGeneralComponent VcRuntimeList
+set TargetGUID=450D8FBA-AD25-11D0-98A8-0800361B1103
+call :GetGeneralComponentList VcRuntimeList
 call :CheckVcRuntimeEnv "%VcRuntimeList%"
-
+call :GetComponentName "%TargetGUID%"
 pause
 goto :eof
 
@@ -36,9 +36,9 @@ goto :eof
     endlocal
 goto :eof
 
-:GetGeneralComponent
+:GetGeneralComponentList
     setlocal EnableDelayedExpansion
-    call :color_text 2f "+++++++++++++GetGeneralComponent+++++++++++++++"
+    call :color_text 2f "+++++++++++++GetGeneralComponentList+++++++++++++++"
     set My_Documents=450D8FBA-AD25-11D0-98A8-0800361B1103
     set My_Computer=20D04FE0-3AEA-1069-A2D8-08002B30309D
     set Network_Neighborhood=208D2C60-3AEA-1069-A2D7-08002B30309D
@@ -50,9 +50,32 @@ goto :eof
     set Task_Scheduler=D6277990-4C6A-11CF-8D87-00AA0060F5BF
     set Printer=2227A280-3AEA-1069-A2DE-08002B30309D
     set History_Folder=7BD29E00-76C1-11CF-9DD0-00A0C9034933
-    call :color_text 9f "+++++++++++++GetGeneralComponent+++++++++++++++"
+    call :color_text 9f "+++++++++++++GetGeneralComponentList+++++++++++++++"
     endlocal & set %~1=%My_Documents% %My_Computer% %Network_Neighborhood% %Recycle_Bin% %Internet_Explorer% %Control_Panel% %Network_Connections% %Task_Scheduler% %Printer% %History_Folder%
 goto :eof
+
+
+:GetComponentName
+    setlocal EnableDelayedExpansion
+    set ComponentGUID=%~1
+    set ComponentName=
+    call :color_text 2f "+++++++++++++GetComponentName+++++++++++++++"
+    call :GetGeneralComponentList ComponentList
+    set idx=0
+    echo ComponentList:%ComponentList%
+    for %%i in (%ComponentList%) do (
+        set /a idx+=1
+        set GUID=%%i
+
+        if "!ComponentGUID!"=="!GUID!" (
+            call :color_text 2f "-------------'HKEY_CLASSES_ROOT CLSID {GUID}' already exists---------------"
+            echo [!idx!]GUID: !GUID!
+        )
+    )
+    call :color_text 9f "+++++++++++++GetComponentName+++++++++++++++"
+    endlocal & set %~1=%ComponentName%
+goto :eof
+
 
 @rem YellowBackground    6f  ef
 @rem BlueBackground      9f  bf   3f
