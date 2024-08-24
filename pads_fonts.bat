@@ -6,14 +6,49 @@ set CurDir=%~dp0
 
 set ProjDir=%CurDir:~0,-1%
 echo ProjDir %ProjDir%
-
-call :QueryPadsFonts
+set PadsHomeDir=H:\MentorGraphics\PADSVX.2.7
+call :QueryPadsGuiFontDll "%PadsHomeDir%"  "chs"
+call :QueryPadsGuiFontDll "%PadsHomeDir%"  "enu"
+call :QueryPadsColorCfg   "%PadsHomeDir%"
+@rem call :QueryPadsFonts
 @rem call :ModifyPadsFonts
 @rem call :QueryPadsFonts
 pause
 goto :eof
 
+:QueryPadsGuiFontDll
+    setlocal EnableDelayedExpansion
+    set PadsHomeDir=%~1
+    set PadsGuiLang=%~2
+    set PadsGuiFontDir=%PadsHomeDir%\SDD_HOME\Programs\%PadsGuiLang%
+    set PadsGuiFontDll=%PadsGuiFontDir%\powerlogicres.dll
+    call :color_text 2f "+++++++++++++QueryPadsGuiFontDll+++++++++++++++"
+    set idx=0
+    pushd %PadsGuiFontDir%
+    for /f %%i in ('dir /s /b "*.dll"') do (
+        set /a idx+=1
+        echo [!idx!]:%%i
+    )
+    popd
+    call :color_text 9f "-------------QueryPadsGuiFontDll---------------"
+    endlocal
+goto :eof
 
+:QueryPadsColorCfg
+    setlocal EnableDelayedExpansion
+    set PadsHomeDir=%~1
+    set PadsSetDir=%~1\SDD_HOME\Settings
+    call :color_text 2f "+++++++++++++QueryPadsColorCfg+++++++++++++++"
+    set idx=0
+    pushd %PadsSetDir%
+    for /f %%i in ('dir /s /b "*.CCF"') do (
+        set /a idx+=1
+        echo [!idx!]:%%i
+    )
+    popd
+    call :color_text 9f "-------------QueryPadsColorCfg---------------"
+    endlocal
+goto :eof
 
 :ModifyPadsFonts
     setlocal EnableDelayedExpansion
@@ -41,9 +76,15 @@ goto :eof
     endlocal
 goto :eof
 
+:QuerySystemEnv
+    setlocal EnableDelayedExpansion
+    reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+    reg query "HKEY_CURRENT_USER\Environment"
+    endlocal
+goto :eof
+
 :QueryPadsFonts
     setlocal EnableDelayedExpansion
-
     call :color_text 2f "+++++++++++++QueryPadsFonts+++++++++++++++"
     echo Key:Fonts, StringValue:Microsoft YaHei ^& Microsoft YaHei UI (TrueType)
     @rem msyh.ttc -> simsun.ttc
