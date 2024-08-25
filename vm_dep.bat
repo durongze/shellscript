@@ -48,7 +48,7 @@ call %auto_install_func% gen_all_env %software_dir% %home_dir% all_inc all_lib a
 
 @rem set Iconv_LIBRARY=%tools_dir%\bin\libiconv.lib
 
-@rem call %auto_install_func% install_all_package "%tools_addr%" "%tools_dir%"
+@rem call %auto_install_func% install_all_package "%tools_addr%"    "%tools_dir%"
 @rem call %auto_install_func% install_all_package "%software_urls%" "%software_dir%"
 call :thirdparty_lib_install "%software_dir%" %home_dir%
 pause
@@ -61,20 +61,20 @@ goto :eof
     set home_dir="%~2"
     call :color_text 2f "++++++++++++++thirdparty_lib_install++++++++++++++"
     pushd %lib_dir%
-        @rem call %auto_install_func% install_package pthread-win32.zip       "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% install_package zlib-1.2.12.tar.gz      "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% install_package capstone-master.zip     "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% install_package SDL-release-2.24.0.zip  "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% install_package unicorn-master.zip      "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% install_package iconv-master.zip        "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% auto_install    "pthread-win32"       "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        call %auto_install_func% auto_install    "freetype-2.9"        "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% auto_install    "zlib-1.2.12"         "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% auto_install    "capstone-master"     "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% auto_install    "SDL-release-2.24.0"  "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% auto_install    "unicorn-master"      "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -DPROJECT_IS_TOP_LEVEL=ON  -A Win32"
-        @rem call %auto_install_func% auto_install    "iconv-master"        "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
-        @rem call %auto_install_func% auto_install    "libiconv-master"     "%home_dir%"  "-DCMAKE_BUILD_TYPE=Release  -A Win32"
+        @rem call %auto_install_func% install_package pthread-win32.zip       "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% install_package zlib-1.2.12.tar.gz      "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% install_package capstone-master.zip     "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% install_package SDL-release-2.24.0.zip  "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% install_package unicorn-master.zip      "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% install_package iconv-master.zip        "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% auto_install    "pthread-win32"       "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        call %auto_install_func% auto_install    "freetype-2.9"        "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% auto_install    "zlib-1.2.12"         "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% auto_install    "capstone-master"     "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% auto_install    "SDL-release-2.24.0"  "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% auto_install    "unicorn-master"      "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -DPROJECT_IS_TOP_LEVEL=ON  -A Win32"
+        @rem call %auto_install_func% auto_install    "iconv-master"        "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
+        @rem call %auto_install_func% auto_install    "libiconv-master"     "%home_dir%"  "-DCMAKE_BUILD_TYPE=%build_type%  -A Win32"
     popd
 goto :eof
 
@@ -175,7 +175,7 @@ goto :eof
     :DetectVsPathBreak
     echo Use:%CurBatFile%
     call :color_text 2f "--------------------DetectVsPath-----------------------"
-    endlocal & set "%~1=%CurBat%"
+    endlocal & set "%~1=%CurBatFile%"
 goto :eof
 
 @rem YellowBackground    6f  ef
