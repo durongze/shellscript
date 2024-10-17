@@ -9,16 +9,16 @@ set spec_dir=%ProjDir%
 
 @rem call :copy_spec_file      "%spec_file%"    "%spec_dir%"
 
-set spec_file_list=./ffmpeg/libavdevice/alldevices.c
-set spec_file_list=%spec_file_list%;./ffmpeg/libavdevice/alldevices.c
-set spec_file_list=%spec_file_list%;./ffmpeg/libavformat/allformats.c
-set spec_file_list=%spec_file_list%;./ffmpeg/libavformat/allformats.c
-set spec_file_list=%spec_file_list%;./ffmpeg/libavcodec/allcodecs.c
-set spec_file_list=%spec_file_list%;./ffmpeg/libavcodec/allcodecs.c
-set spec_file_list=%spec_file_list%;./ffmpeg/libavcodec/parsers.c
-set spec_file_list=%spec_file_list%;./ffmpeg/libavcodec/bitstream_filter.c
-set spec_file_list=%spec_file_list%;./ffmpeg/libavcodec/hwaccels.h
-set spec_file_list=%spec_file_list%;./ffmpeg/libavformat/protocols.c
+set spec_file_list=/home/lighthouse/code/lua/libavdevice/alldevices.c
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavdevice/alldevices.c
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavformat/allformats.c
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavformat/allformats.c
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavcodec/allcodecs.c
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavcodec/allcodecs.c
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavcodec/parsers.c
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavcodec/bitstream_filter.c
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavcodec/hwaccels.h
+set spec_file_list=%spec_file_list%;/home/lighthouse/code/lua/libavformat/protocols.c
 call :create_spec_file    "%spec_file%"    "%spec_file_list%"
 pause
 goto :eof
@@ -40,7 +40,7 @@ goto :eof
             set dst_file_name=
             set dst_file_dir=
             set dst_file_ext=
-            call :get_path_by_file   "!dst_file!"    dst_file_name    dst_file_dir    dst_file_ext
+            call :get_path_by_file   "!dst_file!"    dst_file_dir    dst_file_name    dst_file_ext
             echo File[!idx!]: !dst_file!    !dst_file_name!    !dst_file_dir!    !dst_file_ext!
             if "!spec_file!" == "!dst_file_name!!dst_file_ext!" (
                 echo copy    "!spec_file!"    "!dst_file!"
@@ -65,7 +65,7 @@ goto :eof
         set dst_file_name=
         set dst_file_dir=
         set dst_file_ext=
-        call :get_path_by_file   "!dst_file!"    dst_file_name    dst_file_dir    dst_file_ext
+        call :get_path_by_file   "!dst_file!"    dst_file_dir    dst_file_name    dst_file_ext
         echo File[!idx!]: dst_file=!dst_file!    dst_file_name=!dst_file_name!    dst_file_dir=!dst_file_dir!    dst_file_ext=!dst_file_ext!
         if "!spec_file!" == "!dst_file_name!!dst_file_ext!" (
             echo md      "!dst_file_dir!"
