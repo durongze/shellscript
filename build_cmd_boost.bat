@@ -10,11 +10,13 @@ echo ProgramDir=%ProgramDir%
 set CurDir=%~dp0
 set ProjDir=%CurDir:~0,-1%
 
+set PERL5LIB=%PERL5LIB%
 set PerlPath=%ProgramDir%\Perl\bin
 set NASMPath=%ProgramDir%\nasm\bin
+set YASMPath=%ProgramDir%\yasm\bin
 set CMakePath=%ProgramDir%\cmake\bin
 set PythonHome=%ProgramDir%\python
-set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PATH%
+set PATH=%NASMPath%;%YASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PATH%
 
 set HomeDir=%ProjDir%\out\windows
 
@@ -28,13 +30,30 @@ call :install_boost1830  "debug"  "64"  "%HomeDir%"
 pause
 goto :eof
 
+:MidlProcFile
+    setlocal EnableDelayedExpansion
+    set IdlFileList=%~1
+    set idx=0
+    call :color_text 2f " +++++++++++++++++++ MidlProcFile +++++++++++++++++++++++ "
+    for %%i in (%IdlFileList%) do (
+        set /a idx+=1
+        set IdlFile=%%i
+        echo [!idx!] !IdlFile!
+        if exist !IdlFile! (
+            
+        )
+    )
+    call :color_text 2f " -------------------- MidlProcFile ----------------------- "
+    endlocal
+goto :eof
+
 :DetectProgramDir
     setlocal EnableDelayedExpansion
     @rem SkySdk\VS2005\VC
     set SkySdkDiskSet=C;D;E;F;G;
     set CurProgramDir=
     set idx=0
-    call :color_text 2f "+++++++++++++++++++DetectProgramDir+++++++++++++++++++++++"
+    call :color_text 2f " +++++++++++++++++++ DetectProgramDir +++++++++++++++++++++++ "
     for %%i in (%SkySdkDiskSet%) do (
         set /a idx+=1
         for /f "tokens=1-2 delims=|" %%B in ("programs|program") do (
@@ -52,8 +71,53 @@ goto :eof
     )
     :DetectProgramDirBreak
     set ProgramDir=!CurProgramDir!
-    call :color_text 2f "--------------------DetectProgramDir-----------------------"
+    call :color_text 2f " ------------------- DetectProgramDir ----------------------- "
     endlocal & set %~1=%ProgramDir%
+goto :eof
+
+:DetectVS2005VcDir
+    setlocal EnableDelayedExpansion
+    set OutVCInstallDir=%~1
+    set VisualStudioDiskSet=C;D;E;F;G;
+    set CurVcDir=
+    set idx=0
+    call :color_text 2f "+++++++++++++++++++DetectVS2005VcDir+++++++++++++++++++++++"
+    for %%i in (%VisualStudioDiskSet%) do (
+        set /a idx+=1
+        set CurVcDir="%%i:\Program Files (x86)\Microsoft Visual Studio 8\VC"
+        echo [!idx!] !VS80COMNTOOLS!
+        echo [!idx!] !CurVcDir!
+        if exist !CurVcDir! (
+            goto :DetectVS2005VcDirBreak
+        )
+    )
+    :DetectVS2005VcDirBreak
+    set VCInstallDir="!CurVcDir!"
+    call :color_text 2f "--------------------DetectVS2005VcDir-----------------------"
+    endlocal & set "%~1=%VCInstallDir%"
+goto :eof
+
+:CopyVS2005Libs
+    setlocal EnableDelayedExpansion
+    set ProjDir=%~1
+    call :color_text 2f "+++++++++++++++++++CopyVS2005Libs+++++++++++++++++++++++"
+    @rem call :DetectVS2005VcDir   VCInstallDir
+    call :DetectProgramDir    ProgramDir
+    set VCInstallDir=%ProgramDir%\SkySdk\VS2005\VC
+    set VscLib=msvcmrtd.lib;msvcrtd.lib;
+    set VscDir=%VCInstallDir%\lib
+    set VsAtlmfcLib=mfcs80d.lib atlsd.lib mfc80d.lib
+    set VsAtlmfcDir=%VCInstallDir%\atlmfc\lib
+    set FrameworkLib=kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;WS2_32.lib;winmm.lib;vfw32.lib;
+    set FrameworkDir=%VCInstallDir%\PlatformSDK\lib
+    set SkySdkLib=dsound.lib;dxguid.lib;simulator.lib;simlib.lib;jpeg_sim.lib;SIM_mr_helperexb.lib;data_codec_sim.lib;SIM_mr_helperexbnp.lib;
+    @rem call :CheckLibInDir         "%VscLib%"             "%WindowsSdkDir%"                "%ProjDir%"
+    call :CheckLibInDir         "%VscLib%"             "%VscDir%"         "%ProjDir%"
+    call :CheckLibInDir         "%VsAtlmfcLib%"        "%VsAtlmfcDir%"    "%ProjDir%"
+    @rem call :CheckLibInDir         "%FrameworkLib%"       "%FrameworkDir%"                 "%ProjDir%"
+    @rem call :CheckLibInDir         "%SkySdkLib%"          "%SkySdkDir%\Simulator\lib"      "%ProjDir%"
+    call :color_text 2f "--------------------CopyVS2005Libs-----------------------"
+    endlocal
 goto :eof
 
 :CheckLibInDir
@@ -65,10 +129,10 @@ goto :eof
     if not exist "%MyPlatformSDK%" (
         mkdir %MyPlatformSDK%
     )
-    call :color_text 2f "+++++++++++++++++++CheckLibInDir+++++++++++++++++++++++"
+    call :color_text 2f " +++++++++++++++++++ CheckLibInDir +++++++++++++++++++++++ "
     echo LibDir %LibDir%
     if not exist %LibDir% (
-        call :color_text 4f "--------------------CheckLibInDir-----------------------"
+        call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
         goto :eof
     )
 
@@ -85,25 +149,28 @@ goto :eof
         )
     )
     popd
-    call :color_text 2f "--------------------CheckLibInDir-----------------------"
+    call :color_text 2f " -------------------- CheckLibInDir ----------------------- "
     endlocal
 goto :eof
 
 :DetectVsPath
     setlocal EnableDelayedExpansion
     set VsBatFileVar=%~1
+
+    call :color_text 2f " +++++++++++++++++++ DetectVsPath +++++++++++++++++++++++ "
     set VSDiskSet=C;D;E;F;G;
     set AllProgramsPathSet=program
     set AllProgramsPathSet=%AllProgramsPathSet%;programs
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files (x86)"
-    set VCPathSet=SkySdk\VS2005\VC
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;SkySdk\VS2005\VC
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 12.0\VC\bin"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 14.0\VC\bin"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build"
-    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
-    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
+
     set idx_a=0
     for %%C in (%VCPathSet%) do (
         set /a idx_a+=1
@@ -123,7 +190,7 @@ goto :eof
     )
     :DetectVsPathBreak
     echo Use:%CurBatFile%
-    call :color_text 2f "--------------------DetectVsPath-----------------------"
+    call :color_text 2f " -------------------- DetectVsPath ----------------------- "
     endlocal & set "%~1=%CurBatFile%"
 goto :eof
 
@@ -182,8 +249,6 @@ goto :eof
     popd
     endlocal
 goto :eof
-
-
 
 :install_boost1830
     setlocal ENABLEDELAYEDEXPANSION
