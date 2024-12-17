@@ -171,17 +171,20 @@ goto :eof
     set VsBatFileVar=%~1
     call :color_text 2f " ++++++++++++++++++ DetectVsPath +++++++++++++++++++++++ "
     set VSDiskSet=C;D;E;F;G;
+
     set AllProgramsPathSet=program
     set AllProgramsPathSet=%AllProgramsPathSet%;programs
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files (x86)"
+
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;SkySdk\VS2005\VC
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 12.0\VC\bin"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 14.0\VC\bin"
-    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build"
 
     set idx_a=0
     for %%C in (%VCPathSet%) do (
