@@ -83,10 +83,10 @@ goto :eof
     if not exist "%MyPlatformSDK%" (
         mkdir %MyPlatformSDK%
     )
-    call :color_text 2f "+++++++++++++++++++CheckLibInDir+++++++++++++++++++++++"
+    call :color_text 2f " +++++++++++++++++++ CheckLibInDir +++++++++++++++++++++++ "
     echo LibDir %LibDir%
     if not exist %LibDir% (
-        call :color_text 4f "--------------------CheckLibInDir-----------------------"
+        call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
         goto :eof
     )
 
@@ -103,14 +103,14 @@ goto :eof
         )
     )
     popd
-    call :color_text 2f "--------------------CheckLibInDir-----------------------"
+    call :color_text 2f " -------------------- CheckLibInDir ----------------------- "
     endlocal
 goto :eof
 
 :DetectVsPath
     setlocal EnableDelayedExpansion
     set VsBatFileVar=%~1
-    call :color_text 2f "++++++++++++++++++ DetectVsPath +++++++++++++++++++++++"
+    call :color_text 2f " ++++++++++++++++++ DetectVsPath +++++++++++++++++++++++ "
     set VSDiskSet=C;D;E;F;G;
 
     set AllProgramsPathSet=program
@@ -148,7 +148,7 @@ goto :eof
     )
     :DetectVsPathBreak
     echo Use:%CurBatFile%
-    call :color_text 2f "--------------------DetectVsPath-----------------------"
+    call :color_text 2f " -------------------- DetectVsPath ----------------------- "
     endlocal & set "%~1=%CurBatFile%"
 goto :eof
 
@@ -382,7 +382,7 @@ goto :eof
     set zip_file="%~1"
     set HomeDir=%~2
     set FileDir=
-
+    call :color_text 9f " ++++++++++++++ gen_env_by_file ++++++++++++++ "
     call :get_pre_sub_str !zip_file! . file_name
     call :get_last_char_pos !zip_file! . ext_name_pos
     echo file_name:!file_name! ext_name_pos:!ext_name_pos!
@@ -397,7 +397,7 @@ goto :eof
     ) else (
         echo "%ext_name%"
     )
-    call :color_text 9f "++++++++++++++gen_env_by_file++++++++++++++"
+    call :color_text 9f " -------------- gen_env_by_file -------------- "
     set DstDirWithHome=%HomeDir%\%FileDir%
     echo %0 %zip_file% %DstDirWithHome%
     endlocal & set %~3=%DstDirWithHome%
@@ -408,7 +408,7 @@ goto :eof
     set thridparty_dir="%~1"
     set home_dir="%~2"
     set DstDirWithHome=
-    call :color_text 2f "++++++++++++++gen_all_env_by_file++++++++++++++"
+    call :color_text 2f " ++++++++++++++ gen_all_env_by_file ++++++++++++++ "
     if not exist %thridparty_dir% (
         echo Dir '%thridparty_dir%' doesn't exist!
         goto :eof
@@ -426,7 +426,7 @@ goto :eof
             set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
         )
     popd
-    call :color_text 9f "++++++++++++++gen_all_env_by_file++++++++++++++"
+    call :color_text 9f " -------------- gen_all_env_by_file -------------- "
     echo inc:%inc%
     echo lib:%lib%
     echo bin:%bin%
@@ -439,7 +439,7 @@ goto :eof
     set HomeDir=%~2
     set DstDirWithHome=%3
 
-    call :color_text 9f "++++++++++++++gen_env_by_dir++++++++++++++"
+    call :color_text 9f " ++++++++++++++ gen_env_by_dir ++++++++++++++ "
     set DstDirWithHome=%HomeDir%\%FileDir%
     echo %0 %zip_file% %DstDirWithHome%
     endlocal & set %~3=%DstDirWithHome%
@@ -484,6 +484,9 @@ goto :eof
     echo include    :%include%
     echo lib        :%lib%
     echo path       :%path%
+    echo all_inc    :%all_inc%
+    echo all_lib    :%all_lib%
+    echo all_bin    :%all_bin%
     echo CMAKE_INCLUDE_PATH     :%CMAKE_INCLUDE_PATH%
     echo CMAKE_LIBRARY_PATH     :%CMAKE_LIBRARY_PATH%
     echo CMAKE_MODULE_PATH      :%CMAKE_MODULE_PATH%
@@ -518,7 +521,7 @@ goto :eof
     call :color_text 2f "++++++++++++++get_first_char_pos++++++++++++++"
     :intercept_first_char_pos
     for /f %%i in ("%count%") do (
-        set /a count+=1	
+        set /a count+=1
         if not "!mystr:~%%i,1!"=="!char_sym!" (
             goto :intercept_first_char_pos
         )
@@ -535,11 +538,11 @@ goto :eof
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
     call :color_text 2f "++++++++++++++get_last_char_pos++++++++++++++"
-    @rem set /a count-=1	
+    @rem set /a count-=1
     :intercept_last_char_pos
     for /f %%i in ("%count%") do (
         if not "!mystr:~%%i,1!"=="!char_sym!" (
-            set /a count-=1			
+            set /a count-=1
             goto :intercept_last_char_pos
         )
     )
@@ -591,11 +594,12 @@ goto :eof
         if not "!mystr:~%%i,1!"=="!char_sym!" (
             set /a mysubstr_len=!mystrlen! - %%i
             set substr=!mystr:~%%i!
-            set /a count-=1	
+            set /a count-=1
             goto :intercept_suf_sub_str
         )
     )
     echo %0 %mystr% %char_sym% %count% %mysubstr_len%
+    call :color_text 9f "--------------get_suf_sub_str--------------"
     endlocal & set %~3=%substr%
 goto :eof
 

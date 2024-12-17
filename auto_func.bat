@@ -34,7 +34,7 @@ goto :eof
     if not exist dyzbuild (
         md dyzbuild
     ) else (
-        del dyzbuild/*.* /s /q
+        del dyzbuild\* /s /q
     )
     call:color_text 2f "++++++++++++++cmake_install++++++++++++++"
     echo %0 %src_dir% %dst_dir% %cur_flags% %install_dir%
@@ -232,7 +232,7 @@ goto :eof
     set zip_file="%~1"
     set HomeDir=%~2
     set FileDir=
-
+    call :color_text 9f " ++++++++++++++ gen_env_by_file ++++++++++++++ "
     call :get_pre_sub_str !zip_file! . file_name
     call :get_last_char_pos !zip_file! . ext_name_pos
     echo file_name:!file_name! ext_name_pos:!ext_name_pos!
@@ -247,7 +247,7 @@ goto :eof
     ) else (
         echo "%ext_name%"
     )
-    call :color_text 9f "++++++++++++++gen_env_by_file++++++++++++++"
+    call :color_text 9f " -------------- gen_env_by_file -------------- "
     set DstDirWithHome=%HomeDir%\%FileDir%
     echo %0 %zip_file% %DstDirWithHome%
     endlocal & set %~3=%DstDirWithHome%
@@ -258,7 +258,7 @@ goto :eof
     set thridparty_dir="%~1"
     set home_dir="%~2"
     set DstDirWithHome=
-    call :color_text 2f "++++++++++++++gen_all_env_by_file++++++++++++++"
+    call :color_text 2f " ++++++++++++++ gen_all_env_by_file ++++++++++++++ "
     if not exist %thridparty_dir% (
         echo Dir '%thridparty_dir%' doesn't exist!
         goto :eof
@@ -276,7 +276,7 @@ goto :eof
             set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
         )
     popd
-    call :color_text 9f "++++++++++++++gen_all_env_by_file++++++++++++++"
+    call :color_text 9f " -------------- gen_all_env_by_file -------------- "
     echo inc:%inc%
     echo lib:%lib%
     echo bin:%bin%
@@ -289,7 +289,7 @@ goto :eof
     set HomeDir=%~2
     set DstDirWithHome=%3
 
-    call :color_text 9f "++++++++++++++gen_env_by_dir++++++++++++++"
+    call :color_text 9f " ++++++++++++++ gen_env_by_dir ++++++++++++++ "
     set DstDirWithHome=%HomeDir%\%FileDir%
     echo %0 %zip_file% %DstDirWithHome%
     endlocal & set %~3=%DstDirWithHome%
@@ -371,7 +371,7 @@ goto :eof
     call :color_text 2f "++++++++++++++get_first_char_pos++++++++++++++"
     :intercept_first_char_pos
     for /f %%i in ("%count%") do (
-        set /a count+=1	
+        set /a count+=1
         if not "!mystr:~%%i,1!"=="!char_sym!" (
             goto :intercept_first_char_pos
         )
@@ -388,11 +388,11 @@ goto :eof
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
     call :color_text 2f "++++++++++++++get_last_char_pos++++++++++++++"
-    @rem set /a count-=1	
+    @rem set /a count-=1
     :intercept_last_char_pos
     for /f %%i in ("%count%") do (
         if not "!mystr:~%%i,1!"=="!char_sym!" (
-            set /a count-=1			
+            set /a count-=1
             goto :intercept_last_char_pos
         )
     )
@@ -444,11 +444,12 @@ goto :eof
         if not "!mystr:~%%i,1!"=="!char_sym!" (
             set /a mysubstr_len=!mystrlen! - %%i
             set substr=!mystr:~%%i!
-            set /a count-=1	
+            set /a count-=1
             goto :intercept_suf_sub_str
         )
     )
     echo %0 %mystr% %char_sym% %count% %mysubstr_len%
+    call :color_text 9f "--------------get_suf_sub_str--------------"
     endlocal & set %~3=%substr%
 goto :eof
 
@@ -474,10 +475,12 @@ goto :eof
         md %tools_dir%
     )
     pushd %tools_dir%
+    set idx=0
     for %%i in ( %tools_addr% ) do (
+        set /a idx+=1
         set tool_file=%%i
         call :get_last_char_pos !tool_file! / char_pos
-        echo tool_file:!char_pos!:!tool_file!
+        echo [!idx!] tool_file:!char_pos!:!tool_file!
         call :get_suf_sub_str !tool_file! / file_name
         echo file_name:!file_name!
         if not exist !file_name! (
