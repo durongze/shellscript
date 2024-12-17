@@ -10,9 +10,9 @@ if "%1"=="" (
 
 set filePath=%1
 set fileName=%~nx1
-set "fileDir=%~dp1"
+set fileDir=%~dp1
 
-call :HandleAddToContextMenuOnFlie %filePath% 
+call :HandleAddToContextMenuOnFlie "%fileDir%" 
 call :HandleFileName %filePath%
 pause
 goto :eof
@@ -70,12 +70,12 @@ goto :eof
 
 :HandleFileName
     setlocal EnableDelayedExpansion
-    set FilePath=%~1
-    set FileName=%~n1
-    set ExtName=%~x1
-    call :color_text 2f "+++++++++++++HandleFileName+++++++++++++++"
-    echo FilePath:%FilePath%
-    echo FileName:%FileName%
-    echo ExtName:%ExtName%
-    endlocal
+    set myfile=%1
+    set mypath=%~dp1
+    set myname=%~n1
+    set myext=%~x1
+    call :color_text 2f "++++++++++++++++++ get_path_by_file ++++++++++++++++++++++++"
+    echo !mypath! !myname! !myext!
+    call :color_text 2f "-------------------- get_path_by_file -----------------------"
+    endlocal & set %~2=%mypath%&set %~3=%myname%&set %~4=%myext%
 goto :eof

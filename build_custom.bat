@@ -142,10 +142,10 @@ goto :eof
     if not exist "%MyPlatformSDK%" (
         mkdir %MyPlatformSDK%
     )
-    call :color_text 2f "+++++++++++++++++++CheckLibInDir+++++++++++++++++++++++"
+    call :color_text 2f " +++++++++++++++++++ CheckLibInDir +++++++++++++++++++++++ "
     echo LibDir %LibDir%
     if not exist %LibDir% (
-        call :color_text 4f "--------------------CheckLibInDir-----------------------"
+        call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
         goto :eof
     )
 
@@ -162,7 +162,7 @@ goto :eof
         )
     )
     popd
-    call :color_text 2f "--------------------CheckLibInDir-----------------------"
+    call :color_text 2f " -------------------- CheckLibInDir ----------------------- "
     endlocal
 goto :eof
 
@@ -179,7 +179,9 @@ goto :eof
 
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;SkySdk\VS2005\VC
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
@@ -205,7 +207,7 @@ goto :eof
     )
     :DetectVsPathBreak
     echo Use:%CurBatFile%
-    call :color_text 2f "--------------------DetectVsPath-----------------------"
+    call :color_text 2f " -------------------- DetectVsPath ----------------------- "
     endlocal & set "%~1=%CurBatFile%"
 goto :eof
 
