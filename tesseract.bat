@@ -181,7 +181,7 @@ goto :eof
     if not exist dyzbuild (
         md dyzbuild
     ) else (
-        del dyzbuild/* /s /q
+        del dyzbuild\* /s /q
     )
     call:color_text 2f "++++++++++++++cmake_install++++++++++++++"
     echo %0 %src_dir% %dst_dir% %cur_flags% %install_dir%
