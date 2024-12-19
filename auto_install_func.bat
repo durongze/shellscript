@@ -33,6 +33,8 @@ goto :eof
     set install_dir=%dst_dir%/%src_dir%
     if not exist dyzbuild (
         md dyzbuild
+    ) else (
+        del dyzbuild\* /s /q
     )
     call:color_text 2f "++++++++++++++cmake_install++++++++++++++"
     echo %0 %src_dir% %dst_dir% %cur_flags% %install_dir%
@@ -40,7 +42,8 @@ goto :eof
         echo cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
         cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
         cmake --build . --config %build_type%
-        cmake --install .
+        @rem cmake --install .
+        cmake --build . --target INSTALL --config %build_type%
     popd
     endlocal
 goto :eof
@@ -98,6 +101,7 @@ goto :eof
             call :cmake_install %src_dir% %dst_dir% %cur_flags%
         ) else (
             call:color_text 6f "++++++++++++++auto_install++++++++++++++"
+            echo "CMakeLists.txt doesn't exist."
             echo skip %src_dir% %dst_dir% %cur_flags%
         )
 goto :to_skip
@@ -227,7 +231,7 @@ goto :eof
     set zip_file="%~1"
     set HomeDir=%~2
     set FileDir=
-
+    call :color_text 9f " ++++++++++++++ gen_env_by_file ++++++++++++++ "
     call :get_pre_sub_str !zip_file! . file_name
     call :get_last_char_pos !zip_file! . ext_name_pos
     echo file_name:!file_name! ext_name_pos:!ext_name_pos!
@@ -242,32 +246,101 @@ goto :eof
     ) else (
         echo "%ext_name%"
     )
-    call :color_text 9f "++++++++++++++gen_env_by_file++++++++++++++"
+    call :color_text 9f " -------------- gen_env_by_file -------------- "
     set DstDirWithHome=%HomeDir%\%FileDir%
     echo %0 %zip_file% %DstDirWithHome%
     endlocal & set %~3=%DstDirWithHome%
 goto :eof
 
-:gen_all_env
+:gen_all_env_by_file
     setlocal ENABLEDELAYEDEXPANSION
-    set tools_dir="%~1"
+    set thridparty_dir="%~1"
     set home_dir="%~2"
     set DstDirWithHome=
-    call :color_text 2f "++++++++++++++gen_all_env++++++++++++++"
-    pushd %tools_dir%
+    call :color_text 2f " ++++++++++++++ gen_all_env_by_file ++++++++++++++ "
+    if not exist %thridparty_dir% (
+        echo Dir '%thridparty_dir%' doesn't exist!
+        goto :eof
+    )
+    pushd %thridparty_dir%
         for /f %%i in ( 'dir /b *.tar.* *.zip' ) do (
             set tar_file=%%i
             call :gen_env_by_file !tar_file! !home_dir! DstDirWithHome
-            set inc=!DstDirWithHome!/include;!inc!
-            set lib=!DstDirWithHome!/lib;!lib!
-            set bin=!DstDirWithHome!/bin;!bin!
+            set inc=!DstDirWithHome!\include;!inc!
+            set lib=!DstDirWithHome!\lib;!lib!
+            set bin=!DstDirWithHome!\bin;!bin!
+            set CMAKE_INCLUDE_PATH=!DstDirWithHome!\include;!CMAKE_INCLUDE_PATH!
+            set CMAKE_LIBRARY_PATH=!DstDirWithHome!\lib;!CMAKE_LIBRARY_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\lib\cmake;!CMAKE_MODULE_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
         )
     popd
-    call :color_text 9f "++++++++++++++gen_all_env++++++++++++++"
+    call :color_text 9f " -------------- gen_all_env_by_file -------------- "
     echo inc:%inc%
     echo lib:%lib%
     echo bin:%bin%
-    endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin%
+    endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin% & set %~6=%CMAKE_INCLUDE_PATH% & set %~7=%CMAKE_LIBRARY_PATH% & set %~8=%CMAKE_MODULE_PATH%
+goto :eof
+
+:gen_env_by_dir
+    setlocal ENABLEDELAYEDEXPANSION
+    set FileDir=%~1
+    set HomeDir=%~2
+    set DstDirWithHome=%3
+
+    call :color_text 9f " ++++++++++++++ gen_env_by_dir ++++++++++++++ "
+    set DstDirWithHome=%HomeDir%\%FileDir%
+    echo %0 %zip_file% %DstDirWithHome%
+    endlocal & set %~3=%DstDirWithHome%
+goto :eof
+
+:gen_all_env_by_dir
+    setlocal ENABLEDELAYEDEXPANSION
+    set thridparty_dir="%~1"
+    set home_dir="%~2"
+    set DstDirWithHome=
+    call :color_text 2f " ++++++++++++ gen_all_env_by_dir ++++++++++++ "
+    echo thridparty_dir  :%thridparty_dir%
+    echo home_dir        :%home_dir%
+    echo DstDirWithHome  :%DstDirWithHome%
+    if not exist %thridparty_dir% (
+        echo Dir '%thridparty_dir%' doesn't exist!
+        goto :eof
+    )
+    pushd %thridparty_dir%
+        for /f %%i in ( 'dir /b /ad ' ) do (
+            set soft_dir=%%i
+            call :gen_env_by_dir !soft_dir! !home_dir! DstDirWithHome
+            set cur_inc=!DstDirWithHome!\include;!cur_inc!
+            set cur_lib=!DstDirWithHome!\lib;!cur_lib!
+            set cur_bin=!DstDirWithHome!\bin;!cur_bin!
+            set CMAKE_INCLUDE_PATH=!DstDirWithHome!\include;!CMAKE_INCLUDE_PATH!
+            set CMAKE_LIBRARY_PATH=!DstDirWithHome!\lib;!CMAKE_LIBRARY_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\lib\cmake;!CMAKE_MODULE_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
+        )
+    popd
+    call :color_text 9f " ----------- gen_all_env_by_dir ------------ "
+    echo cur_inc    :%cur_inc%
+    echo cur_lib    :%cur_lib%
+    echo cur_bin    :%cur_bin%
+    endlocal & set %~3=%cur_inc% & set %~4=%cur_lib% & set %~5=%cur_bin% & set %~6=%CMAKE_INCLUDE_PATH% & set %~7=%CMAKE_LIBRARY_PATH% & set %~8=%CMAKE_MODULE_PATH%
+goto :eof
+
+:show_all_env
+    setlocal ENABLEDELAYEDEXPANSION
+    call :color_text 2f " +++++++++++ show_all_env ++++++++++++ "
+    echo include    :%include%
+    echo lib        :%lib%
+    echo path       :%path%
+    echo all_inc    :%all_inc%
+    echo all_lib    :%all_lib%
+    echo all_bin    :%all_bin%
+    echo CMAKE_INCLUDE_PATH     :%CMAKE_INCLUDE_PATH%
+    echo CMAKE_LIBRARY_PATH     :%CMAKE_LIBRARY_PATH%
+    echo CMAKE_MODULE_PATH      :%CMAKE_MODULE_PATH%
+    call :color_text 2f " ----------- show_all_env ------------ "
+    endlocal
 goto :eof
 
 :get_str_len
@@ -297,7 +370,7 @@ goto :eof
     call :color_text 2f "++++++++++++++get_first_char_pos++++++++++++++"
     :intercept_first_char_pos
     for /f %%i in ("%count%") do (
-        set /a count+=1	
+        set /a count+=1
         if not "!mystr:~%%i,1!"=="!char_sym!" (
             goto :intercept_first_char_pos
         )
@@ -314,11 +387,11 @@ goto :eof
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
     call :color_text 2f "++++++++++++++get_last_char_pos++++++++++++++"
-    @rem set /a count-=1	
+    @rem set /a count-=1
     :intercept_last_char_pos
     for /f %%i in ("%count%") do (
         if not "!mystr:~%%i,1!"=="!char_sym!" (
-            set /a count-=1			
+            set /a count-=1
             goto :intercept_last_char_pos
         )
     )
@@ -370,11 +443,12 @@ goto :eof
         if not "!mystr:~%%i,1!"=="!char_sym!" (
             set /a mysubstr_len=!mystrlen! - %%i
             set substr=!mystr:~%%i!
-            set /a count-=1	
+            set /a count-=1
             goto :intercept_suf_sub_str
         )
     )
     echo %0 %mystr% %char_sym% %count% %mysubstr_len%
+    call :color_text 9f "--------------get_suf_sub_str--------------"
     endlocal & set %~3=%substr%
 goto :eof
 
@@ -392,18 +466,20 @@ goto :eof
 
 :download_package
     setlocal ENABLEDELAYEDEXPANSION
-    set tools_addr="%~1"
+    set tools_addr=%~1
     set tools_dir="%~2"
-    call :color_text 2f "++++++++++++++download_package++++++++++++++"
+    call :color_text 2f " ++++++++++++++ download_package ++++++++++++++ "
     echo %tools_addr%    %tools_dir%
     if not exist %tools_dir% (
         md %tools_dir%
     )
     pushd %tools_dir%
+    set idx=0
     for %%i in ( %tools_addr% ) do (
+        set /a idx+=1
         set tool_file=%%i
         call :get_last_char_pos !tool_file! / char_pos
-        echo tool_file:!char_pos!:!tool_file!
+        echo [!idx!] tool_file:!char_pos!:!tool_file!
         call :get_suf_sub_str !tool_file! / file_name
         echo file_name:!file_name!
         if not exist !file_name! (
@@ -412,6 +488,7 @@ goto :eof
         unzip -q -o !file_name!
     )
     popd
+    call :color_text 2f " ------------- download_package ------------- "
     endlocal
 goto :eof
 
@@ -419,8 +496,12 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     set package_name="%~1"
     set home_dir="%~2"
-    call :color_text 2f "++++++++++++++install_package++++++++++++++"
+    call :color_text 2f " ++++++++++++++ install_package ++++++++++++++ "
     echo %package_name% 
+    if not exist %package_name% (
+        echo %package_name% does not exist!
+        goto :eof
+    )
     call :get_suf_sub_str !package_name! . ext_name
     echo ext_name:!ext_name!
     if "%ext_name%" == "zip" (
@@ -432,6 +513,28 @@ goto :eof
     ) else (
         echo "%ext_name%"
     )
+    call :color_text 2f " ------------- install_package ------------- "
+    endlocal
+goto :eof
+
+:uncompress_package
+    setlocal ENABLEDELAYEDEXPANSION
+    set package_name=%1
+
+    call :color_text 2f " ++++++++++++++ uncompress_package ++++++++++++++ "
+    echo %package_name% 
+    call :get_suf_sub_str !package_name! . ext_name
+    echo ext_name:!ext_name!
+    if "%ext_name%" == "zip" (
+        unzip -q -o   !package_name!  
+    ) else if "%ext_name%" == "gz" (
+        tar -xf       !package_name!  
+    ) else if "%ext_name%" == "xz" (
+        tar -xf       !package_name!  
+    ) else (
+        echo "%ext_name%"
+    )
+    call :color_text 2f " ------------- uncompress_package ------------- "
     endlocal
 goto :eof
 
@@ -441,17 +544,23 @@ goto :eof
     set tools_dir="%~2"
     set home_dir="%~3"
     call :color_text 2f "++++++++++++++bat_start++++++++++++++"
-    echo %tools_addr%    %tools_dir%
+    echo tools_addr="%tools_addr%" 
+    echo tools_dir ="%tools_dir%" 
+    echo home_dir  =%home_dir%
     @rem call :download_package "%tools_addr%" "%tools_dir%"
     if not exist %tools_dir% (
         md %tools_dir%
     )
     pushd %tools_dir%
+    set idx=0
     for /f %%i in ( 'dir /b *.zip *.tar.*' ) do (
+        set /a idx+=1
         set pkg_file=%%i
-        call :install_package  !pkg_file!  %home_dir%  "-DCMAKE_BUILD_TYPE=%build_type%"  ""
+        echo [!idx!] pkg_file=!pkg_file!
+        call :install_package  !pkg_file!  !home_dir!  "-DCMAKE_BUILD_TYPE=!build_type!"  ""
     )
     popd
+    call :color_text 2f " ------------- install_all_package ------------- "
     endlocal
 goto :eof
 
