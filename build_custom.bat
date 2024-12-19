@@ -16,9 +16,10 @@ set PERL5LIB=%PERL5LIB%
 set PerlPath=%ProgramDir%\Perl\bin
 set NASMPath=%ProgramDir%\nasm\bin
 set YASMPath=%ProgramDir%\yasm\bin
+set GPERFPath=%ProgramDir%\gperf\bin
 set CMakePath=%ProgramDir%\cmake\bin
 set PythonHome=%ProgramDir%\python
-set PATH=%NASMPath%;%YASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
+set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
 
 call :TaskKillSpecProcess  "cl.exe"
 call :TaskKillSpecProcess  "MSBuild.exe"
@@ -40,9 +41,10 @@ set SystemBinDir=.\
 call %VisualStudioCmd% x86
 @rem call "C:\Qt\6.5.2\msvc2019_64\bin\qtenv2.bat"
 @rem call "D:/Qt/Qt5.12.0/5.12.0/msvc2017_64/bin/qtenv2.bat"
+pushd %CurDir%
 
 @rem Win32  or x64
-set ArchType=x64  
+set ArchType=x64
 
 set BuildType=Release
 set ProjName=

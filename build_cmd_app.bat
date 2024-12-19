@@ -14,11 +14,14 @@ set old_sys_include="%include%"
 set old_sys_lib="%lib%"
 set old_sys_path="%path%"
 
+set PERL5LIB=%PERL5LIB%
 set PerlPath=%ProgramDir%\Perl\bin
 set NASMPath=%ProgramDir%\nasm\bin
+set YASMPath=%ProgramDir%\yasm\bin
+set GPERFPath=%ProgramDir%\gperf\bin
 set CMakePath=%ProgramDir%\cmake\bin
 set PythonHome=%ProgramDir%\python
-set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PATH%
+set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
 
 set CurDir=%~dp0
 
@@ -26,13 +29,24 @@ set ProjDir=%CurDir:~0,-1%
 echo ProjDir %ProjDir%
 set software_dir="%ProjDir%\thirdparty"
 set HomeDir=%ProjDir%\out\windows
+@rem set HomeDir=%ProgramDir%
+
+call :SetProjEnv %software_dir% %CurDir% include lib path CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH CMAKE_MODULE_PATH
+call :ShowProjEnv
 
 set SystemBinDir=.\
 
+@rem x86  or x64
+call %VisualStudioCmd% x64
+@rem call "C:\Qt\6.5.2\msvc2019_64\bin\qtenv2.bat"
+@rem call "D:/Qt/Qt5.12.0/5.12.0/msvc2017_64/bin/qtenv2.bat"
+pushd %CurDir%
+
+@rem Win32  or x64
+set ArchType=x64
+
 set BuildType=Release
 set ProjName=
-
-call %VisualStudioCmd% x64
 
 set all_srcs=src\main.c
 set objs_dir=out
@@ -44,6 +58,12 @@ call :CompileAllSrcs     "%all_srcs%"     "%objs_dir%"
 call :search_func_in_lib %lib_name%   "pcre_config"
 call :search_func_in_lib main.obj   "pcre_config"
 
+call :ProcQtUis       "%AllQtUis%"
+call :ProcQtHdrs      "%AllQtHdrs%"
+call :CompileQtSrcs   "%AllQtSrcs%"
+call :LinkQtObjs      "%AllQtObjs%"
+call :CompileQtSln    "%QtSln%"
+
 pause
 goto :eof
 
@@ -53,7 +73,7 @@ goto :eof
     set SkySdkDiskSet=C;D;E;F;G;
     set CurProgramDir=
     set idx=0
-    call :color_text 2f "+++++++++++++++++++DetectProgramDir+++++++++++++++++++++++"
+    call :color_text 2f " +++++++++++++++++++ DetectProgramDir +++++++++++++++++++++++ "
     for %%i in (%SkySdkDiskSet%) do (
         set /a idx+=1
         for /f "tokens=1-2 delims=|" %%B in ("programs|program") do (
@@ -71,7 +91,7 @@ goto :eof
     )
     :DetectProgramDirBreak
     set ProgramDir=!CurProgramDir!
-    call :color_text 2f "--------------------DetectProgramDir-----------------------"
+    call :color_text 2f " ------------------- DetectProgramDir ----------------------- "
     endlocal & set %~1=%ProgramDir%
 goto :eof
 
@@ -84,10 +104,10 @@ goto :eof
     if not exist "%MyPlatformSDK%" (
         mkdir %MyPlatformSDK%
     )
-    call :color_text 2f "+++++++++++++++++++CheckLibInDir+++++++++++++++++++++++"
+    call :color_text 2f " +++++++++++++++++++ CheckLibInDir +++++++++++++++++++++++ "
     echo LibDir %LibDir%
     if not exist %LibDir% (
-        call :color_text 4f "--------------------CheckLibInDir-----------------------"
+        call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
         goto :eof
     )
 
@@ -104,26 +124,32 @@ goto :eof
         )
     )
     popd
-    call :color_text 2f "--------------------CheckLibInDir-----------------------"
+    call :color_text 2f " -------------------- CheckLibInDir ----------------------- "
     endlocal
 goto :eof
 
 :DetectVsPath
     setlocal EnableDelayedExpansion
     set VsBatFileVar=%~1
-    call :color_text 2f "++++++++++++++++++DetectVsPath++++++++++++++++++++++++"
+    call :color_text 2f " ++++++++++++++++++ DetectVsPath +++++++++++++++++++++++ "
     set VSDiskSet=C;D;E;F;G;
+
     set AllProgramsPathSet=program
     set AllProgramsPathSet=%AllProgramsPathSet%;programs
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files (x86)"
-    set VCPathSet="Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
+
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;SkySdk\VS2005\VC
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 12.0\VC\bin"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 14.0\VC\bin"
-    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build"
-    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+
     set idx_a=0
     for %%C in (%VCPathSet%) do (
         set /a idx_a+=1
@@ -143,8 +169,82 @@ goto :eof
     )
     :DetectVsPathBreak
     echo Use:%CurBatFile%
-    call :color_text 2f "--------------------DetectVsPath-----------------------"
+    call :color_text 2f " -------------------- DetectVsPath ----------------------- "
     endlocal & set "%~1=%CurBatFile%"
+goto :eof
+
+:ProcQtUis
+    setlocal EnableDelayedExpansion
+    set AllQtUis=%~1
+    call :color_text 2f " +++++++++++++++++ ProcQtUis ++++++++++++++++ "
+    set OutDir=out\Debug
+    if not exist %OutDir% (
+        mkdir %OutDir%
+    )
+    set idx=0
+    set AllUiHdrs=
+    for %%i in (%AllQtUis%) do (
+        set /a idx+=1
+        set QtUiFile=%%i
+        set QtUiHdr=!OutDir!\ui_%%~ni.h
+        set ext=%%~xi
+        echo [!idx!] !QtUiFile!  !QtUiHdr!
+        set AllUiHdrs=!AllUiHdrs! !QtUiHdr!
+    )
+    call :color_text 2f " ----------------- ProcQtUis ---------------- "
+    endlocal
+goto :eof
+
+:ProcQtHdrs
+    setlocal EnableDelayedExpansion
+    set AllQtHdrs=%~1
+    call :color_text 2f " +++++++++++++++++ ProcQtHdrs ++++++++++++++++ "
+    set OutDir=out\Debug
+    if not exist %OutDir% (
+        mkdir %OutDir%
+    )
+    set idx=0
+    set AllMocCpps=
+    for %%i in (%AllQtHdrs%) do (
+        set /a idx+=1
+        set QtHdrFile=%%i
+        set QtMocCpp=!OutDir!\moc_%%~ni.cpp
+        set ext=%%~xi
+        echo [!idx!] !QtHdrFile!  !QtMocCpp!
+        set AllMocCpps=!AllMocCpps! !QtMocCpp!
+    )
+    call :color_text 2f " ----------------- ProcQtHdrs ---------------- "
+    endlocal
+goto :eof
+
+:CompileQtSrcs
+    setlocal EnableDelayedExpansion
+    set AllQtSrcs=%~1
+    call :color_text 2f " +++++++++++++++++ CompileQtSrcs ++++++++++++++++ "
+    set OutDir=out\Debug
+
+    call :color_text 2f " ----------------- CompileQtSrcs ---------------- "
+    endlocal
+goto :eof
+
+:LinkQtObjs
+    setlocal EnableDelayedExpansion
+    set AllQtObjs=%~1
+    call :color_text 2f " +++++++++++++++++ LinkQtObjs ++++++++++++++++ "
+    set OutDir=out\Debug
+
+    call :color_text 2f " ----------------- LinkQtObjs ---------------- "
+    endlocal
+goto :eof
+
+:CompileQtSln
+    setlocal EnableDelayedExpansion
+    set QtSln=%~1
+    call :color_text 2f " +++++++++++++++++ CompileQtSln ++++++++++++++++ "
+    set OutDir=out\Debug
+
+    call :color_text 2f " ----------------- CompileQtSln ---------------- "
+    endlocal
 goto :eof
 
 :CompileAllSrcs
@@ -152,7 +252,7 @@ goto :eof
     set AllSrcs=%~1
     set ObjsDir="%~2"
     set PcreDir=%HomeDir%\pcre-8.42
-    call :color_text 2f "++++++++++++++++++CompileAllSrcs++++++++++++++++++++++++"
+    call :color_text 2f " ++++++++++++++++++ CompileAllSrcs ++++++++++++++++++++++++ "
     set IncDir=/I .\inc    /I .\src    /I  .\    /I  %PcreDir%\include
     set PcreDefs=/D PCRE_STATIC
     set WinDefs=/D _WINDOWS  /D WIN32  /D _NDEBUG  /D NDEBUG  
@@ -181,7 +281,7 @@ goto :eof
     set AllOpts=%PcreOpts%
     echo     link    /link    %LibDir%    %AllOpts%    %AllObjs% /OUT:%OutDir%\app.exe
     link    /link    %LibDir%    %AllOpts%    %AllObjs% /OUT:%OutDir%\app.exe
-    call :color_text 2f "-----------------CompileAllSrcs-----------------"
+    call :color_text 2f " ----------------- CompileAllSrcs ----------------- "
     endlocal
 goto :eof
 
