@@ -596,7 +596,10 @@ goto :eof
     set thridparty_dir="%~1"
     set home_dir="%~2"
     set DstDirWithHome=
-    call :color_text 2f " ++++++++++++++ gen_all_env_by_dir ++++++++++++++ "
+    call :color_text 2f " ++++++++++++ gen_all_env_by_dir ++++++++++++ "
+    echo thridparty_dir  :%thridparty_dir%
+    echo home_dir        :%home_dir%
+    echo DstDirWithHome  :%DstDirWithHome%
     if not exist %thridparty_dir% (
         echo Dir '%thridparty_dir%' doesn't exist!
         goto :eof
@@ -605,32 +608,32 @@ goto :eof
         for /f %%i in ( 'dir /b /ad ' ) do (
             set soft_dir=%%i
             call :gen_env_by_dir !soft_dir! !home_dir! DstDirWithHome
-            set inc=!DstDirWithHome!\include;!inc!
-            set lib=!DstDirWithHome!\lib;!lib!
-            set bin=!DstDirWithHome!\bin;!bin!
+            set cur_inc=!DstDirWithHome!\include;!cur_inc!
+            set cur_lib=!DstDirWithHome!\lib;!cur_lib!
+            set cur_bin=!DstDirWithHome!\bin;!cur_bin!
             set CMAKE_INCLUDE_PATH=!DstDirWithHome!\include;!CMAKE_INCLUDE_PATH!
             set CMAKE_LIBRARY_PATH=!DstDirWithHome!\lib;!CMAKE_LIBRARY_PATH!
             set CMAKE_MODULE_PATH=!DstDirWithHome!\lib\cmake;!CMAKE_MODULE_PATH!
             set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
         )
     popd
-    call :color_text 9f " -------------- gen_all_env_by_dir -------------- "
-    echo inc:%inc%
-    echo lib:%lib%
-    echo bin:%bin%
-    endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin% & set %~6=%CMAKE_INCLUDE_PATH% & set %~7=%CMAKE_LIBRARY_PATH% & set %~8=%CMAKE_MODULE_PATH%
+    call :color_text 9f " ----------- gen_all_env_by_dir ------------ "
+    echo cur_inc    :%cur_inc%
+    echo cur_lib    :%cur_lib%
+    echo cur_bin    :%cur_bin%
+    endlocal & set %~3=%cur_inc% & set %~4=%cur_lib% & set %~5=%cur_bin% & set %~6=%CMAKE_INCLUDE_PATH% & set %~7=%CMAKE_LIBRARY_PATH% & set %~8=%CMAKE_MODULE_PATH%
 goto :eof
 
 :show_all_env
     setlocal ENABLEDELAYEDEXPANSION
-    call :color_text 2f " ++++++++++++++ show_all_env ++++++++++++++ "
-    echo all_inc:%all_inc%
-    echo all_lib:%all_lib%
-    echo all_bin:%all_bin%
-    echo CMAKE_INCLUDE_PATH:%CMAKE_INCLUDE_PATH%
-    echo CMAKE_LIBRARY_PATH:%CMAKE_LIBRARY_PATH%
-    echo CMAKE_MODULE_PATH:%CMAKE_MODULE_PATH%
-    call :color_text 2f " -------------- show_all_env -------------- "
+    call :color_text 2f " +++++++++++ show_all_env ++++++++++++ "
+    echo include    :%include%
+    echo lib        :%lib%
+    echo path       :%path%
+    echo CMAKE_INCLUDE_PATH     :%CMAKE_INCLUDE_PATH%
+    echo CMAKE_LIBRARY_PATH     :%CMAKE_LIBRARY_PATH%
+    echo CMAKE_MODULE_PATH      :%CMAKE_MODULE_PATH%
+    call :color_text 2f " ----------- show_all_env ------------ "
     endlocal
 goto :eof
 
