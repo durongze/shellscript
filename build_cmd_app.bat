@@ -58,11 +58,147 @@ call :CompileAllSrcs     "%all_srcs%"     "%objs_dir%"
 call :search_func_in_lib %lib_name%   "pcre_config"
 call :search_func_in_lib main.obj   "pcre_config"
 
+set AllQtUis= E:/code/MagicKey/src/aboutdialog.ui
+set AllQtUis=%AllQtUis% E:/code/MagicKey/src/helpdialog.ui
+set AllQtUis=%AllQtUis% E:/code/MagicKey/src/mainwindow.ui
 call :ProcQtUis       "%AllQtUis%"
-call :ProcQtHdrs      "%AllQtHdrs%"
-call :CompileQtSrcs   "%AllQtSrcs%"
-call :LinkQtObjs      "%AllQtObjs%"
-call :CompileQtSln    "%QtSln%"
+
+set AllQtRcs=E:/code/MagicKey/src/mainwindow.qrc
+call :ProcQtRcs   "%AllQtRcs%"
+
+set ProjDepDefs= -DWIN32 -DUNICODE -D_UNICODE -D_WIN64 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE   -DLUA_STATIC 
+
+set QtDepDefs= -DQT_CONCURRENT_LIB    -DQT_CORE5COMPAT_LIB    -DQT_CORE_LIB      -DQT_GUI_LIB         -DQT_NETWORK_LIB -DQT_OPENGL_LIB      
+set QtDepDefs=%QtDepDefs% -DQT_PRINTSUPPORT_LIB  -DQT_QMLINTEGRATION_LIB -DQT_QMLMODELS_LIB -DQT_QML_LIB         -DQT_QUICK_LIB   -DQT_WEBCHANNEL_LIB 
+set QtDepDefs=%QtDepDefs% -DQT_WEBENGINECORE_LIB -DQT_WIDGETS_LIB        -DQT_XML_LIB       -DQT_POSITIONING_LIB
+
+set ProjIncDirs=-IE:/code/MagicKey/src 
+set ProjIncDirs=%ProjIncDirs% -IE:/code/MagicKey/thirdparty/lua-5.4.4 
+set ProjIncDirs=%ProjIncDirs% -IE:/code/MagicKey/thirdparty/lua-5.4.4/include 
+set ProjIncDirs=%ProjIncDirs% -IE:/code/MagicKey/thirdparty/lua-5.4.4/src 
+set ProjIncDirs=%ProjIncDirs% -IE:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4 
+set ProjIncDirs=%ProjIncDirs% -IE:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4/include 
+
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtCore 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/mkspecs/win32-msvc 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtCore5Compat 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtGui 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtWidgets 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtConcurrent 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtNetwork 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtPrintSupport 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtXml 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtWebEngineCore 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtQuick 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtQml 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtQmlIntegration 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtQmlModels 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtOpenGL 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtWebChannel 
+set QtIncDirs=%QtIncDirs% -IC:/Qt/6.5.2/msvc2019_64/include/QtPositioning 
+
+set AllQtHdrs=E:/code/MagicKey/src/aboutdialog.h
+set AllQtHdrs=%AllQtHdrs% E:/code/MagicKey/src/helpdialog.h
+set AllQtHdrs=%AllQtHdrs% E:/code/MagicKey/src/mainwindow.h
+set AllQtHdrs=%AllQtHdrs% E:/code/MagicKey/src/networkmanager.h
+call :ProcQtHdrs      "%ProjDepDefs%"   "%QtDepDefs%"    "%ProjIncDirs%"  "%QtIncDirs%"  "%AllQtHdrs%"
+
+set ProjIncDirs=/I"E:\code\MagicKey\BuildSrc\MagicKey_autogen\include_Debug"
+set ProjIncDirs=%ProjIncDirs% /I"E:\code\MagicKey\.\src"
+set ProjIncDirs=%ProjIncDirs% /I"E:\code\MagicKey\cmake\..\thirdparty\lua-5.4.4" 
+set ProjIncDirs=%ProjIncDirs% /I"E:\code\MagicKey\cmake\..\thirdparty\lua-5.4.4\include" 
+set ProjIncDirs=%ProjIncDirs% /I"E:\code\MagicKey\cmake\..\thirdparty\lua-5.4.4\src" 
+set ProjIncDirs=%ProjIncDirs% /I"E:\code\MagicKey\BuildSrc\thirdparty\lua-5.4.4" 
+set ProjIncDirs=%ProjIncDirs% /I"E:\code\MagicKey\BuildSrc\thirdparty\lua-5.4.4\include" 
+
+set ProjDepDefs= /D WIN64 /D _WIN64 /D UNICODE /D _UNICODE /D WIN32 /D _WINDOWS  
+set ProjDepDefs=%ProjDepDefs% /D _ENABLE_EXTENDED_ALIGNED_STORAGE   /D LUA_STATIC
+
+set QtDepDefs= /D QT_CORE_LIB /D QT_CORE5COMPAT_LIB /D QT_PRINTSUPPORT_LIB /D QT_POSITIONING_LIB 
+set QtDepDefs=%QtDepDefs% /D QT_GUI_LIB  /D QT_WIDGETS_LIB       /D QT_CONCURRENT_LIB   /D QT_NETWORK_LIB 
+set QtDepDefs=%QtDepDefs% /D QT_XML_LIB  /D QT_WEBENGINECORE_LIB /D QT_QUICK_LIB        /D QT_QMLINTEGRATION_LIB 
+set QtDepDefs=%QtDepDefs% /D QT_QML_LIB  /D QT_QMLMODELS_LIB     /D QT_OPENGL_LIB       /D QT_WEBCHANNEL_LIB 
+@rem set QtDepDefs=%QtDepDefs% /D "CMAKE_INTDIR=\"Debug\"" 
+
+set QtIncDirs=/external:I "C:/Qt/6.5.2/msvc2019_64/include/QtCore" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include"
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/mkspecs/win32-msvc" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtCore5Compat"
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtGui" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtWidgets" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtConcurrent" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtNetwork" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtPrintSupport" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtXml" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtWebEngineCore" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtQuick" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtQml" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtQmlIntegration" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtQmlModels" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtOpenGL" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtWebChannel" 
+set QtIncDirs=%QtIncDirs% /external:I "C:/Qt/6.5.2/msvc2019_64/include/QtPositioning" 
+
+@rem set ProjAllSrcs=E:\code\MagicKey\out\Debug\qrc_mainwindow.cpp 
+set ProjAllSrcs=%ProjAllSrcs% out\Debug\*.cpp 
+set ProjAllSrcs=%ProjAllSrcs% E:\code\MagicKey\src\aboutdialog.cpp 
+set ProjAllSrcs=%ProjAllSrcs% E:\code\MagicKey\src\helpdialog.cpp 
+set ProjAllSrcs=%ProjAllSrcs% E:\code\MagicKey\src\key_interface.cpp 
+set ProjAllSrcs=%ProjAllSrcs% E:\code\MagicKey\src\lua_interface.cpp 
+set ProjAllSrcs=%ProjAllSrcs% E:\code\MagicKey\src\main.cpp 
+set ProjAllSrcs=%ProjAllSrcs% E:\code\MagicKey\src\mainwindow.cpp 
+set ProjAllSrcs=%ProjAllSrcs% E:\code\MagicKey\src\net_interface.cpp 
+set ProjAllSrcs=%ProjAllSrcs% E:\code\MagicKey\src\networkmanager.cpp
+@rem set ProjAllSrcs=%ProjAllSrcs% qrc_mainwindow.cpp
+call :CompileQtSrcs   "%ProjIncDirs%"   "%ProjDepDefs%"  "%QtDepDefs%"    "%QtIncDirs%"    "%ProjAllSrcs%"
+
+set ProjLibDirs=/LIBPATH:"E:/code/MagicKey/./lib" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/./lib/Debug" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/thirdparty/lua-5.4.4" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/thirdparty/lua-5.4.4/Debug" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/thirdparty/lua-5.4.4/lib" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/thirdparty/lua-5.4.4/lib/Debug" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/thirdparty/lua-5.4.4/src" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/thirdparty/lua-5.4.4/src/Debug" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4/Debug" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4/lib" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4/lib/Debug" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4/Debug" 
+set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4/Debug/Debug" 
+
+set QtLibDirs=C:\Qt\6.5.2\msvc2019_64\lib\Qt6Core5Compatd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Concurrentd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6PrintSupportd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Xmld.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6WebEngineCored.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Widgetsd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Quickd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6QmlModelsd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6OpenGLd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Guid.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6WebChanneld.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Qmld.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Networkd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Positioningd.lib 
+set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Cored.lib 
+
+set DepSysLibs=comdlg32.lib winspool.lib d3d11.lib dxgi.lib dxguid.lib dcomp.lib user32.lib 
+set DepSysLibs=%DepSysLibs% ws2_32.lib shell32.lib mpr.lib userenv.lib kernel32.lib user32.lib gdi32.lib 
+set DepSysLibs=%DepSysLibs% winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib 
+
+set ProjAllObjs=out\Debug\*.obj
+set ProjAllObjs=%ProjAllObjs% out\Debug\aboutdialog.obj
+set ProjAllObjs=%ProjAllObjs% out\Debug\helpdialog.obj
+set ProjAllObjs=%ProjAllObjs% out\Debug\key_interface.obj
+set ProjAllObjs=%ProjAllObjs% out\Debug\lua_interface.obj
+set ProjAllObjs=%ProjAllObjs% out\Debug\main.obj
+set ProjAllObjs=%ProjAllObjs% out\Debug\mainwindow.obj
+set ProjAllObjs=%ProjAllObjs% out\Debug\net_interface.obj
+set ProjAllObjs=%ProjAllObjs% out\Debug\networkmanager.obj
+@rem set ProjAllObjs=%ProjAllObjs% out\Debug\qrc_mainwindow.obj
+call :LinkQtObjs      "%ProjLibDirs%"   "%QtLibDirs%"    "%DepSysLibs%"   "%ProjAllObjs%" 
 
 pause
 goto :eof
@@ -173,6 +309,7 @@ goto :eof
     endlocal & set "%~1=%CurBatFile%"
 goto :eof
 
+@rem call :ProcQtUis   "%AllQtUis%"
 :ProcQtUis
     setlocal EnableDelayedExpansion
     set AllQtUis=%~1
@@ -190,15 +327,56 @@ goto :eof
         set ext=%%~xi
         echo [!idx!] !QtUiFile!  !QtUiHdr!
         set AllUiHdrs=!AllUiHdrs! !QtUiHdr!
+        uic.exe -o  !QtUiHdr!  !QtUiFile!
     )
     call :color_text 2f " ----------------- ProcQtUis ---------------- "
     endlocal
 goto :eof
 
+@rem call :ProcQtRcs   "%AllQtRcs%"
+:ProcQtRcs
+    setlocal EnableDelayedExpansion
+    set AllQtRcs=%~1
+
+    call :color_text 2f " +++++++++++++++++ ProcQtRcs ++++++++++++++++ "
+    set OutDir=out\Debug
+    if not exist %OutDir% (
+        mkdir %OutDir%
+    )
+    set idx=0
+    set AllQtCpps=
+    for %%i in (%AllQtRcs%) do (
+        set /a idx+=1
+        set QrcFile=%%i
+        set FileName=%%~ni
+        set CppFile=!OutDir!\qrc_!FileName!_CMKE_.cpp
+        set ext=%%~xi
+        echo [!idx!] !QrcFile!  !CppFile!
+        set AllQtCpps=!AllQtCpps! !CppFile!
+        rcc.exe -name !FileName! -o !CppFile! !QrcFile!
+    )
+
+    call :color_text 2f " ----------------- ProcQtRcs ---------------- "
+    endlocal
+goto :eof
+
+@rem call :ProcQtHdrs   "%ProjDepDefs%"   "%QtDepDefs%"   "%ProjIncDirs%"   "%QtIncDirs%"   "%AllQtHdrs%"
 :ProcQtHdrs
     setlocal EnableDelayedExpansion
-    set AllQtHdrs=%~1
+    set ProjDepDefs=%~1
+    set QtDepDefs=%~2
+    set ProjIncDirs=%~3
+    set QtIncDirs=%~4
+    set AllQtHdrs=%~5
+
     call :color_text 2f " +++++++++++++++++ ProcQtHdrs ++++++++++++++++ "
+
+    echo ProjDepDefs=%ProjDepDefs%
+    echo QtDepDefs=%QtDepDefs%
+    echo ProjIncDirs=%ProjIncDirs%
+    echo QtIncDirs=%QtIncDirs%
+    echo AllQtHdrs=%AllQtHdrs%
+
     set OutDir=out\Debug
     if not exist %OutDir% (
         mkdir %OutDir%
@@ -212,26 +390,69 @@ goto :eof
         set ext=%%~xi
         echo [!idx!] !QtHdrFile!  !QtMocCpp!
         set AllMocCpps=!AllMocCpps! !QtMocCpp!
+        moc.exe !ProjDepDefs!   !QtDepDefs!   !ProjIncDirs!   !QtIncDirs! --output-dep-file -o   !QtMocCpp!   !QtHdrFile!
     )
     call :color_text 2f " ----------------- ProcQtHdrs ---------------- "
     endlocal
 goto :eof
 
+
+
+@rem call :CompileQtSrcs   "%ProjIncDirs%"   "%ProjDepDefs%"   "%QtDepDefs%"   "%QtIncDirs%"    "%ProjAllSrcs%"
 :CompileQtSrcs
     setlocal EnableDelayedExpansion
-    set AllQtSrcs=%~1
-    call :color_text 2f " +++++++++++++++++ CompileQtSrcs ++++++++++++++++ "
-    set OutDir=out\Debug
+    set ProjIncDirs=%~1
+    set ProjDepDefs=%~2
+    set QtDepDefs=%~3
+    set QtIncDirs=%~4
+    set ProjAllSrcs=%~5
 
+    call :color_text 2f " +++++++++++++++++ CompileQtSrcs ++++++++++++++++ "
+
+    echo ProjIncDirs=%ProjIncDirs%
+    echo ProjDepDefs=%ProjDepDefs%
+    echo QtDepDefs=%QtDepDefs%
+    echo QtIncDirs=%QtIncDirs%
+    echo ProjAllSrcs=%ProjAllSrcs%
+
+    set OutDir=out\Debug
+    set ZcOpts=/Zc:wchar_t /Zc:forScope /Zc:inline
+
+    set idx=0
+    set AllMocCpps=
+    for %%i in (%ProjAllSrcs%) do (
+        set /a idx+=1
+        set QtCppFile=%%i
+        set ObjFile=!OutDir!\%%~ni.obj
+        set ext=%%~xi
+        echo [!idx!] !QtCppFile!  !ObjFile!
+        set AllObjFiles=!AllObjFiles! !ObjFile!
+        CL.exe /c  /I"!OutDir!" !ProjIncDirs! /Z7 /nologo /W4 /WX- /diagnostics:column /Od /Ob0 !ProjDepDefs! !QtDepDefs! /Gm- /EHsc /RTC1 /MDd /GS /fp:precise !ZcOpts! /GR /std:c++17 /permissive- /Fo"!OutDir!\\" /Fd"!OutDir!\vc143.pdb" /external:W0 /Gd /TP /errorReport:queue  !QtIncDirs! -Zc:__cplusplus -utf-8 !QtCppFile!
+    )
     call :color_text 2f " ----------------- CompileQtSrcs ---------------- "
     endlocal
 goto :eof
 
+
+
+@rem call :LinkQtObjs   "%ProjLibDirs%"   "%QtLibDirs%"   "%DepSysLibs%"   "%ProjAllObjs%"    
 :LinkQtObjs
     setlocal EnableDelayedExpansion
-    set AllQtObjs=%~1
+    set ProjLibDirs=%~1
+    set QtLibDirs=%~2
+    set DepSysLibs=%~3
+    set ProjAllObjs=%~4
+
     call :color_text 2f " +++++++++++++++++ LinkQtObjs ++++++++++++++++ "
+
+    echo ProjLibDirs=%ProjLibDirs%
+    echo QtLibDirs=%QtLibDirs%
+    echo DepSysLibs=%DepSysLibs%
+    echo ProjAllObjs=%ProjAllObjs%
+
     set OutDir=out\Debug
+
+    link.exe /ERRORREPORT:QUEUE /OUT:"%OutDir%\MagicKey.exe" /INCREMENTAL /ILK:"%OutDir%\MagicKey.ilk" /NOLOGO %ProjLibDirs% %QtLibDirs% %DepSysLibs% /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"%OutDir%/MagicKey.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"%OutDir%/MagicKey.lib" /MACHINE:X64 %ProjAllObjs%
 
     call :color_text 2f " ----------------- LinkQtObjs ---------------- "
     endlocal
