@@ -58,7 +58,8 @@ call %auto_install_func% show_all_env
 
 set HomeDir=%home_dir%
 @rem Win32  or x64
-set ArchType=x64   
+set ArchType=x64
+
 @rem set Iconv_LIBRARY=%tools_dir%\bin\libiconv.lib
 
 @rem call %auto_install_func% install_all_package "%tools_addr%"    "%tools_dir%"
