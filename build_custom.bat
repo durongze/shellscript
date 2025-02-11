@@ -18,8 +18,11 @@ set NASMPath=%ProgramDir%\nasm\bin
 set YASMPath=%ProgramDir%\yasm\bin
 set GPERFPath=%ProgramDir%\gperf\bin
 set CMakePath=%ProgramDir%\cmake\bin
+set MakePath=%ProgramDir%\make-3.81-bin\bin
 set PythonHome=%ProgramDir%\python
 set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
+
+set MakeProgram=%MakePath%\make.exe
 
 call :TaskKillSpecProcess  "cl.exe"
 call :TaskKillSpecProcess  "MSBuild.exe"
@@ -272,6 +275,7 @@ goto :eof
         @rem cmake -G "Visual Studio 8 2005"  ..
         @rem cmake --build . --target clean
         cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%ProgramDir%\%ProjName%
+        @rem cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE="../toolchain.cmake" -DCMAKE_MAKE_PROGRAM="%MakeProgram%" -DCMAKE_C_COMPILER_WORKS=ON
         cmake --build . -j16  --config %BuildType% --target INSTALL
     popd
     call :color_text 2f " -------------------- CompileProject ----------------------- "
