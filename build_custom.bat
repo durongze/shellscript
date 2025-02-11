@@ -20,7 +20,7 @@ set GPERFPath=%ProgramDir%\gperf\bin
 set CMakePath=%ProgramDir%\cmake\bin
 set MakePath=%ProgramDir%\make-3.81-bin\bin
 set PythonHome=%ProgramDir%\python
-set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
+set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%SDCCPath%;%MakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
 
 set MakeProgram=%MakePath%\make.exe
 
