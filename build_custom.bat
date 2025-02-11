@@ -213,6 +213,39 @@ goto :eof
     endlocal & set "%~1=%CurBatFile%"
 goto :eof
 
+:SdccCompileProj
+    setlocal EnableDelayedExpansion
+    set BuildDir=%~1
+    set SrcDir=%~2
+
+    call :color_text 2f " ++++++++++++++ SdccCompileProj ++++++++++++++ "
+    if not exist %BuildDir% (
+        mkdir %BuildDir%
+    ) 
+
+    set all_rel_file=
+    set idx=0
+    pushd %SrcDir%
+    for /f %%i in ('dir /s /b *.c ') do (
+        set /a idx+=1
+        set cur_src=%%i
+        call :get_path_by_file  !cur_src!   cur_dir   cur_name   cur_ext
+        echo [!idx!] cur_dir=!cur_dir!    cur_name=!cur_name!    cur_ext=!cur_ext!
+        pushd !BuildDir!
+            sdcc.exe  -I!cur_dir!\ -I!cur_dir!\driver -I!cur_dir!\common -I!cur_dir!\tasks  -o !cur_name!.rel -c !cur_src!
+        popd
+        set all_rel_file=!cur_name!.rel !all_rel_file!
+    )
+    popd
+
+    pushd !BuildDir!
+        sdcc.exe    -o demo.ihx !all_rel_file!
+    popd
+
+    call :color_text 2f " -------------- SdccCompileProj -------------- "
+    endlocal
+goto :eof
+
 :CompileProject
     setlocal EnableDelayedExpansion
     set BuildDir=%~1
