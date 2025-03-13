@@ -49,8 +49,11 @@ pushd %CurDir%
 @rem Win32  or x64
 set ArchType=x64
 
+set BuildDir=BuildLib
+set BuildType=Debug
 set BuildType=Release
 set ProjName=
+set build_mrp_ext=%CurDir%\mythroad\build_mrp_ext.bat
 
 call :get_suf_sub_str %ProjDir% \ ProjName
 
@@ -151,6 +154,7 @@ goto :eof
     echo LibDir %LibDir%
     if not exist %LibDir% (
         call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
+        echo '%LibDir%' does not exist... 
         goto :eof
     )
 
@@ -309,7 +313,7 @@ goto :eof
         if !errorlevel! equ 0 (
             sc stop %ProjName%
         ) else (
-            call :color_text 4f "--------------RunWinSvr net start error --------------"
+            call :color_text 4f " -------------- RunWinSvr net start error -------------- "
             %BinPath%
         )
         @rem sc delete %ProjName%
@@ -356,11 +360,11 @@ goto :eof
 
 :ResetSystemEnv
     setlocal ENABLEDELAYEDEXPANSION
-    call :color_text 9f "++++++++++++++ResetSystemEnv++++++++++++++"
+    call :color_text 9f " ++++++++++++++ ResetSystemEnv ++++++++++++++ "
     @rem set include=%old_sys_include%
     @rem set lib=%old_sys_lib%
     @rem set path=%old_sys_path%
-    call :color_text 9f "--------------ResetSystemEnv--------------"
+    call :color_text 9f " -------------- ResetSystemEnv -------------- "
     endlocal
 goto :eof
 
@@ -430,7 +434,11 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     set lib_name=%1
     set func_name=%~2
+    call:color_text 2f " ++++++++++++++++++ search_func_in_lib ++++++++++++++++++ "
     if "%func_name%" == "" (
+        @rem dumpbin /ARCHIVEMEMBERS  %lib_name%
+        @rem dumpbin /HEADERS %lib_name%  /SECTION:.drectve
+        @rem dumpbin /HEADERS %lib_name%  | grep "machine"
         dumpbin /EXPORTS %lib_name%
         dumpbin /SYMBOLS %lib_name%
         strings %lib_name%
@@ -438,6 +446,7 @@ goto :eof
         dumpbin /SYMBOLS %lib_name%  | grep %func_name%
         strings %lib_name% |  findstr /i "%func_name%"
     )
+    call:color_text 2f " ------------------ search_func_in_lib ------------------ "
     endlocal
 goto :eof
 

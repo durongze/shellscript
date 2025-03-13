@@ -34,7 +34,7 @@ goto :eof
     if not exist dyzbuild (
         md dyzbuild
     ) else (
-        del dyzbuild\* /s /q
+        del dyzbuild\*.* /s /q
     )
     call:color_text 2f "++++++++++++++cmake_install++++++++++++++"
     echo %0 %src_dir% %dst_dir% %cur_flags% %install_dir%
@@ -437,7 +437,7 @@ goto :eof
     set mysubstr="%~3"
     call :get_str_len %mystr% mystrlen
     set count=%mystrlen%
-    call :color_text 2f "++++++++++++++get_suf_sub_str++++++++++++++"
+    call :color_text 2f " ++++++++++++++ get_suf_sub_str ++++++++++++++ "
     set substr=
     :intercept_suf_sub_str
     for /f %%i in ("%count%") do (
@@ -449,7 +449,7 @@ goto :eof
         )
     )
     echo %0 %mystr% %char_sym% %count% %mysubstr_len%
-    call :color_text 9f "--------------get_suf_sub_str--------------"
+    call :color_text 9f " -------------- get_suf_sub_str -------------- "
     endlocal & set %~3=%substr%
 goto :eof
 
