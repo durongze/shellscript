@@ -114,3 +114,10 @@ function RunNginx()
 	$PYTHON_APP manage.py runfcgi method=threaded host=127.0.0.1 port=8000
 	sudo systemctl restart nginx
 }
+
+function InstallPythonLibs()
+{
+	$PYTHON_APP pip install --upgrade django 
+    $PYTHON_APP pip install django-dbbackup mysqlclient openpyxl pandas pyecharts py7zr 
+    $PYTHON_APP pip install requests bokeh requests_toolbelt cryptography
+}
