@@ -11,6 +11,16 @@ ARM_SYS_ROOT=${ARM_SYS_HOME}/sysroot
 ARM_COMPILER_PREFIX=arm-buildroot-linux-gnueabihf- 
 CC=${ARM_COMPILER_PREFIX}gcc 
 
+echo "ARM_GCC_HOME=${ARM_GCC_HOME}/bin"
+echo "CC=${CC}"
+export PATH=${ARM_GCC_HOME}/bin:$PATH
+
+function EchoGreen()
+{
+    local Msg=$1
+    echo -e "\033[32m$Msg\033[0m"
+}
+
 function InstallCompileTools()
 {
 	sudo apt install python-is-python3
@@ -21,6 +31,7 @@ function InstallCompileTools()
 	sudo apt install libssl-dev
 	sudo apt install mkimage
 	sudo apt install u-boot-tools
+	sudo apt install symlinks
 }
 
 function CompileKernel()
@@ -44,6 +55,7 @@ function CreateBootFs()
     mkfs.ext4 -L bootfs bootfs.ext4  
 
 	BOOT_FS=/mnt/bootfs
+    mkdir -p                           $BOOT_FS
     mount   bootfs.ext4                $BOOT_FS                             
     sudo cp uImage stm32mp157d-atk.dtb $BOOT_FS
     umount                             $BOOT_FS
@@ -51,37 +63,50 @@ function CreateBootFs()
 
 function CompileBusybox()
 {
-    make stm32mp1_atk_defconfig
+    EchoGreen "$FUNCNAME:$LINENO"
+    make CROSS_COMPILE=arm-buildroot-linux-gnueabihf- ARCH=arm stm32mp1_atk_defconfig
+    make 
 }
 
 function CreateRootFS()
 {
+    EchoGreen "$FUNCNAME:$LINENO"
+    
     dd if=/dev/zero of=rootfs.ext4 bs=1M count=1024 
     mkfs.ext4 -L rootfs rootfs.ext4   
 
 	ROOT_FS=/mnt/rootfs
+    mkdir -p                           $ROOT_FS
     mount   rootfs.ext4                $ROOT_FS 
                             
 	#make INSTALL_PATH=$ROOT_FS
-    make install CONFIG_PREFIX=$ROOT_FS
+    make CROSS_COMPILE=arm-buildroot-linux-gnueabihf- install CONFIG_PREFIX=$ROOT_FS
 
-    ARM_COMPILER_HOME_DIR=/usr/local/arm/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf/arm-none-linux-gnueabihf 
+    ARM_COMPILER_HOME_DIR=${ARM_GCC_HOME} 
 
     mkdir  $ROOT_FS/lib
     LIBC_LIB_DIR=${ARM_COMPILER_HOME_DIR}/libc/lib 
-    cp     $LIBC_LIB_DIR/*.so*                       $ROOT_FS/lib/        -d 
-    rm                                               $ROOT_FS/lib/ld-linux-armhf.so.3 
-    cp     $LIBC_LIB_DIR/ld-linux-armhf.so.3         $ROOT_FS/lib/ 
+    if [ -d $LIBC_LIB_DIR ];then
+        cp     $LIBC_LIB_DIR/*.so*                       $ROOT_FS/lib/       -d 
+        rm                                               $ROOT_FS/lib/ld-linux-armhf.so.3 
+        cp     $LIBC_LIB_DIR/ld-linux-armhf.so.3         $ROOT_FS/lib/ 
+    fi
 
     LIB_DIR=${ARM_COMPILER_HOME_DIR}/lib 
-    cp     $LIB_DIR/*.so*                            $ROOT_FS/lib/       -d 
-    cp     $LIB_DIR/*.a                              $ROOT_FS/lib/       -d 
+    if [ -d $LIBC_LIB_DIR ];then
+        cp     $LIB_DIR/*.so*                            $ROOT_FS/lib/       -d 
+        cp     $LIB_DIR/*.a                              $ROOT_FS/lib/       -d 
+    fi
 
     mkdir  $ROOT_FS/usr/lib  -p
     LIBC_USR_DIR=${ARM_COMPILER_HOME_DIR}/usr/lib 
-    cp     $LIBC_USR_DIR/*.so*                       $ROOT_FS/usr/lib/   -d 
-    cp     $LIBC_USR_DIR/*.a                         $ROOT_FS/usr/lib/   -d 
+    if [ -d $LIBC_LIB_DIR ];then
+        cp     $LIBC_USR_DIR/*.so*                       $ROOT_FS/usr/lib/   -d 
+        cp     $LIBC_USR_DIR/*.a                         $ROOT_FS/usr/lib/   -d 
+    fi
 
+    symlinks -d                                      $ROOT_FS/usr/lib/
+    
     for cur_dir in dev proc mnt sys tmp etc root
     do
         mkdir $ROOT_FS/$cur_dir
