@@ -32,6 +32,7 @@ function InstallCompileTools()
 	sudo apt install mkimage
 	sudo apt install u-boot-tools
 	sudo apt install symlinks
+	sudo apt install bzip2
 }
 
 function CompileKernel()
@@ -65,7 +66,7 @@ function CompileBusybox()
 {
     EchoGreen "$FUNCNAME:$LINENO"
     make CROSS_COMPILE=arm-buildroot-linux-gnueabihf- ARCH=arm stm32mp1_atk_defconfig
-    make 
+    make CROSS_COMPILE=arm-buildroot-linux-gnueabihf- ARCH=arm
 }
 
 function CreateRootFS()
@@ -109,10 +110,12 @@ function CreateRootFS()
     
     for cur_dir in dev proc mnt sys tmp etc root
     do
-        mkdir $ROOT_FS/$cur_dir
+        if [ ! -d $ROOT_FS/$cur_dir ];then
+            mkdir $ROOT_FS/$cur_dir
+        fi
     done
 
-    umount                             $BOOT_FS
+    umount                             $ROOT_FS
 }
 
 function CreateRootFS_rcS()
