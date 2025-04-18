@@ -35,9 +35,9 @@ goto :eof
     set PATH=%JAVA_HOME%\bin;%PATH%;
 
     set PATH=E:\AndroidSdk\ndk\25.1.8937393;%PATH%;
-    @rem set PATH=%PATH%;E:\program\android-ndk-r26b;
-    @rem set PATH=%PATH%;E:\Android\sdk\ndk-bundle\android-ndk-r20;
-    @rem set PATH=%PATH%;D:\Android\ndk\android-ndk-r19c;
+    @rem set PATH=E:\program\android-ndk-r26b;%PATH%;
+    @rem set PATH=E:\Android\sdk\ndk-bundle\android-ndk-r20;%PATH%;
+    @rem set PATH=D:\Android\ndk\android-ndk-r19c;%PATH%;
 
     java  -version
     javac -version
