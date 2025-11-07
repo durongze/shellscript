@@ -1,35 +1,59 @@
+set ProgramDir=F:\program
+set PerlPath=%ProgramDir%\Perl\bin
+set NASMPath=%ProgramDir%\nasm
+set CMakePath=%ProgramDir%\cmake\bin
+set PythonHome=%ProgramDir%\python
 
-call :RustEnvInfo PATH_DIR RUSTUP_HOME_DIR CARGO_HOME_DIR
-set PATH=%PATH_DIR%
-set RUSTUP_HOME=%RUSTUP_HOME_DIR%
-set CARGO_HOME=%CARGO_HOME_DIR%
-rustc.exe
+set RUST_ROOT=%ProgramDir%\rust
+set CARGO_HOME=%RUST_ROOT%\.cargo
+set CARGO_PATH=%CARGO_HOME%\bin
+set RUSTUP_HOME=%RUST_ROOT%\.rustup
+set RUSTUP_PATH=%RUSTUP_HOME%\toolchains\stable-x86_64-pc-windows-msvc\bin
+
+set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%CARGO_PATH%;%RUSTUP_PATH%;%PATH%
+
+set RUSTUP_DIST_SERVER=https://static.rust-lang.org
+set RUSTUP_UPDATE_ROOT=https://static.rust-lang.org/rustup
+
+set RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
+set RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
+
+call :RustEnvCfg
+where cargo
+cargo --version
+cargo run -- search sample.rs
+rustc sample.rs
+sample.exe
+
 pause
-
-:RustEnvInfo
-    setlocal EnableDelayedExpansion
-    set PATH_DIR=%~1
-    set RUSTUP_HOME_DIR=%~2
-    set CARGO_HOME_DIR=%~3
-
-    set USER_HOME=%USERPROFILE%
-    set USER_HOME=F:\program\rust
-    set RUSTUP_HOME=%USER_HOME%\.rustup
-    set PATH=%PATH%;%RUSTUP_HOME%\toolchains\stable-x86_64-pc-windows-msvc\bin
-
-    set CARGO_HOME=%USER_HOME%\.cargo
-    set PATH=%PATH%;%CARGO_HOME%\bin
-
-    reg query HKEY_CURRENT_USER\Environment /v path
-    call :color_text 2f "+++++++++++++++++++++PATH+++++++++++++++++++++++"
-    echo %path%
-    call :color_text 2f "---------------------PATH-----------------------"
-    endlocal & set %~1=%path%& set %~2=%RUSTUP_HOME%& set %~3=%CARGO_HOME%
 goto :eof
 
-:ShowUserInfo
-    echo %date:~6,4%_%date:~0,2%_%date:~3,2%
-    echo %time:~0,2%_%time:~3,2%
+:RustEnvCfg
+    setlocal ENABLEDELAYEDEXPANSION
+    call :color_text 9f "++++++++++++++RustEnvCfg++++++++++++++"
+    echo [source.crates-io]
+    echo registry = "https://github.com/rust-lang/crates.io-index"
+    
+    echo # 
+    echo replace-with = 'sjtu'
+    
+    echo # 
+    echo [source.tuna]
+    echo registry = "https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git"
+    
+    echo # 
+    echo [source.ustc]
+    echo registry = "git://mirrors.ustc.edu.cn/crates.io-index"
+    
+    echo # 
+    echo [source.sjtu]
+    echo registry = "https://mirrors.sjtug.sjtu.edu.cn/git/crates.io-index"
+    
+    echo # rustcc
+    echo [source.rustcc]
+    echo registry = "git://crates.rustcc.cn/crates.io-index"
+    call :color_text 9f "--------------RustEnvCfg--------------"
+    endlocal
 goto :eof
 
 @rem YellowBackground    6f  ef
