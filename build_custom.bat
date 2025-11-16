@@ -66,7 +66,7 @@ echo ProjName %ProjName%
 call :TaskKillSpecProcess  "cl.exe"
 call :TaskKillSpecProcess  "MSBuild.exe"
 
-call :CompileProject %BuildDir% %BuildType% %ProjName% "%HomeDir%"
+call :CompileProject     "%BuildDir%" "%BuildType%" "%ProjName%"    "%HomeDir%"
 call :CopyTarget %BuildDir% %BuildType% %SystemBinDir%
 pause
 goto :eof
@@ -289,9 +289,10 @@ goto :eof
     pushd %BuildDir%
         @rem del * /q /s
         @rem cmake .. -G"Visual Studio 16 2019" -A Win64
+        @rem cmake .. -G"Visual Studio 17 2022" -A Win32
         @rem cmake -G "Visual Studio 8 2005"  ..
         @rem cmake --build . --target clean
-        cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%ProgramDir%\%ProjName%
+        cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%ProgramDir%\%ProjName%  -A %ArchType%
         @rem cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE="../toolchain.cmake" -DCMAKE_MAKE_PROGRAM="%MakeProgram%" -DCMAKE_C_COMPILER_WORKS=ON
         cmake --build . -j16  --config %BuildType% --target INSTALL
     popd
