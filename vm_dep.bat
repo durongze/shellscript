@@ -25,6 +25,7 @@ set tools_addr=%tools_addr%;https://www.7-zip.org/a/lzma2201.7z
 set software_urls=https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz
 
 set build_type=Release
+set BuildType=Release
 
 set include=%all_inc%;%include%;%tools_dir%\include;
 set lib=%all_lib%;%lib%;%tools_dir%\lib;%tools_dir%\bin;
@@ -32,11 +33,17 @@ set path=%all_bin%;%path%;%tools_dir%\bin;
 
 set PERL5LIB=%PERL5LIB%
 set PerlPath=%ProgramDir%\Perl\bin
+set TclshPath=%ProgramDir%\tcl\bin
 set NASMPath=%ProgramDir%\nasm\bin
 set YASMPath=%ProgramDir%\yasm\bin
+set GPERFPath=%ProgramDir%\gperf\bin
 set CMakePath=%ProgramDir%\cmake\bin
-set PythonHome=%ProgramDir%\python
-set PATH=%NASMPath%;%YASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
+set SDCCPath=%ProgramDir%\SDCC\bin
+set MakePath=%ProgramDir%\make-3.81-bin\bin
+set PythonHome=%ProgramDir%\python\Python312
+set PYTHONPATH=%PYTHONHOME%\lib;%PythonHome%;
+set SwigHome=%ProgramDir%\swigwin\bin
+set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%SDCCPath%;%MakePath%;%PYTHONHOME%;%PYTHONHOME%\Scripts;%SwigHome%;%PATH%
 
 set cur_dir=%~dp0
 set ProjDir=%cur_dir:~0,-1%\..
@@ -64,11 +71,47 @@ set ArchType=x64
 
 @rem call %auto_install_func% install_all_package "%tools_addr%"    "%tools_dir%"
 @rem call %auto_install_func% install_all_package "%software_urls%" "%software_dir%"
+@rem call :upgrade_python_pip
 call :thirdparty_lib_install "%software_dir%" %home_dir%
+@rem call :del_lib_cacke_dir      "%software_dir%"
+
+@rem call :Copy3rdLibCMakeList    %cur_dir%
 pause
 goto :eof
 
 @rem objdump -S E:\program\xz-5.2.6\lib\liblzma.lib | grep -C 5 "lzma_auto_decoder"
+
+:CopyThirdpartyLib
+    setlocal ENABLEDELAYEDEXPANSION
+    set thirdparty_dir=%1
+    set BuildType=%~2
+    set PaddleDir=%~3
+    call:color_text 2f " ++++++++++++++ CopyThirdpartyLib ++++++++++++++ "
+    echo PaddleDir=%PaddleDir%
+    pause
+    set idx=0
+    pushd %thirdparty_dir%
+        for /f %%i in (' dir /s /b *.lib ') do (
+            set /a idx+=1
+            set lib_dir=%%i
+            echo [!idx!] BuildType=!BuildType!    lib_dir:!lib_dir!
+            echo "!lib_dir!" | findstr /C:!BuildType! >nul
+            if !errorlevel! equ 0 (
+                copy  !lib_dir!    !PaddleDir!\lib\
+                if !errorlevel! equ 0 (
+                    echo "copy succ"
+                ) else (
+                    echo "copy  !lib_dir!    !PaddleDir!\lib\"
+                )
+            ) else (
+                echo "!BuildType!---!lib_dir!" 
+                pause
+            )
+        )
+    popd
+    call:color_text 9f " -------------- CopyThirdpartyLib -------------- "
+    endlocal
+goto :eof
 
 :CheckDepTypeByDir
     setlocal EnableDelayedExpansion
@@ -250,6 +293,7 @@ goto :eof
     echo LibDir %LibDir%
     if not exist %LibDir% (
         call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
+        echo '%LibDir%' does not exist... 
         goto :eof
     )
 
@@ -287,13 +331,14 @@ goto :eof
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
-    set VCPathSet=%VCPathSet%;SkySdk\VS2005\VC
+    set VCPathSet=%VCPathSet%;"VS2022\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"SkySdk\VS2005\VC"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 12.0\VC\bin"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 14.0\VC\bin"
 
     set idx_a=0
-    for %%C in (%VCPathSet%) do (
+    for %%C in (!VCPathSet!) do (
         set /a idx_a+=1
         set idx_b=0
         for %%B in (!AllProgramsPathSet!) do (

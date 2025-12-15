@@ -1,5 +1,4 @@
 @rem set VSCMD_DEBUG=2
-@rem %comspec% /k "F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
 
 @rem set VSCMD_DEBUG=2
 
@@ -42,21 +41,32 @@ set SystemBinDir=.\
 
 @rem x86  or x64
 call %VisualStudioCmd% x86
+pause
+
 @rem call "C:\Qt\6.5.2\msvc2019_64\bin\qtenv2.bat"
 @rem call "D:/Qt/Qt5.12.0/5.12.0/msvc2017_64/bin/qtenv2.bat"
 pushd %CurDir%
 
 @rem Win32  or x64
-set ArchType=x64
+set ArchType=Win32
 
+set BuildDir=BuildLib
+set BuildType=Debug
 set BuildType=Release
 set ProjName=
+set build_mrp_ext=%CurDir%\mythroad\build_mrp_ext.bat
+
+@rem sxstrace trace -logfile:%~dp0\sxstrace.etl
+@rem sxstrace parse -logfile:%~dp0\sxstrace.etl -outfile:%~dp0\sxstrace.txt
 
 call :get_suf_sub_str %ProjDir% \ ProjName
 
 echo ProjName %ProjName%
 
-call :CompileProject %BuildDir% %BuildType% %ProjName% "%HomeDir%"
+call :TaskKillSpecProcess  "cl.exe"
+call :TaskKillSpecProcess  "MSBuild.exe"
+
+call :CompileProject     "%BuildDir%" "%BuildType%" "%ProjName%"    "%HomeDir%"
 call :CopyTarget %BuildDir% %BuildType% %SystemBinDir%
 pause
 goto :eof
@@ -151,6 +161,7 @@ goto :eof
     echo LibDir %LibDir%
     if not exist %LibDir% (
         call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
+        echo '%LibDir%' does not exist... 
         goto :eof
     )
 
@@ -188,7 +199,8 @@ goto :eof
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
-    set VCPathSet=%VCPathSet%;SkySdk\VS2005\VC
+    set VCPathSet=%VCPathSet%;"VS2022\VC\Auxiliary\Build"
+    set VCPathSet=%VCPathSet%;"SkySdk\VS2005\VC"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 12.0\VC\bin"
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 14.0\VC\bin"
@@ -226,6 +238,8 @@ goto :eof
         mkdir %BuildDir%
     ) 
 
+    set sdcc_flags= --model-small --less-pedantic --opt-code-size
+    set sdcc_flags= --model-large --less-pedantic --opt-code-size
     set all_rel_file=
     set idx=0
     pushd %SrcDir%
@@ -235,14 +249,17 @@ goto :eof
         call :get_path_by_file  !cur_src!   cur_dir   cur_name   cur_ext
         echo [!idx!] cur_dir=!cur_dir!    cur_name=!cur_name!    cur_ext=!cur_ext!
         pushd !BuildDir!
-            sdcc.exe  -I!cur_dir!\ -I!cur_dir!\driver -I!cur_dir!\common -I!cur_dir!\tasks  -o !cur_name!.rel -c !cur_src!
+            echo sdcc.exe  -I!cur_dir!\ -I!cur_dir!\driver -I!cur_dir!\common -I!cur_dir!\tasks  !sdcc_flags!   -o !cur_name!.rel -c !cur_src!
+            sdcc.exe  -I!cur_dir!\ -I!cur_dir!\driver -I!cur_dir!\common -I!cur_dir!\tasks  !sdcc_flags!   -o !cur_name!.rel -c !cur_src!
         popd
-        set all_rel_file=!cur_name!.rel !all_rel_file!
+        set all_rel_file=!all_rel_file!  !cur_name!.rel 
     )
     popd
 
     pushd !BuildDir!
-        sdcc.exe    -o demo.ihx !all_rel_file!
+        echo sdcc.exe  !sdcc_flags!    -o demo.ihx !all_rel_file!
+        sdcc.exe  !sdcc_flags!    -o demo.ihx !all_rel_file!
+        packihx demo.ihx > demo.hex
     popd
 
     call :color_text 2f " -------------- SdccCompileProj -------------- "
@@ -272,9 +289,10 @@ goto :eof
     pushd %BuildDir%
         @rem del * /q /s
         @rem cmake .. -G"Visual Studio 16 2019" -A Win64
+        @rem cmake .. -G"Visual Studio 17 2022" -A Win32
         @rem cmake -G "Visual Studio 8 2005"  ..
         @rem cmake --build . --target clean
-        cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%ProgramDir%\%ProjName%
+        cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%ProgramDir%\%ProjName%  -A %ArchType%
         @rem cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE="../toolchain.cmake" -DCMAKE_MAKE_PROGRAM="%MakeProgram%" -DCMAKE_C_COMPILER_WORKS=ON
         cmake --build . -j16  --config %BuildType% --target INSTALL
     popd
@@ -309,7 +327,7 @@ goto :eof
         if !errorlevel! equ 0 (
             sc stop %ProjName%
         ) else (
-            call :color_text 4f "--------------RunWinSvr net start error --------------"
+            call :color_text 4f " -------------- RunWinSvr net start error -------------- "
             %BinPath%
         )
         @rem sc delete %ProjName%
@@ -356,11 +374,11 @@ goto :eof
 
 :ResetSystemEnv
     setlocal ENABLEDELAYEDEXPANSION
-    call :color_text 9f "++++++++++++++ResetSystemEnv++++++++++++++"
+    call :color_text 9f " ++++++++++++++ ResetSystemEnv ++++++++++++++ "
     @rem set include=%old_sys_include%
     @rem set lib=%old_sys_lib%
     @rem set path=%old_sys_path%
-    call :color_text 9f "--------------ResetSystemEnv--------------"
+    call :color_text 9f " -------------- ResetSystemEnv -------------- "
     endlocal
 goto :eof
 
@@ -430,7 +448,11 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     set lib_name=%1
     set func_name=%~2
+    call:color_text 2f " ++++++++++++++++++ search_func_in_lib ++++++++++++++++++ "
     if "%func_name%" == "" (
+        @rem dumpbin /ARCHIVEMEMBERS  %lib_name%
+        @rem dumpbin /HEADERS %lib_name%  /SECTION:.drectve
+        @rem dumpbin /HEADERS %lib_name%  | grep "machine"
         dumpbin /EXPORTS %lib_name%
         dumpbin /SYMBOLS %lib_name%
         strings %lib_name%
@@ -438,6 +460,7 @@ goto :eof
         dumpbin /SYMBOLS %lib_name%  | grep %func_name%
         strings %lib_name% |  findstr /i "%func_name%"
     )
+    call:color_text 2f " ------------------ search_func_in_lib ------------------ "
     endlocal
 goto :eof
 

@@ -4,7 +4,6 @@ shift /1
 goto %*
 @rem %comspec%
 
-
 @rem YellowBackground    6f  ef
 @rem BlueBackground      9f  bf   3f
 @rem GreenBackground     af  2f
@@ -34,15 +33,17 @@ goto :eof
     if not exist dyzbuild (
         md dyzbuild
     ) else (
-        del dyzbuild\* /s /q
+        del dyzbuild\*.* /s /q
     )
     call:color_text 2f "++++++++++++++cmake_install++++++++++++++"
     echo %0 %src_dir% %dst_dir% %cur_flags% %install_dir%
+    set build_type=%BuildType%
     pushd dyzbuild
         echo cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
         cmake .. -DCMAKE_INSTALL_PREFIX=%install_dir%  %cur_flags%
         cmake --build . --config %build_type%
         @rem cmake --install .
+        echo  cmake --build . --target INSTALL --config %build_type%
         cmake --build . --target INSTALL --config %build_type%
     popd
     endlocal
@@ -80,6 +81,31 @@ goto :eof
     popd
     endlocal
 goto :eof
+
+:qmake_install
+    setlocal ENABLEDELAYEDEXPANSION
+    set src_dir=%~1
+    set dst_dir=%~2
+    set cur_flags=%~3
+    set install_dir=%dst_dir%\%src_dir%
+    call:color_text 2f " ++++++++++++++ qmake_install ++++++++++++++ "
+    if not exist dyzbuild (
+        md dyzbuild
+    )
+
+    set ProFile=
+    for /f %%i in ( 'dir /b *.pro ' ) do (
+        set /a idx+=1
+        set ProFile=%%i
+        echo [!idx!] !ProFile!
+    )
+    pushd dyzbuild
+        qmake.exe %ProFile% -spec win32-msvc "CONFIG+=debug" "CONFIG+=qml_debug" 
+    popd
+    call :color_text 2f " ------------- qmake_install -------------- "
+    endlocal
+goto :eof
+
 
 :auto_install
     setlocal ENABLEDELAYEDEXPANSION
