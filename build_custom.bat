@@ -288,9 +288,9 @@ goto :eof
     )
     pushd %BuildDir%
         @rem del * /q /s
-        @rem cmake .. -G"Visual Studio 16 2019" -A Win64
-        @rem cmake .. -G"Visual Studio 17 2022" -A Win32
-        @rem cmake -G "Visual Studio 8 2005"  ..
+        @rem cmake .. -G"Visual Studio 16 2019" -A  %ArchType%
+        @rem cmake .. -G"Visual Studio 17 2022" -A  %ArchType%
+        @rem cmake    -G "Visual Studio 8 2005"     ..
         @rem cmake --build . --target clean
         cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%ProgramDir%\%ProjName%  -A %ArchType%
         @rem cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE="../toolchain.cmake" -DCMAKE_MAKE_PROGRAM="%MakeProgram%" -DCMAKE_C_COMPILER_WORKS=ON
@@ -386,22 +386,40 @@ goto :eof
     setlocal EnableDelayedExpansion
     call :color_text 2f "+++++++++++++++++++ShowVS2022InfoOnWin10+++++++++++++++++++++++"
     @rem HKCU\SOFTWARE  or  HKCU\SOFTWARE\Wow6432Node
-    @rem see winsdk.bat -> GetWin10SdkDir -> GetWin10SdkDirHelper -> reg query "%1\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
-    @rem see winsdk.bat -> GetUniversalCRTSdkDir -> GetUniversalCRTSdkDirHelper -> reg query "%1\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
 
-    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
+    @rem see winsdk.bat -> GetWin10SdkDir -> GetWin10SdkDirHelper ->
+    reg query "%1\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
+
+    @rem see winsdk.bat -> GetUniversalCRTSdkDir -> GetUniversalCRTSdkDirHelper -> 
+    reg query "%1\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
+
     @rem reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v InstallationFolder
     @rem reg add    "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v InstallationFolder /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
+    reg query       "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
 
-    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
     @rem reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 
     @rem reg add    "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10         /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
+    reg query       "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
 
     echo "C:\Program Files (x86)\Microsoft SDKs\Windows"
     echo "C:\Program Files (x86)\Windows Kits"
     echo "C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Platforms\Win32\PlatformToolsets\v80\Microsoft.Cpp.Win32.v80.props"
+
     reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\8.0\Setup\VC" /v "ProductDir"
     reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\8.0\Setup\VS" /v "ProductDir"
+
+    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\Setup\Instances\ManualVS2022"
+
+    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\Setup\Instances\ManualVS2022\Catalog\Components"
+
+    where cl
+    where nmake
+    where rc
+
+    where msbuild
+    where devenv
+    where vswhere
+
     call :color_text 2f "--------------------ShowVS2022InfoOnWin10-----------------------"
     endlocal
 goto :eof
