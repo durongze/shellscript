@@ -188,8 +188,8 @@ goto :eof
     call :color_text 2f " ++++++++++++++++++ DetectVsPath +++++++++++++++++++++++ "
     set VSDiskSet=C;D;E;F;G;
 
-    set AllProgramsPathSet=program
-    set AllProgramsPathSet=%AllProgramsPathSet%;programs
+    set AllProgramsPathSet="program"
+    set AllProgramsPathSet=%AllProgramsPathSet%;"programs"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files (x86)"
 
@@ -206,7 +206,7 @@ goto :eof
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 14.0\VC\bin"
 
     set idx_a=0
-    for %%C in (%VCPathSet%) do (
+    for %%C in (!VCPathSet!) do (
         set /a idx_a+=1
         set idx_b=0
         for %%B in (!AllProgramsPathSet!) do (
@@ -214,10 +214,10 @@ goto :eof
             set idx_c=0
             for %%A in (!VSDiskSet!) do (
                 set /a idx_c+=1
-                set CurBatFile=%%A:\%%B\%%C\vcvarsall.bat
+                set CurBatFile=%%A:\%%~B\%%~C\vcvarsall.bat
                 echo [!idx_a!][!idx_b!][!idx_c!] !CurBatFile!
                 if exist !CurBatFile! (
-                    goto DetectVsPathBreak
+                    goto :DetectVsPathBreak
                 )
             )
         )
@@ -226,6 +226,53 @@ goto :eof
     echo Use:%CurBatFile%
     call :color_text 2f " -------------------- DetectVsPath ----------------------- "
     endlocal & set "%~1=%CurBatFile%"
+goto :eof
+
+:DetectWinSdk
+    setlocal EnableDelayedExpansion
+    set VsBatFileVar=%~1
+    set VS_ARCH=x64
+
+    call :color_text 2f " ++++++++++++++++++ DetectWinSdk +++++++++++++++++++++++ "
+
+    set WindowsSdkVersion=10.0.22621.0
+
+    set VSDiskSet=C;D;E;F;G;
+
+    set AllProgramsPathSet=program
+    set AllProgramsPathSet=%AllProgramsPathSet%;programs
+
+    set VCPathSet=%VCPathSet%;"VS2022\Windows Kits\10"
+    set VCPathSet=%VCPathSet%;"SkySdk\VS2005\SDK\v2.0"
+
+    set idx_a=0
+    for %%C in (!VCPathSet!) do (
+        set /a idx_a+=1
+        set idx_b=0
+        for %%B in (!AllProgramsPathSet!) do (
+            set /a idx_b+=1
+            set idx_c=0
+            for %%A in (!VSDiskSet!) do (
+                set /a idx_c+=1
+                set CurDirName=%%A:\%%B\%%~C
+                echo [!idx_a!][!idx_b!][!idx_c!] !CurDirName!
+                if exist !CurDirName! (
+                    set WindowsSdkDir=!CurDirName!
+                    set WIN_SDK_BIN=!WindowsSdkDir!\bin\!WindowsSdkVersion!\!VS_ARCH!;
+                    set WIN_SDK_INC=!WIN_SDK_INC!;!WindowsSdkDir!\Include\!WindowsSdkVersion!\um;
+                    set WIN_SDK_INC=!WIN_SDK_INC!;!WindowsSdkDir!\Include\!WindowsSdkVersion!\ucrt;
+                    set WIN_SDK_INC=!WIN_SDK_INC!;!WindowsSdkDir!\Include\!WindowsSdkVersion!\shared;
+                    set WIN_SDK_LIB=!WIN_SDK_LIB!;!WindowsSdkDir!\Lib\!WindowsSdkVersion!\um\!VS_ARCH!;
+                    set WIN_SDK_LIB=!WIN_SDK_LIB!;!WindowsSdkDir!\Lib\!WindowsSdkVersion!\ucrt\!VS_ARCH!;
+                    goto :DetectWinSdkBreak
+                )
+            )
+        )
+    )
+    :DetectWinSdkBreak
+    echo Use:%CurDirName%
+    call :color_text 2f " -------------------- DetectWinSdk ----------------------- "
+    endlocal & set "%~1=%CurDirName%" & set %~2=%WIN_SDK_BIN% & set %~3=%WIN_SDK_INC% & set %~4=%WIN_SDK_LIB%
 goto :eof
 
 :SdccCompileProj
