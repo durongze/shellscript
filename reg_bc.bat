@@ -1,16 +1,25 @@
-
 @rem pushd "C:\Users\%UserName%\AppData\Roaming\Scooter Software\Beyond Compare 4"
-pushd "%USERPROFILE%\AppData\Roaming\Scooter Software\Beyond Compare 4"
-del *  /q
-popd
 
-echo "reg query start...."
+set BC_REG_DIR="%USERPROFILE%\AppData\Roaming\Scooter Software\Beyond Compare 4"
 
-reg query HKEY_CURRENT_USER\SOFTWARE\Scooter" "Software\Beyond" "Compare" "4 /v CacheID
+if not exist %BC_REG_DIR% (
+    echo BC_REG_DIR=%BC_REG_DIR%
+    pause
+    goto :eof
+) else (
+    pushd %BC_REG_DIR%
+        del *  /q
+    popd
+)
 
-reg delete HKEY_CURRENT_USER\SOFTWARE\Scooter" "Software\Beyond" "Compare" "4 /v CacheID /f
+set BC_REG_PATH="HKEY_CURRENT_USER\SOFTWARE\Scooter Software\Beyond Compare 4"
+echo BC_REG_PATH=%BC_REG_PATH%
 
-reg add HKEY_CURRENT_USER\SOFTWARE\Scooter" "Software\Beyond" "Compare" "4 /v CacheID /f /t REG_BINARY /d 0 
+reg query  %BC_REG_PATH% /v CacheID
+reg delete %BC_REG_PATH% /v CacheID /f
+reg add    %BC_REG_PATH% /v CacheID /f /t REG_BINARY /d 0 
+
+pause
 
 set CurDir=%~dp0
 
