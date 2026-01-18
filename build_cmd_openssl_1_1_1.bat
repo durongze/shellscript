@@ -170,8 +170,6 @@ goto :eof
     endlocal
     echo .
 goto :eof
-nmake test
-nmake install
 
 :GetCurSysTime
     setlocal EnableDelayedExpansion
