@@ -10,7 +10,6 @@ set CurDir=%~dp0
 set ProjDir=%CurDir:~0,-1%
 echo ProjDir %ProjDir%
 
-
 set PERL5LIB=%PERL5LIB%
 set PerlPath=%ProgramDir%\Perl\bin
 set NASMPath=%ProgramDir%\nasm\bin

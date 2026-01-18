@@ -1,23 +1,64 @@
-set SDCC_HOME=F:\programs\sdcc
-set PATH=%SDCC_HOME%\bin;%PATH%;
-set c_file=led01.c
+@rem set VSCMD_DEBUG=2
+@rem %comspec% /k "F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
 
-set ProgramDir=F:\program
+call :DetectProgramDir ProgramDir
+
+echo ProgramDir=%ProgramDir%
+
+set CurDir=%~dp0
+set ProjDir=%CurDir:~0,-1%
+
+set PERL5LIB=%PERL5LIB%
 set PerlPath=%ProgramDir%\Perl\bin
 set NASMPath=%ProgramDir%\nasm\bin
+set YASMPath=%ProgramDir%\yasm\bin
+set GPERFPath=%ProgramDir%\gperf\bin
 set CMakePath=%ProgramDir%\cmake\bin
 set PythonHome=%ProgramDir%\python
-set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PATH%
+set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
 
+set HomeDir=%MrpCodeDir%\out\windows
+
+set SDCC_HOME=%ProgramDir%\sdcc
+set PATH=%SDCC_HOME%\bin;%PATH%;
+set c_file=led01.c
 set CurDir=%~dp0
 
 set ProjDir=%CurDir:~0,-1%
 echo ProjDir %ProjDir%
 
 call :SDCC_CompilerSrcFile %c_file%
-call :SDCC_DelCacheFile %c_file%
+call :SDCC_DelCacheFile    %c_file%
 call :SDCC_ShowVersion
 pause
+goto :eof
+
+:DetectProgramDir
+    setlocal EnableDelayedExpansion
+    @rem SkySdk\VS2005\VC
+    set SkySdkDiskSet=C;D;E;F;G;
+    set CurProgramDir=
+    set idx=0
+    call :color_text 2f " +++++++++++++++++++ DetectProgramDir +++++++++++++++++++++++ "
+    for %%i in (%SkySdkDiskSet%) do (
+        set /a idx+=1
+        for /f "tokens=1-2 delims=|" %%B in ("programs|program") do (
+            set CurProgramDir=%%i:\%%B
+            echo [!idx!] !CurProgramDir!
+            if exist !CurProgramDir!\sdcc (
+                goto :DetectProgramDirBreak
+            )
+            set CurProgramDir=%%i:\%%C
+            echo [!idx!] !CurProgramDir!
+            if exist !CurProgramDir!\sdcc (
+                goto :DetectProgramDirBreak
+            )
+        )
+    )
+    :DetectProgramDirBreak
+    set ProgramDir=!CurProgramDir!
+    call :color_text 2f " ------------------- DetectProgramDir ----------------------- "
+    endlocal & set %~1=%ProgramDir%
 goto :eof
 
 :SDCC_CompilerSrcFile

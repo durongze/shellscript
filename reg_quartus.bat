@@ -78,6 +78,13 @@ goto :eof
     endlocal & set %~1=%addrs_lst%
 goto :eof
 
+@rem YellowBackground    6f  ef
+@rem BlueBackground      9f  bf   3f
+@rem GreenBackground     af  2f
+@rem RedBackground       4f  cf
+@rem GreyBackground      7f  8f
+@rem PurpleBackground    5f
+
 :color_text
     setlocal EnableDelayedExpansion
     for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (

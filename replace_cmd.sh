@@ -3,8 +3,6 @@ workdir=$(pwd)
 src_target=test_args.exe
 dst_dir=dst
 
-
-
 function get_path_by_file ()
 {
     myfile=$1
@@ -60,4 +58,3 @@ function replace_all_cmd ()
 }
 
 replace_all_cmd $workdir $src_target  $dst_dir
-

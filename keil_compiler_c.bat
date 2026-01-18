@@ -2,7 +2,7 @@ set ProgramDir=F:\program
 
 set KEIL_HOME=%ProgramDir%\KeilC51
 SET C251HOME=%KEIL_HOME%\C251
-SET C251INC=%C251HOME%\INC;.\;
+SET C251INC=%C251HOME%\INC;%C251HOME%\INC\STC;.\;
 SET C251LIB=%C251HOME%\LIB;.\;
 SET C251BIN=%C251HOME%\BIN;.\;
 set PATH=%C251BIN%;%PATH%;
@@ -17,9 +17,10 @@ set CurDir=%~dp0
 
 set ProjDir=%CurDir:~0,-1%\example
 set file_name=led01
+set ProjName=sample
 echo ProjDir %ProjDir%
 
-call :C251_CompilerSrcFile "%ProjDir%" "%file_name%"
+call :C251_CompilerSrcFile "%ProjDir%" "%file_name%" "%ProjName%"
 call :C251_DelCacheFile    "%ProjDir%" "%file_name%"
 call :C251_ShowVersion
 pause
@@ -29,6 +30,7 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     set proj_dir=%~1
     set file_name=%~2
+    set proj_name=%~3
     set c_file=%file_name%.c
     set obj_file=%file_name%.obj
     call :color_text 2f "++++++++++C251_CompilerSrcFile++++++++++++"
@@ -36,9 +38,11 @@ goto :eof
         if not exist "%c_file%"  (
             echo %c_file% doesn't_exist.
         ) else (
-            C251                      %c_file%
-            L251                      %obj_file%
-            OH251 file_name hex
+            echo C251                      @%file_name%.__i
+            C251                      @%file_name%.__i
+            echo L251                      @%proj_name%.lnp
+            L251                      @%proj_name%.lnp
+            OH251 %proj_name%  H386 RANGE "(0 - 0xFFFFFF)"
         )
     popd
     call :color_text 9f "----------C251_CompilerSrcFile-------------"
