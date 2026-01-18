@@ -1,15 +1,15 @@
 @rem set VSCMD_DEBUG=2
-
-@rem set VSCMD_DEBUG=2
+@rem %comspec% /k "F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
 
 call :DetectVsPath     VisualStudioCmd
 call :DetectProgramDir ProgramDir
 
 echo ProgramDir=%ProgramDir%
 
-set old_sys_include="%include%"
-set old_sys_lib="%lib%"
-set old_sys_path="%path%"
+set CurDir=%~dp0
+set ProjDir=%CurDir:~0,-1%
+echo ProjDir %ProjDir%
+
 
 set PERL5LIB=%PERL5LIB%
 set PerlPath=%ProgramDir%\Perl\bin
@@ -17,22 +17,16 @@ set NASMPath=%ProgramDir%\nasm\bin
 set YASMPath=%ProgramDir%\yasm\bin
 set GPERFPath=%ProgramDir%\gperf\bin
 set CMakePath=%ProgramDir%\cmake\bin
+set SDCCPath=%ProgramDir%\SDCC\bin
 set MakePath=%ProgramDir%\make-3.81-bin\bin
-set PythonHome=%ProgramDir%\python
+set PythonHome=%ProgramDir%\python\Python312
 set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%SDCCPath%;%MakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
 
 set MakeProgram=%MakePath%\make.exe
 
-call :TaskKillSpecProcess  "cl.exe"
-call :TaskKillSpecProcess  "MSBuild.exe"
-
-set CurDir=%~dp0
-
-set ProjDir=%CurDir:~0,-1%
-echo ProjDir %ProjDir%
-set software_dir="%ProjDir%\thirdparty"
 set HomeDir=%ProjDir%\out\windows
-@rem set HomeDir=%ProgramDir%
+
+set software_dir="%ProjDir%\thirdparty"
 
 call :SetProjEnv %software_dir% %CurDir% include lib path CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH CMAKE_MODULE_PATH
 call :ShowProjEnv
@@ -40,12 +34,10 @@ call :ShowProjEnv
 set SystemBinDir=.\
 
 @rem x86  or x64
-call %VisualStudioCmd% x86
-pause
+call %VisualStudioCmd% x64
 
 @rem call "C:\Qt\6.5.2\msvc2019_64\bin\qtenv2.bat"
 @rem call "D:/Qt/Qt5.12.0/5.12.0/msvc2017_64/bin/qtenv2.bat"
-pushd %CurDir%
 
 @rem Win32  or x64
 set ArchType=Win32
@@ -66,8 +58,20 @@ echo ProjName %ProjName%
 call :TaskKillSpecProcess  "cl.exe"
 call :TaskKillSpecProcess  "MSBuild.exe"
 
-call :CompileProject     "%BuildDir%" "%BuildType%" "%ProjName%"    "%HomeDir%"
-call :CopyTarget %BuildDir% %BuildType% %SystemBinDir%
+call :DetectWinSdk   WinSdkDirHome   WinSdkDirBin   WinSdkDirInc   WinSdkDirLib
+
+echo WinSdkDirBin=%WinSdkDirBin%
+echo WinSdkDirInc=%WinSdkDirInc%
+echo WinSdkDirLib=%WinSdkDirLib%
+
+set PATH=%WinSdkDirBin%;%PATH%
+set INCLUDE=%WinSdkDirInc%;%INCLUDE%
+set LIB=%WinSdkDirLib%;%LIB%
+
+call :ShowVS2022InfoOnWin10
+
+call :CompileProject "%BuildDir%" "%BuildType%" "%ProjName%"     "%HomeDir%"
+call :CopyTarget     "%BuildDir%" "%BuildType%" "%SystemBinDir%"
 pause
 goto :eof
 
@@ -75,7 +79,7 @@ goto :eof
     setlocal EnableDelayedExpansion
     set lib_dir="%~1"
     set home_dir="%~2"
-    call :color_text 2f "++++++++++++++ del_lib_cacke_dir ++++++++++++++"
+    call :color_text 2f " ++++++++++++++ del_lib_cacke_dir ++++++++++++++ "
     pushd %lib_dir%
         set idx=0
         for /f %%i in ( 'dir /b /ad ' ) do (
@@ -148,7 +152,92 @@ goto :eof
     endlocal & set %~1=%ProgramDir%
 goto :eof
 
-:CheckLibInDir
+:DetectVS2005VcDir
+    setlocal EnableDelayedExpansion
+    set OutVCInstallDir=%~1
+
+    set CurVcDir=
+    set idx=0
+    call :color_text 2f " +++++++++++++++++++ DetectVS2005VcDir +++++++++++++++++++++++ "
+    set VSDiskSet=C;D;E;F;G;
+
+    set AllProgramsPathSet="program"
+    set AllProgramsPathSet=%AllProgramsPathSet%;"programs"
+    set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files"
+    set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files (x86)"
+
+    set VCPathSet=%VCPathSet%;"SkySdk\VS2005\VC"
+    set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
+
+    set idx_a=0
+    for %%C in (!VCPathSet!) do (
+        set /a idx_a+=1
+        set idx_b=0
+        for %%B in (!AllProgramsPathSet!) do (
+            set /a idx_b+=1
+            set idx_c=0
+            for %%A in (!VSDiskSet!) do (
+                set /a idx_c+=1
+                set CurVcDir=%%A:\%%~B\%%~C
+                echo [!idx_a!] [!idx_b!] [!idx_c!] VS80COMNTOOLS=!VS80COMNTOOLS!
+                echo [!idx_a!] [!idx_b!] [!idx_c!] CurVcDir=!CurVcDir!
+                if exist !CurVcDir! (
+                    goto :DetectVS2005VcDirBreak
+                )
+            )
+        )
+    )
+    :DetectVS2005VcDirBreak
+    set  VCInstallDir=!CurVcDir!
+    echo VCInstallDir=!CurVcDir!
+    call :color_text 2f " -------------------- DetectVS2005VcDir ----------------------- "
+    endlocal & set "%~1=%VCInstallDir%"
+goto :eof
+
+:CopyDynamicLibsForVS2005
+    setlocal EnableDelayedExpansion
+    set SpecLibDir=%~1
+    call :color_text 2f " +++++++++++++++++++ CopyDynamicLibsForVS2005 +++++++++++++++++++++++ "
+    call :DetectProgramDir    ProgramDir
+    set VCInstallDir=%ProgramDir%\SkySdk\VS2005\VC
+    set RedistDir=%VCInstallDir%\redist\Debug_NonRedist\x86
+    mkdir %SpecLibDir%\lib
+    xcopy %RedistDir%         "%SpecLibDir%\"         /y /s /e   
+    xcopy %RedistDir%         "%SpecLibDir%\lib\"     /y /s /e   
+    call :color_text 2f " -------------------- CopyDynamicLibsForVS2005 ----------------------- "
+    endlocal
+goto :eof
+
+:CopyStaticLibsForVS2005
+    setlocal EnableDelayedExpansion
+    set ProjDir=%~1
+    call :color_text 2f " +++++++++++++++++++ CopyStaticLibsForVS2005 +++++++++++++++++++++++ "
+    @rem call :DetectVS2005VcDir   VCInstallDir
+    call :DetectProgramDir    ProgramDir
+    set VCInstallDir=%ProgramDir%\SkySdk\VS2005\VC
+
+    set VscLib=msvcmrtd.lib;msvcrtd.lib;
+    set VscDir=%VCInstallDir%\lib
+
+    set VsAtlmfcLib=mfcs80d.lib atlsd.lib mfc80d.lib
+    set VsAtlmfcDir=%VCInstallDir%\atlmfc\lib
+
+    set FrameworkLib=kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;WS2_32.lib;winmm.lib;vfw32.lib;
+    set FrameworkDir=%VCInstallDir%\PlatformSDK\lib
+
+    set SkySdkLib=dsound.lib;dxguid.lib;simulator.lib;simlib.lib;jpeg_sim.lib;SIM_mr_helperexb.lib;data_codec_sim.lib;SIM_mr_helperexbnp.lib;
+
+    call :CopyStaticLibToSpecDir         "%VscLib%"             "%VscDir%"         "%ProjDir%"
+    call :CopyStaticLibToSpecDir         "%VsAtlmfcLib%"        "%VsAtlmfcDir%"    "%ProjDir%"
+    @rem call :CopyStaticLibToSpecDir         "%FrameworkLib%"       "%FrameworkDir%"                 "%ProjDir%"
+
+    @rem call :CopyStaticLibToSpecDir         "%SkySdkLib%"          "%SkySdkDir%\Simulator\lib"      "%ProjDir%"
+
+    call :color_text 2f " -------------------- CopyStaticLibsForVS2005 ----------------------- "
+    endlocal
+goto :eof
+
+:CopyStaticLibToSpecDir
     setlocal EnableDelayedExpansion
     set Libs=%~1
     set LibDir="%~2"
@@ -157,10 +246,10 @@ goto :eof
     if not exist "%MyPlatformSDK%" (
         mkdir %MyPlatformSDK%
     )
-    call :color_text 2f " +++++++++++++++++++ CheckLibInDir +++++++++++++++++++++++ "
+    call :color_text 2f " +++++++++++++++++++ CopyStaticLibToSpecDir +++++++++++++++++++++++ "
     echo LibDir %LibDir%
     if not exist %LibDir% (
-        call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
+        call :color_text 4f " -------------------- CopyStaticLibToSpecDir ----------------------- "
         echo '%LibDir%' does not exist... 
         goto :eof
     )
@@ -174,11 +263,11 @@ goto :eof
         if not exist !LibDir!\!CurLib! (
             echo !LibDir!\!CurLib!
         ) else (
-            copy !LibDir!\!CurLib! %MyPlatformSDK%
+            copy !LibDir!\!CurLib! !MyPlatformSDK!
         )
     )
     popd
-    call :color_text 2f " -------------------- CheckLibInDir ----------------------- "
+    call :color_text 2f " -------------------- CopyStaticLibToSpecDir ----------------------- "
     endlocal
 goto :eof
 
@@ -320,9 +409,13 @@ goto :eof
     set ProjName=%~3
     set LibHomeDir=%~4
     call :color_text 2f " +++++++++++++++++++ CompileProject +++++++++++++++++++++++ "
+    if not exist CMakeLists.txt (
+        echo CMakeLists.txt doesn't exist!
+        goto :eof
+    )
     if not exist %BuildDir% (
         mkdir %BuildDir%
-    ) 
+    )
     if not exist %BuildDir%\%BuildType% (
         mkdir %BuildDir%\%BuildType%\
     )
@@ -334,14 +427,16 @@ goto :eof
         )
     )
     pushd %BuildDir%
+        set ALL_DEFS=            -D CMAKE_TOOLCHAIN_FILE="../toolchain.cmake" -D CMAKE_MAKE_PROGRAM="%MakeProgram%"            -D CMAKE_C_COMPILER_WORKS=ON
+        set ALL_DEFS=            -D CMAKE_BUILD_TYPE=%BuildType%              -D CMAKE_INSTALL_PREFIX=%LibHomeDir%\%ProjName% 
         @rem del * /q /s
-        @rem cmake .. -G"Visual Studio 16 2019" -A  %ArchType%
-        @rem cmake .. -G"Visual Studio 17 2022" -A  %ArchType%
-        @rem cmake    -G "Visual Studio 8 2005"     ..
+        @rem cmake .. -G "Visual Studio 16 2019" -A  %ArchType%
+        @rem cmake .. -G "Visual Studio 17 2022" -A  %ArchType%
+        @rem cmake    -G "Visual Studio 8  2005"     ..
         @rem cmake --build . --target clean
-        cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%ProgramDir%\%ProjName%  -A %ArchType%
-        @rem cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE="../toolchain.cmake" -DCMAKE_MAKE_PROGRAM="%MakeProgram%" -DCMAKE_C_COMPILER_WORKS=ON
-        cmake --build . -j16  --config %BuildType% --target INSTALL
+        @rem cmake ..  %ALL_DEFS%  -A %ArchType%
+        cmake      ..  %ALL_DEFS%  -G "NMake Makefiles" 
+        cmake      --build .       --config %BuildType%  --target %ProjName%
     popd
     call :color_text 2f " -------------------- CompileProject ----------------------- "
     endlocal
@@ -432,32 +527,50 @@ goto :eof
 :ShowVS2022InfoOnWin10
     setlocal EnableDelayedExpansion
     call :color_text 2f "+++++++++++++++++++ShowVS2022InfoOnWin10+++++++++++++++++++++++"
-    @rem HKCU\SOFTWARE  or  HKCU\SOFTWARE\Wow6432Node
+    @rem Error HKCU\SOFTWARE  or  HKCU\SOFTWARE\Wow6432Node
+    set SoftwareRoot=HKLM\SOFTWARE\Wow6432Node
+    echo SoftwareRoot=%SoftwareRoot%
 
     @rem see winsdk.bat -> GetWin10SdkDir -> GetWin10SdkDirHelper ->
-    reg query "%1\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
+    reg query "%SoftwareRoot%\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
 
     @rem see winsdk.bat -> GetUniversalCRTSdkDir -> GetUniversalCRTSdkDirHelper -> 
-    reg query "%1\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
+    reg query "%SoftwareRoot%\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
 
-    @rem reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v InstallationFolder
-    @rem reg add    "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v InstallationFolder /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
-    reg query       "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
+    set SoftwareRoot=HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node
+    set OldVerKey=Microsoft\Microsoft SDKs\Windows\v10.0
+    echo OldVerKey=%OldVerKey%
 
-    @rem reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 
-    @rem reg add    "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10         /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
-    reg query       "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
+    @rem reg delete "%SoftwareRoot%\%OldVerKey%" /v InstallationFolder
+    @rem reg add    "%SoftwareRoot%\%OldVerKey%" /v InstallationFolder /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
+    @rem reg add    "%SoftwareRoot%\%OldVerKey%" /v InstallationFolder /f /t REG_SZ /d "E:\Program\VS2022\Windows Kits\10"
+    reg query       "%SoftwareRoot%\%OldVerKey%" /v InstallationFolder
+
+    set SoftwareRoot=HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node
+    set NewVerKey=Microsoft\Windows Kits\Installed Roots
+    echo NewVerKey=%NewVerKey%
+
+    @rem reg delete "%SoftwareRoot%\%NewVerKey%"  /v KitsRoot10 
+    @rem reg add    "%SoftwareRoot%\%NewVerKey%"  /v KitsRoot10         /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
+    @rem reg add    "%SoftwareRoot%\%NewVerKey%"  /v KitsRoot10         /f /t REG_SZ /d "E:\Program\VS2022\Windows Kits\10"
+    reg query       "%SoftwareRoot%\%NewVerKey%"  /v KitsRoot10
 
     echo "C:\Program Files (x86)\Microsoft SDKs\Windows"
     echo "C:\Program Files (x86)\Windows Kits"
     echo "C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Platforms\Win32\PlatformToolsets\v80\Microsoft.Cpp.Win32.v80.props"
 
-    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\8.0\Setup\VC" /v "ProductDir"
-    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\8.0\Setup\VS" /v "ProductDir"
+    set SoftwareRoot=HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node
+    set VC2005_Key=Microsoft\VisualStudio\8.0
+    echo VC2005_Key=%VC2005_Key%
 
-    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\Setup\Instances\ManualVS2022"
+    reg query "%SoftwareRoot%\%VC2005_Key%\Setup\VC" /v "ProductDir"
+    reg query "%SoftwareRoot%\%VC2005_Key%\Setup\VS" /v "ProductDir"
 
-    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\Setup\Instances\ManualVS2022\Catalog\Components"
+    set VC2022_Key=Microsoft\VisualStudio\Setup\Instances\ManualVS2022
+    echo VC2022_Key=%VC2022_Key%
+
+    reg query "%SoftwareRoot%\%VC2022_Key%"
+    reg query "%SoftwareRoot%\%VC2022_Key%\Catalog\Components"
 
     where cl
     where nmake
@@ -465,7 +578,9 @@ goto :eof
 
     where msbuild
     where devenv
-    where vswhere
+    where mt
+
+    @rem where vswhere
 
     call :color_text 2f "--------------------ShowVS2022InfoOnWin10-----------------------"
     endlocal
@@ -495,7 +610,7 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     set lib_dir=%1
     set func_name=%~2
-    call:color_text 2f "++++++++++++++find_lib_by_func++++++++++++++"
+    call:color_text 2f " ++++++++++++++ find_lib_by_func ++++++++++++++ "
     set idx=0
     pushd %lib_dir%
         for /f %%i in (' dir /b  ') do (
@@ -505,7 +620,26 @@ goto :eof
             call :search_func_in_lib "!lib_file!"  "%func_name%"
         )
     popd
-    call:color_text 9f "--------------find_lib_by_func--------------"
+    call:color_text 2f " -------------- find_lib_by_func -------------- "
+    endlocal
+goto :eof
+
+:check_vs_lib_in_spec_dir
+    setlocal ENABLEDELAYEDEXPANSION
+    set lib_dir=%1
+    set spec_vc_ver=VC80
+
+    call:color_text 2f " ++++++++++++++ check_vs_lib_in_spec_dir ++++++++++++++ "
+    echo %0 %lib_dir%
+
+    set idx=0
+    for /f %%i in ('dir /s /b "%lib_dir%\*.lib" ') do (
+        set /a idx+=1
+        set lib_file=%%i
+        echo [!idx!] dumpbin /all !lib_file! ^| findstr !spec_vc_ver!
+        dumpbin /all !lib_file! | findstr !spec_vc_ver!
+    )
+    call:color_text 9f " -------------- check_vs_lib_in_spec_dir -------------- "
     endlocal
 goto :eof
 
@@ -534,7 +668,7 @@ goto :eof
     set lib_name=%1
     set spec_obj=%~2
     set sym_text=%lib_name%_sym.txt
-    call:color_text 2f "++++++++++++++show_lib_info++++++++++++++"
+    call:color_text 2f " ++++++++++++++ show_lib_info ++++++++++++++ "
     echo %0 %lib_name%
     @rem objdump -S %lib_name% | grep -C 5 "_open"
     lib /list %lib_name% > %sym_text%
@@ -550,7 +684,7 @@ goto :eof
             lib !lib_name! /extract:!obj_file!
         )
     )
-    call:color_text 9f "--------------show_lib_info--------------"
+    call:color_text 2f " -------------- show_lib_info -------------- "
     endlocal
 goto :eof
 
@@ -558,7 +692,7 @@ goto :eof
     setlocal ENABLEDELAYEDEXPANSION
     set spec_obj=%~1
 
-    call:color_text 2f "++++++++++++++show_obj_info++++++++++++++"
+    call:color_text 2f " ++++++++++++++ show_obj_info ++++++++++++++ "
     echo %0 %spec_obj%
     set idx=0
     :GOON
@@ -576,7 +710,7 @@ goto :eof
         goto GOON
     )
     :GOON_END
-    call:color_text 9f "--------------show_obj_info--------------"
+    call:color_text 2f " -------------- show_obj_info -------------- "
     endlocal
 goto :eof
 
@@ -603,9 +737,20 @@ goto :eof
     set mypath=%~dp1
     set myname=%~n1
     set myext=%~x1
-    call :color_text 2f "++++++++++++++++++ get_path_by_file ++++++++++++++++++++++++"
+    call :color_text 2f " ++++++++++++++++++ get_path_by_file ++++++++++++++++++++++++ "
+
+    echo 0    =%0
+    echo f0   =%~f0
+    echo d0   =%~d0
+    echo p0   =%~p0
+    echo n0   =%~n0
+    echo x0   =%~x0
+    echo dp0  =%~dp0
+    echo nx0  =%~nx0
+    echo dpnx0=%~dpnx0
+
     echo !mypath! !myname! !myext!
-    call :color_text 2f "-------------------- get_path_by_file -----------------------"
+    call :color_text 2f " -------------------- get_path_by_file ----------------------- "
     endlocal & set %~2=%mypath%&set %~3=%myname%&set %~4=%myext%
 goto :eof
 
@@ -867,7 +1012,7 @@ goto :eof
         )
     )
     echo %0 %mystr% %char_sym% %count% %mysubstr_len%
-    call :color_text 9f "--------------get_suf_sub_str--------------"
+    call :color_text 2f "--------------get_suf_sub_str--------------"
     endlocal & set %~3=%substr%
 goto :eof
 

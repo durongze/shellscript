@@ -320,8 +320,8 @@ goto :eof
     call :color_text 2f " ++++++++++++++++++ DetectVsPath +++++++++++++++++++++++ "
     set VSDiskSet=C;D;E;F;G;
 
-    set AllProgramsPathSet=program
-    set AllProgramsPathSet=%AllProgramsPathSet%;programs
+    set AllProgramsPathSet="program"
+    set AllProgramsPathSet=%AllProgramsPathSet%;"programs"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files (x86)"
 
@@ -346,10 +346,10 @@ goto :eof
             set idx_c=0
             for %%A in (!VSDiskSet!) do (
                 set /a idx_c+=1
-                set CurBatFile=%%A:\%%B\%%C\vcvarsall.bat
+                set CurBatFile=%%A:\%%~B\%%~C\vcvarsall.bat
                 echo [!idx_a!][!idx_b!][!idx_c!] !CurBatFile!
                 if exist !CurBatFile! (
-                    goto DetectVsPathBreak
+                    goto :DetectVsPathBreak
                 )
             )
         )

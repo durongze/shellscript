@@ -1,4 +1,5 @@
 @rem set VSCMD_DEBUG=2
+@rem %comspec% /k "F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
 
 call :DetectVsPath     VisualStudioCmd
 call :DetectProgramDir ProgramDir
@@ -31,8 +32,9 @@ set NASMPath=%ProgramDir%\nasm\bin
 set YASMPath=%ProgramDir%\yasm\bin
 set GPERFPath=%ProgramDir%\gperf\bin
 set CMakePath=%ProgramDir%\cmake\bin
+set SDCCPath=%ProgramDir%\SDCC\bin
 set MakePath=%ProgramDir%\make-3.81-bin\bin
-set PythonHome=%ProgramDir%\python
+set PythonHome=%ProgramDir%\python\Python312
 set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%SDCCPath%;%MakePath%;%PythonHome%;%PythonHome%\Scripts;%PATH%
 
 set HomeDir=%MrpHomeDir%\vmrp\out\windows
@@ -56,9 +58,68 @@ pushd %CurDir%
 set ArchType=Win32
 
 call :CopyVS2005Libs         "%ProjDir%"
-@rem call :ShowVS2022InfoOnWin10
+call :DetectWinSdk   WinSdkDirHome   WinSdkDirBin   WinSdkDirInc   WinSdkDirLib
+
+echo WinSdkDirBin=%WinSdkDirBin%
+echo WinSdkDirInc=%WinSdkDirInc%
+echo WinSdkDirLib=%WinSdkDirLib%
+
+set PATH=%WinSdkDirBin%;%PATH%
+set INCLUDE=%WinSdkDirInc%;%INCLUDE%
+set LIB=%WinSdkDirLib%;%LIB%
+
+call :ShowVS2022InfoOnWin10
 
 pause
+goto :eof
+
+:del_lib_cacke_dir
+    setlocal EnableDelayedExpansion
+    set lib_dir="%~1"
+    set home_dir="%~2"
+    call :color_text 2f " ++++++++++++++ del_lib_cacke_dir ++++++++++++++ "
+    pushd %lib_dir%
+        set idx=0
+        for /f %%i in ( 'dir /b /ad ' ) do (
+            set /a idx+=1
+            set cur_lib_name=%%i
+            echo [!idx!] !cur_lib_name!
+            if exist !cur_lib_name!\dyzbuild (
+                echo !cur_lib_name!\dyzbuild does exist
+                pause
+            )
+            if exist !cur_lib_name!\SMP\.vs (
+                echo !cur_lib_name!\SMP\.vs does exist
+                pause
+            )
+            if exist !cur_lib_name!\SMP\obj (
+                echo !cur_lib_name!\SMP\obj does exist
+                pause
+            )
+            tar -caf !cur_lib_name!.tar.gz !cur_lib_name!
+        )
+    popd
+    call :color_text 2f " -------------- del_lib_cacke_dir --------------- "
+    endlocal
+goto :eof
+
+:TaskKillSpecProcess
+    setlocal EnableDelayedExpansion
+    set ProcName=%~1
+    call :color_text 2f " +++++++++++++++++++ TaskKillSpecProcess +++++++++++++++++++ "
+    tasklist | grep  "%ProcName%"
+    taskkill /f /im  "%ProcName%"
+    call :color_text 2f " -------------------- TaskKillSpecProcess ----------------------- "
+    endlocal
+goto :eof
+
+:upgrade_python_pip
+    setlocal EnableDelayedExpansion
+    python -m ensurepip
+    python -m pip install --upgrade pip
+    pip3 install Jinja2
+    call :color_text 2f " -------------------- upgrade_python_pip ----------------------- "
+    endlocal
 goto :eof
 
 :DetectProgramDir
@@ -134,7 +195,7 @@ goto :eof
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 8\VC"
 
     set idx_a=0
-    for %%C in (%VCPathSet%) do (
+    for %%C in (!VCPathSet!) do (
         set /a idx_a+=1
         set idx_b=0
         for %%B in (!AllProgramsPathSet!) do (
@@ -143,8 +204,8 @@ goto :eof
             for %%A in (!VSDiskSet!) do (
                 set /a idx_c+=1
                 set CurVcDir=%%A:\%%~B\%%~C
-                echo [!idx!] VS80COMNTOOLS=!VS80COMNTOOLS!
-                echo [!idx!] CurVcDir=!CurVcDir!
+                echo [!idx_a!] [!idx_b!] [!idx_c!] VS80COMNTOOLS=!VS80COMNTOOLS!
+                echo [!idx_a!] [!idx_b!] [!idx_c!] CurVcDir=!CurVcDir!
                 if exist !CurVcDir! (
                     goto :DetectVS2005VcDirBreak
                 )
@@ -158,10 +219,24 @@ goto :eof
     endlocal & set "%~1=%VCInstallDir%"
 goto :eof
 
-:CopyVS2005Libs
+:CopyDynamicLibsForVS2005
+    setlocal EnableDelayedExpansion
+    set SpecLibDir=%~1
+    call :color_text 2f " +++++++++++++++++++ CopyDynamicLibsForVS2005 +++++++++++++++++++++++ "
+    call :DetectProgramDir    ProgramDir
+    set VCInstallDir=%ProgramDir%\SkySdk\VS2005\VC
+    set RedistDir=%VCInstallDir%\redist\Debug_NonRedist\x86
+    mkdir %SpecLibDir%\lib
+    xcopy %RedistDir%         "%SpecLibDir%\"         /y /s /e   
+    xcopy %RedistDir%         "%SpecLibDir%\lib\"     /y /s /e   
+    call :color_text 2f " -------------------- CopyDynamicLibsForVS2005 ----------------------- "
+    endlocal
+goto :eof
+
+:CopyStaticLibsForVS2005
     setlocal EnableDelayedExpansion
     set ProjDir=%~1
-    call :color_text 2f " +++++++++++++++++++ CopyVS2005Libs +++++++++++++++++++++++ "
+    call :color_text 2f " +++++++++++++++++++ CopyStaticLibsForVS2005 +++++++++++++++++++++++ "
     @rem call :DetectVS2005VcDir   VCInstallDir
     call :DetectProgramDir    ProgramDir
     set VCInstallDir=%ProgramDir%\SkySdk\VS2005\VC
@@ -175,25 +250,19 @@ goto :eof
     set FrameworkLib=kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;WS2_32.lib;winmm.lib;vfw32.lib;
     set FrameworkDir=%VCInstallDir%\PlatformSDK\lib
 
-    set RedistDir=%VCInstallDir%\redist\Debug_NonRedist\x86
-
     set SkySdkLib=dsound.lib;dxguid.lib;simulator.lib;simlib.lib;jpeg_sim.lib;SIM_mr_helperexb.lib;data_codec_sim.lib;SIM_mr_helperexbnp.lib;
 
-    call :CheckLibInDir         "%VscLib%"             "%VscDir%"         "%ProjDir%"
-    call :CheckLibInDir         "%VsAtlmfcLib%"        "%VsAtlmfcDir%"    "%ProjDir%"
-    @rem call :CheckLibInDir         "%FrameworkLib%"       "%FrameworkDir%"                 "%ProjDir%"
+    call :CopyStaticLibToSpecDir         "%VscLib%"             "%VscDir%"         "%ProjDir%"
+    call :CopyStaticLibToSpecDir         "%VsAtlmfcLib%"        "%VsAtlmfcDir%"    "%ProjDir%"
+    @rem call :CopyStaticLibToSpecDir         "%FrameworkLib%"       "%FrameworkDir%"                 "%ProjDir%"
 
-    mkdir %ProjDir%\out\lib
-    xcopy %RedistDir%         "%ProjDir%\out\"         /y /s /e   
-    xcopy %RedistDir%         "%ProjDir%\out\lib\"     /y /s /e   
+    @rem call :CopyStaticLibToSpecDir         "%SkySdkLib%"          "%SkySdkDir%\Simulator\lib"      "%ProjDir%"
 
-    @rem call :CheckLibInDir         "%SkySdkLib%"          "%SkySdkDir%\Simulator\lib"      "%ProjDir%"
-
-    call :color_text 2f " -------------------- CopyVS2005Libs ----------------------- "
+    call :color_text 2f " -------------------- CopyStaticLibsForVS2005 ----------------------- "
     endlocal
 goto :eof
 
-:CheckLibInDir
+:CopyStaticLibToSpecDir
     setlocal EnableDelayedExpansion
     set Libs=%~1
     set LibDir="%~2"
@@ -202,10 +271,10 @@ goto :eof
     if not exist "%MyPlatformSDK%" (
         mkdir %MyPlatformSDK%
     )
-    call :color_text 2f " +++++++++++++++++++ CheckLibInDir +++++++++++++++++++++++ "
+    call :color_text 2f " +++++++++++++++++++ CopyStaticLibToSpecDir +++++++++++++++++++++++ "
     echo LibDir %LibDir%
     if not exist %LibDir% (
-        call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
+        call :color_text 4f " -------------------- CopyStaticLibToSpecDir ----------------------- "
         echo '%LibDir%' does not exist... 
         goto :eof
     )
@@ -219,29 +288,11 @@ goto :eof
         if not exist !LibDir!\!CurLib! (
             echo !LibDir!\!CurLib!
         ) else (
-            copy !LibDir!\!CurLib! %MyPlatformSDK%
+            copy !LibDir!\!CurLib! !MyPlatformSDK!
         )
     )
     popd
-    call :color_text 2f " -------------------- CheckLibInDir ----------------------- "
-    endlocal
-goto :eof
-
-:ShowVS2022InfoOnWin10
-    setlocal EnableDelayedExpansion
-    call :color_text 2f "+++++++++++++++++++ShowVS2022InfoOnWin10+++++++++++++++++++++++"
-    @rem HKCU\SOFTWARE  or  HKCU\SOFTWARE\Wow6432Node
-    @rem see winsdk.bat -> GetWin10SdkDir -> GetWin10SdkDirHelper -> reg query "%1\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
-    @rem see winsdk.bat -> GetUniversalCRTSdkDir -> GetUniversalCRTSdkDirHelper -> reg query "%1\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
-
-    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
-    @rem reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v InstallationFolder
-    @rem reg add    "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" /v InstallationFolder /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
-
-    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
-    @rem reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 
-    @rem reg add    "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10         /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
-    call :color_text 2f "--------------------ShowVS2022InfoOnWin10-----------------------"
+    call :color_text 2f " -------------------- CopyStaticLibToSpecDir ----------------------- "
     endlocal
 goto :eof
 
@@ -251,8 +302,8 @@ goto :eof
     call :color_text 2f " ++++++++++++++++++ DetectVsPath +++++++++++++++++++++++ "
     set VSDiskSet=C;D;E;F;G;
 
-    set AllProgramsPathSet=program
-    set AllProgramsPathSet=%AllProgramsPathSet%;programs
+    set AllProgramsPathSet="program"
+    set AllProgramsPathSet=%AllProgramsPathSet%;"programs"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files"
     set AllProgramsPathSet=%AllProgramsPathSet%;"Program Files (x86)"
 
@@ -269,7 +320,7 @@ goto :eof
     set VCPathSet=%VCPathSet%;"Microsoft Visual Studio 14.0\VC\bin"
 
     set idx_a=0
-    for %%C in (%VCPathSet%) do (
+    for %%C in (!VCPathSet!) do (
         set /a idx_a+=1
         set idx_b=0
         for %%B in (!AllProgramsPathSet!) do (
@@ -277,10 +328,10 @@ goto :eof
             set idx_c=0
             for %%A in (!VSDiskSet!) do (
                 set /a idx_c+=1
-                set CurBatFile=%%A:\%%B\%%C\vcvarsall.bat
+                set CurBatFile=%%A:\%%~B\%%~C\vcvarsall.bat
                 echo [!idx_a!][!idx_b!][!idx_c!] !CurBatFile!
                 if exist !CurBatFile! (
-                    goto DetectVsPathBreak
+                    goto :DetectVsPathBreak
                 )
             )
         )
@@ -289,6 +340,68 @@ goto :eof
     echo Use:%CurBatFile%
     call :color_text 2f " -------------------- DetectVsPath ----------------------- "
     endlocal & set "%~1=%CurBatFile%"
+goto :eof
+
+:ShowVS2022InfoOnWin10
+    setlocal EnableDelayedExpansion
+    call :color_text 2f "+++++++++++++++++++ShowVS2022InfoOnWin10+++++++++++++++++++++++"
+    @rem Error HKCU\SOFTWARE  or  HKCU\SOFTWARE\Wow6432Node
+    set SoftwareRoot=HKLM\SOFTWARE\Wow6432Node
+    echo SoftwareRoot=%SoftwareRoot%
+
+    @rem see winsdk.bat -> GetWin10SdkDir -> GetWin10SdkDirHelper ->
+    reg query "%SoftwareRoot%\Microsoft\Microsoft SDKs\Windows\v10.0" /v "InstallationFolder"
+
+    @rem see winsdk.bat -> GetUniversalCRTSdkDir -> GetUniversalCRTSdkDirHelper -> 
+    reg query "%SoftwareRoot%\Microsoft\Windows Kits\Installed Roots" /v "KitsRoot10"
+
+    set SoftwareRoot=HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node
+    set OldVerKey=Microsoft\Microsoft SDKs\Windows\v10.0
+    echo OldVerKey=%OldVerKey%
+
+    @rem reg delete "%SoftwareRoot%\%OldVerKey%" /v InstallationFolder
+    @rem reg add    "%SoftwareRoot%\%OldVerKey%" /v InstallationFolder /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
+    @rem reg add    "%SoftwareRoot%\%OldVerKey%" /v InstallationFolder /f /t REG_SZ /d "E:\Program\VS2022\Windows Kits\10"
+    reg query       "%SoftwareRoot%\%OldVerKey%" /v InstallationFolder
+
+    set SoftwareRoot=HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node
+    set NewVerKey=Microsoft\Windows Kits\Installed Roots
+    echo NewVerKey=%NewVerKey%
+
+    @rem reg delete "%SoftwareRoot%\%NewVerKey%"  /v KitsRoot10 
+    @rem reg add    "%SoftwareRoot%\%NewVerKey%"  /v KitsRoot10         /f /t REG_SZ /d "D:\Program Files (x86)\Windows Kits\10\"
+    @rem reg add    "%SoftwareRoot%\%NewVerKey%"  /v KitsRoot10         /f /t REG_SZ /d "E:\Program\VS2022\Windows Kits\10"
+    reg query       "%SoftwareRoot%\%NewVerKey%"  /v KitsRoot10
+
+    echo "C:\Program Files (x86)\Microsoft SDKs\Windows"
+    echo "C:\Program Files (x86)\Windows Kits"
+    echo "C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Platforms\Win32\PlatformToolsets\v80\Microsoft.Cpp.Win32.v80.props"
+
+    set SoftwareRoot=HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node
+    set VC2005_Key=Microsoft\VisualStudio\8.0
+    echo VC2005_Key=%VC2005_Key%
+
+    reg query "%SoftwareRoot%\%VC2005_Key%\Setup\VC" /v "ProductDir"
+    reg query "%SoftwareRoot%\%VC2005_Key%\Setup\VS" /v "ProductDir"
+
+    set VC2022_Key=Microsoft\VisualStudio\Setup\Instances\ManualVS2022
+    echo VC2022_Key=%VC2022_Key%
+
+    reg query "%SoftwareRoot%\%VC2022_Key%"
+    reg query "%SoftwareRoot%\%VC2022_Key%\Catalog\Components"
+
+    where cl
+    where nmake
+    where rc
+
+    where msbuild
+    where devenv
+    where mt
+
+    @rem where vswhere
+
+    call :color_text 2f "--------------------ShowVS2022InfoOnWin10-----------------------"
+    endlocal
 goto :eof
 
 @rem YellowBackground    6f  ef
@@ -310,6 +423,3 @@ goto :eof
     endlocal
     echo .
 goto :eof
-
-
-
