@@ -127,6 +127,161 @@ goto :eof
     endlocal
 goto :eof
 
+:DetectQtDir
+    setlocal EnableDelayedExpansion
+    @rem call "C:\Qt\6.5.2\msvc2019_64\bin\qtenv2.bat"
+    @rem call "D:/Qt/Qt5.12.0/5.12.0/msvc2017_64/bin/qtenv2.bat"
+    @rem call "D:\Qt\Qt5.14.2\5.14.2\msvc2017_64\bin\qtenv2.bat"
+
+    set VsBatFileVar=%~1
+    call :color_text 2f " ++++++++++++++++++ DetectQtDir +++++++++++++++++++++++ "
+    set VSDiskSet=C;D;E;F;G;
+
+    set QtPathSet="Qt"
+
+    set QtVerSet=%QtVerSet%;"6.5.2"
+    set QtVerSet=%QtVerSet%;"Qt5.12.0\5.12.0"
+    set QtVerSet=%QtVerSet%;"Qt5.14.2\5.14.2"
+
+    set QtMsvcSet=%QtMsvcSet%;"msvc2017_64"
+    set QtMsvcSet=%QtMsvcSet%;"msvc2019_64"
+
+    set idx_a=0
+    for %%A in (!VSDiskSet!) do (
+        set /a idx_a+=1
+        set idx_b=0
+        for %%B in (!QtPathSet!) do (
+            set /a idx_b+=1
+            set idx_c=0
+            for %%C in (!QtVerSet!) do (
+                set /a idx_c+=1
+                for %%D in (!QtMsvcSet!) do (
+                    set /a idx_d+=1
+                    set QtEnvBatFile=%%A:\%%~B\%%~C\%%~D\bin\qtenv2.bat
+                    set QtMsvcPath=%%A:\%%~B\%%~C\%%~D
+                    echo [!idx_a!][!idx_b!][!idx_c!][!idx_d!] !QtEnvBatFile!
+                    if exist !QtEnvBatFile! (
+                        goto :DetectQtEnvPathBreak
+                    )
+                )
+            )
+        )
+    )
+    :DetectQtEnvPathBreak
+    echo Use:%QtEnvBatFile%
+    call :color_text 2f " ------------------ DetectQtDir ----------------------- "
+    endlocal & set "%~1=%QtEnvBatFile%"& set "%~2=%QtMsvcPath%"
+goto :eof
+
+:GenQtIncDirOpts
+    setlocal EnableDelayedExpansion
+    @rem call "C:\Qt\6.5.2\msvc2019_64\bin\qtenv2.bat"
+    @rem call "D:/Qt/Qt5.12.0/5.12.0/msvc2017_64/bin/qtenv2.bat"
+    @rem call "D:\Qt\Qt5.14.2\5.14.2\msvc2017_64\bin\qtenv2.bat"
+
+    set QtMsvcPath=%~1
+    set OptIncFlag=%~2
+
+    call :color_text 2f " ++++++++++++++++++ GenQtIncDirOpts +++++++++++++++++++++++ "
+
+    set QtMsvcSet=%QtMsvcSet%;"msvc2017_64"
+    set QtMsvcSet=%QtMsvcSet%;"msvc2019_64"
+
+    if "%OptIncFlag%"=="1" (
+        set OptIncFlag=-I
+    ) else (
+        set OptIncFlag=/external:I 
+    )
+
+    set QtMsvcIncDirs=%QtMsvcIncDirs%  %OptIncFlag%  %QtMsvcPath%/include 
+    set QtMsvcIncDirs=%QtMsvcIncDirs%  %OptIncFlag%  %QtMsvcPath%/mkspecs/win32-msvc 
+
+    set QtModDirs=%QtModDirs% QtCore 
+    set QtModDirs=%QtModDirs% QtCore5Compat 
+    set QtModDirs=%QtModDirs% QtGui 
+    set QtModDirs=%QtModDirs% QtWidgets 
+    set QtModDirs=%QtModDirs% QtConcurrent 
+    set QtModDirs=%QtModDirs% QtNetwork 
+    set QtModDirs=%QtModDirs% QtPrintSupport 
+    set QtModDirs=%QtModDirs% QtXml 
+    set QtModDirs=%QtModDirs% QtWebEngineCore 
+    set QtModDirs=%QtModDirs% QtQuick 
+    set QtModDirs=%QtModDirs% QtQml 
+    set QtModDirs=%QtModDirs% QtQmlIntegration 
+    set QtModDirs=%QtModDirs% QtQmlModels 
+    set QtModDirs=%QtModDirs% QtOpenGL 
+    set QtModDirs=%QtModDirs% QtWebChannel 
+    set QtModDirs=%QtModDirs% QtPositioning 
+
+    set idx_a=0
+    for %%A in (!QtMsvcPath!) do (
+        set /a idx_a+=1
+        set idx_b=0
+        for %%B in (!QtModDirs!) do (
+            set /a idx_b+=1
+
+            set CurQtMsvcModIncDirs=!OptIncFlag! %%A\include\%%~B
+            set QtMsvcIncDirs=!QtMsvcIncDirs! !CurQtMsvcModIncDirs!
+            echo [!idx_a!][!idx_b!] !CurQtMsvcModIncDirs!
+
+        )
+    )
+
+    call :color_text 2f " ------------------ GenQtIncDirOpts ----------------------- "
+    endlocal & set "%~3=%QtMsvcIncDirs%"
+goto :eof
+
+:GenQtDepLibs
+    setlocal EnableDelayedExpansion
+    @rem call "C:\Qt\6.5.2\msvc2019_64\bin\qtenv2.bat"
+    @rem call "D:/Qt/Qt5.12.0/5.12.0/msvc2017_64/bin/qtenv2.bat"
+    @rem call "D:\Qt\Qt5.14.2\5.14.2\msvc2017_64\bin\qtenv2.bat"
+
+    set QtMsvcPath=%~1
+    set OptLinkFlag=
+
+    call :color_text 2f " ++++++++++++++++++ GenQtDepLibs +++++++++++++++++++++++ "
+
+    set QtMsvcSet=%QtMsvcSet%;"msvc2017_64"
+    set QtMsvcSet=%QtMsvcSet%;"msvc2019_64"
+
+    set QtMsvcDepLibs=
+
+    set QtModLibs=%QtModLibs% QtCore 
+    set QtModLibs=%QtModLibs% QtCore5Compat 
+    set QtModLibs=%QtModLibs% QtGui 
+    set QtModLibs=%QtModLibs% QtWidgets 
+    set QtModLibs=%QtModLibs% QtConcurrent 
+    set QtModLibs=%QtModLibs% QtNetwork 
+    set QtModLibs=%QtModLibs% QtPrintSupport 
+    set QtModLibs=%QtModLibs% QtXml 
+    set QtModLibs=%QtModLibs% QtWebEngineCore 
+    set QtModLibs=%QtModLibs% QtQuick 
+    set QtModLibs=%QtModLibs% QtQml 
+    set QtModLibs=%QtModLibs% QtQmlIntegration 
+    set QtModLibs=%QtModLibs% QtQmlModels 
+    set QtModLibs=%QtModLibs% QtOpenGL 
+    set QtModLibs=%QtModLibs% QtWebChannel 
+    set QtModLibs=%QtModLibs% QtPositioning 
+
+    set idx_a=0
+    for %%A in (!QtMsvcPath!) do (
+        set /a idx_a+=1
+        set idx_b=0
+        for %%B in (!QtModLibs!) do (
+            set /a idx_b+=1
+
+            set CurQtMsvcModLib=!OptLinkFlag! %%A\lib\%%~B.lib
+            set QtMsvcDepLibs=!QtMsvcDepLibs! !CurQtMsvcModLib!
+            echo [!idx_a!][!idx_b!] !CurQtMsvcModLib!
+
+        )
+    )
+
+    call :color_text 2f " ------------------ GenQtDepLibs ----------------------- "
+    endlocal & set "%~2=%QtMsvcDepLibs%"
+goto :eof
+
 :DetectProgramDir
     setlocal EnableDelayedExpansion
     @rem SkySdk\VS2005\VC
@@ -365,6 +520,165 @@ goto :eof
     echo Use:%CurDirName%
     call :color_text 2f " ------------------ DetectWinSdk ----------------------- "
     endlocal & set "%~1=%CurDirName%" & set %~2=%WIN_SDK_BIN% & set %~3=%WIN_SDK_INC% & set %~4=%WIN_SDK_LIB%
+goto :eof
+
+@rem call :ProcQtUis   "%AllQtUis%"
+:ProcQtUis
+    setlocal EnableDelayedExpansion
+    set AllQtUis=%~1
+    call :color_text 2f " +++++++++++++++++ ProcQtUis ++++++++++++++++ "
+    set OutDir=out\Debug
+    if not exist %OutDir% (
+        mkdir %OutDir%
+    )
+    set idx=0
+    set AllUiHdrs=
+    for %%i in (%AllQtUis%) do (
+        set /a idx+=1
+        set QtUiFile=%%i
+        set QtUiHdr=!OutDir!\ui_%%~ni.h
+        set ext=%%~xi
+        echo [!idx!] !QtUiFile!  !QtUiHdr!
+        set AllUiHdrs=!AllUiHdrs! !QtUiHdr!
+        uic.exe -o  !QtUiHdr!  !QtUiFile!
+    )
+    call :color_text 2f " ----------------- ProcQtUis ---------------- "
+    endlocal
+goto :eof
+
+@rem call :ProcQtRcs   "%AllQtRcs%"
+:ProcQtRcs
+    setlocal EnableDelayedExpansion
+    set AllQtRcs=%~1
+
+    call :color_text 2f " +++++++++++++++++ ProcQtRcs ++++++++++++++++ "
+    set OutDir=out\Debug
+    if not exist %OutDir% (
+        mkdir %OutDir%
+    )
+    set idx=0
+    set AllQtCpps=
+    for %%i in (%AllQtRcs%) do (
+        set /a idx+=1
+        set QrcFile=%%i
+        set FileName=%%~ni
+        set CppFile=!OutDir!\qrc_!FileName!_CMKE_.cpp
+        set ext=%%~xi
+        echo [!idx!] !QrcFile!  !CppFile!
+        set AllQtCpps=!AllQtCpps! !CppFile!
+        rcc.exe -name !FileName! -o !CppFile! !QrcFile!
+    )
+
+    call :color_text 2f " ----------------- ProcQtRcs ---------------- "
+    endlocal
+goto :eof
+
+@rem call :ProcQtHdrs   "%ProjDepDefs%"   "%QtDepDefs%"   "%ProjIncDirs%"   "%QtIncDirs%"   "%AllQtHdrs%"
+:ProcQtHdrs
+    setlocal EnableDelayedExpansion
+    set ProjDepDefs=%~1
+    set QtDepDefs=%~2
+    set ProjIncDirs=%~3
+    set QtIncDirs=%~4
+    set AllQtHdrs=%~5
+
+    call :color_text 2f " +++++++++++++++++ ProcQtHdrs ++++++++++++++++ "
+
+    echo ProjDepDefs=%ProjDepDefs%
+    echo QtDepDefs=%QtDepDefs%
+    echo ProjIncDirs=%ProjIncDirs%
+    echo QtIncDirs=%QtIncDirs%
+    echo AllQtHdrs=%AllQtHdrs%
+
+    set OutDir=out\Debug
+    if not exist %OutDir% (
+        mkdir %OutDir%
+    )
+    set idx=0
+    set AllMocCpps=
+    for %%i in (%AllQtHdrs%) do (
+        set /a idx+=1
+        set QtHdrFile=%%i
+        set QtMocCpp=!OutDir!\moc_%%~ni.cpp
+        set ext=%%~xi
+        echo [!idx!] !QtHdrFile!  !QtMocCpp!
+        set AllMocCpps=!AllMocCpps! !QtMocCpp!
+        moc.exe !ProjDepDefs!   !QtDepDefs!   !ProjIncDirs!   !QtIncDirs! --output-dep-file -o   !QtMocCpp!   !QtHdrFile!
+    )
+    call :color_text 2f " ----------------- ProcQtHdrs ---------------- "
+    endlocal
+goto :eof
+
+
+
+@rem call :CompileQtSrcs   "%ProjIncDirs%"   "%ProjDepDefs%"   "%QtDepDefs%"   "%QtIncDirs%"    "%ProjAllSrcs%"
+:CompileQtSrcs
+    setlocal EnableDelayedExpansion
+    set ProjIncDirs=%~1
+    set ProjDepDefs=%~2
+    set QtDepDefs=%~3
+    set QtIncDirs=%~4
+    set ProjAllSrcs=%~5
+
+    call :color_text 2f " +++++++++++++++++ CompileQtSrcs ++++++++++++++++ "
+
+    echo ProjIncDirs=%ProjIncDirs%
+    echo ProjDepDefs=%ProjDepDefs%
+    echo QtDepDefs=%QtDepDefs%
+    echo QtIncDirs=%QtIncDirs%
+    echo ProjAllSrcs=%ProjAllSrcs%
+
+    set OutDir=out\Debug
+    set ZcOpts=/Zc:wchar_t /Zc:forScope /Zc:inline
+
+    set idx=0
+    set AllMocCpps=
+    for %%i in (%ProjAllSrcs%) do (
+        set /a idx+=1
+        set QtCppFile=%%i
+        set ObjFile=!OutDir!\%%~ni.obj
+        set ext=%%~xi
+        echo [!idx!] !QtCppFile!  !ObjFile!
+        set AllObjFiles=!AllObjFiles! !ObjFile!
+        CL.exe /c  /I"!OutDir!" !ProjIncDirs! /Z7 /nologo /W4 /WX- /diagnostics:column /Od /Ob0 !ProjDepDefs! !QtDepDefs! /Gm- /EHsc /RTC1 /MDd /GS /fp:precise !ZcOpts! /GR /std:c++17 /permissive- /Fo"!OutDir!\\" /Fd"!OutDir!\vc143.pdb" /external:W0 /Gd /TP /errorReport:queue  !QtIncDirs! -Zc:__cplusplus -utf-8 !QtCppFile!
+    )
+    call :color_text 2f " ----------------- CompileQtSrcs ---------------- "
+    endlocal
+goto :eof
+
+
+
+@rem call :LinkQtObjs   "%ProjLibDirs%"   "%QtLibDirs%"   "%DepSysLibs%"   "%ProjAllObjs%"    
+:LinkQtObjs
+    setlocal EnableDelayedExpansion
+    set ProjLibDirs=%~1
+    set QtLibDirs=%~2
+    set DepSysLibs=%~3
+    set ProjAllObjs=%~4
+
+    call :color_text 2f " +++++++++++++++++ LinkQtObjs ++++++++++++++++ "
+
+    echo ProjLibDirs=%ProjLibDirs%
+    echo QtLibDirs=%QtLibDirs%
+    echo DepSysLibs=%DepSysLibs%
+    echo ProjAllObjs=%ProjAllObjs%
+
+    set OutDir=out\Debug
+
+    link.exe /ERRORREPORT:QUEUE /OUT:"%OutDir%\MagicKey.exe" /INCREMENTAL /ILK:"%OutDir%\MagicKey.ilk" /NOLOGO %ProjLibDirs% %QtLibDirs% %DepSysLibs% /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"%OutDir%/MagicKey.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"%OutDir%/MagicKey.lib" /MACHINE:X64 %ProjAllObjs%
+
+    call :color_text 2f " ----------------- LinkQtObjs ---------------- "
+    endlocal
+goto :eof
+
+:CompileQtSln
+    setlocal EnableDelayedExpansion
+    set QtSln=%~1
+    call :color_text 2f " +++++++++++++++++ CompileQtSln ++++++++++++++++ "
+    set OutDir=out\Debug
+
+    call :color_text 2f " ----------------- CompileQtSln ---------------- "
+    endlocal
 goto :eof
 
 :SdccCompileProj
