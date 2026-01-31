@@ -57,10 +57,6 @@ pushd %CurDir%
 @rem Win32  or x64
 set ArchType=Win32
 
-
-
-
-
 call :DetectWinSdk   WinSdkDirHome   WinSdkDirBin   WinSdkDirInc   WinSdkDirLib
 
 echo WinSdkDirBin=%WinSdkDirBin%

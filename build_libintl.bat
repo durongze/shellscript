@@ -1,34 +1,19 @@
 @rem set VSCMD_DEBUG=2
 @rem %comspec% /k "F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
 
-set VisualStudioCmd="F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
-
-set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\vcvars32.bat"
-set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64\vcvars64.bat"
-
-set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\vcvars32.bat"
-set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\vcvars64.bat"
-
-set VisualStudioCmd="E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-set VisualStudioCmd="E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-
-set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-
-set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
-
-set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
-set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+call :DetectVsPath     VisualStudioCmd
+call :DetectProgramDir ProgramDir
 
 set old_sys_include="%include%"
 set old_sys_lib="%lib%"
 set old_sys_path="%path%"
 
-set ProgramDir=F:\program
+echo ProgramDir=%ProgramDir%
+
 set PerlPath=%ProgramDir%\Perl\bin
-set NASMPath=%ProgramDir%\nasm
+set NASMPath=%ProgramDir%\nasm\bin
 set CMakePath=%ProgramDir%\cmake\bin
-set PythonHome=%ProgramDir%\python
+set PythonHome=%ProgramDir%\python\Python312
 set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PATH%
 
 @rem HKLM=HKEY_LOCAL_MACHINE
@@ -41,10 +26,11 @@ echo ProjDir %ProjDir%
 @rem src\libintl\0.14.4\libintl-0.14.4-src\README.woe32
 set SrcDir=%ProjDir%\src\libintl\0.14.4\libintl-0.14.4-src
 set InstallDir=%ProjDir%\out
-set IconvDir=F:\program\libiconv-1.17
+set IconvDir=%ProgramDir%\libiconv-1.17
 set PREFIX=%InstallDir%
 
-CALL %VisualStudioCmd%
+@rem x86  or x64
+call %VisualStudioCmd% x64
 
 call :CopyDepLibrary "%IconvDir%" "%InstallDir%"
 call :BuildSharedLibrary   "%SrcDir%"
@@ -58,7 +44,7 @@ goto :eof
     setlocal EnableDelayedExpansion
     set DepDir=%~1
     set InstallDir=%~2
-    call :color_text 2f "++++++++++++++CopyDepLibrary++++++++++++++"
+    call :color_text 2f " ++++++++++++++ CopyDepLibrary ++++++++++++++ "
     if not exist %DepDir% (
         call :color_text 4f "--------------CopyDepLibrary--------------"
         echo Dir'%DepDir%' doesn't exist.
@@ -68,6 +54,7 @@ goto :eof
     )
     xcopy /S /E /Y %DepDir% %InstallDir%\
     move  /y %InstallDir%\lib\libiconv.lib %InstallDir%\lib\iconv.lib 
+    call :color_text 2f " -------------- CopyDepLibrary -------------- "
     endlocal
 goto :eof
 

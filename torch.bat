@@ -5,8 +5,8 @@ call :DetectProgramDir ProgramDir
 
 echo ProgramDir=%ProgramDir%
 
-set PerlPath=E:\programs\python\Python312
-set PythonHome=E:\programs\python\Python312
+set PerlPath=%ProgramDir%\python\Python312
+set PythonHome=%ProgramDir%\python\Python312
 set PowerShellHome=C:\Windows\System32\WindowsPowerShell\v1.0
 set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PythonHome%\Scripts;%PowerShellHome%;%PATH%
 
@@ -30,7 +30,7 @@ goto :eof
 :CheckTorchEnv
     setlocal EnableDelayedExpansion
     call :color_text 2f " +++++++++++++++++++ CheckTorchEnv +++++++++++++++++++++++ "
-	set TORCH_DEVICE_BACKEND_AUTOLOAD=0
+    set TORCH_DEVICE_BACKEND_AUTOLOAD=0
     python -c "import torch; import intel_extension_for_pytorch as ipex; print(f'Torch device: {torch.device(\"xpu\" if torch.xpu.is_available() else \"cpu\")}'); print(f'IPEX available: {ipex.is_available()}')"
     call :color_text 2f " ------------------- CheckTorchEnv ----------------------- "
     endlocal
