@@ -2,6 +2,7 @@
 
 call :DetectVsPath     VisualStudioCmd
 call :DetectProgramDir ProgramDir
+call :DetectQtDir      QtEnvBat          QtMsvcPath
 
 echo ProgramDir=%ProgramDir%
 
@@ -138,22 +139,6 @@ set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua
 set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4/Debug" 
 set ProjLibDirs=%ProjLibDirs% /LIBPATH:"E:/code/MagicKey/BuildSrc/thirdparty/lua-5.4.4/Debug/Debug" 
 
-set QtLibDirs=C:\Qt\6.5.2\msvc2019_64\lib\Qt6Core5Compatd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Concurrentd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6PrintSupportd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Xmld.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6WebEngineCored.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Widgetsd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Quickd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6QmlModelsd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6OpenGLd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Guid.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6WebChanneld.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Qmld.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Networkd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Positioningd.lib 
-set QtLibDirs=%QtLibDirs% C:\Qt\6.5.2\msvc2019_64\lib\Qt6Cored.lib 
-
 call :GenQtDepLibs        "%QtMsvcPath%"   QtDepLibs
 
 set DepSysLibs=comdlg32.lib winspool.lib d3d11.lib dxgi.lib dxguid.lib dcomp.lib user32.lib 
@@ -173,6 +158,67 @@ set ProjAllObjs=%ProjAllObjs% out\Debug\networkmanager.obj
 call :LinkQtObjs      "%ProjLibDirs%"   "%QtDepLibs%"    "%DepSysLibs%"   "%ProjAllObjs%" 
 
 pause
+goto :eof
+
+:CheckSrcFileFilter
+    setlocal EnableDelayedExpansion
+    set srcFileName=%~1
+    call :color_text 2f " +++++++++++++++++++ CheckSrcFileFilter +++++++++++++++++++++++ "
+
+
+    set SrcFileFilter=%SrcFileFilter%   
+
+    set SrcFileFilter=%SrcFileFilter%   smp_calendar.c   smp_combobox.c   smp_datepicker.c   smp_spin.c   smp_tabwindow.c 
+
+    echo SrcFileFilter=%SrcFileFilter%
+
+    set IsExist=no
+    @rem call :get_path_by_file  "!srcFile!"
+    for %%k in (%SrcFileFilter%) do (
+        echo k=%%k   srcFileName=!srcFileName!  
+        if "%%k"=="!srcFileName!" (
+            call :color_text 4f " =========================== "
+            echo srcFileName=!srcFileName!
+            set IsExist=yes
+            goto :intercept_src_file_list 
+        )
+    )
+    :intercept_src_file_list
+
+    call :color_text 2f " ------------------- CheckSrcFileFilter ----------------------- "
+    endlocal & set %~2="%IsExist%"
+goto :eof
+
+:GetSrcFileList
+    setlocal EnableDelayedExpansion
+    call :color_text 2f " +++++++++++++++++++ GetSrcFileList +++++++++++++++++++++++ "
+    set SrcFileDir="%~1"
+    set SrcFileFilterKey=%~2
+    if not exist "%SrcFileDir%" (
+        echo SrcFileDir %SrcFileDir%
+        goto :eof
+    ) else (
+        echo SrcFileDir %SrcFileDir%
+    )
+    pushd %SrcFileDir%
+    echo SrcFileFilter=%SrcFileFilter%
+    set AllSrcFile=
+    for /f %%i in ('dir /s /b "%SrcFileFilterKey%*.c*"') do (
+        set /a idx+=1
+        set srcFile=%%i
+        set ext=%%~xi
+        set srcFileName=%%~nxi
+        echo [!idx!] srcFile=!srcFile!   srcFileName=!srcFileName!  
+        call :CheckSrcFileFilter   "!srcFileName!"   IsExist
+        if !IsExist!=="yes" (
+            echo skip !srcFileName!
+        ) else (
+            set AllSrcFile=!AllSrcFile!  !srcFile!
+        )
+    )
+    popd
+    call :color_text 2f " -------------- GetSrcFileList -------------- "
+    endlocal & set %~3=%AllSrcFile%
 goto :eof
 
 :DetectQtDir

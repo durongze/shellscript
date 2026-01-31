@@ -32,11 +32,14 @@ set build_type=Release
 
 @rem x86  or x64
 call %VisualStudioCmd% x64
-call:gen_all_env_by_dir %software_dir% %home_dir% all_inc all_lib all_bin CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH CMAKE_MODULE_PATH
+
+call :gen_all_env_by_dir %software_dir% %home_dir% all_inc all_lib all_bin CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH CMAKE_MODULE_PATH
+
 set include=%all_inc%;%include%
 set lib=%all_lib%;%lib%
 set path=%all_bin%;%path%
-call:show_all_env
+
+call :show_all_env
 
 set HomeDir=%home_dir%
 @rem Win32  or x64

@@ -1,3 +1,6 @@
+%1 start "" mshta vbscript:CreateObject("Shell.Application").ShellExecute("cmd.exe","/c %~s0 ::","","runas",1)(window.close)&&exit
+CD /D "%~dp0"
+
 @echo off
 @rem HKLM=HKEY_LOCAL_MACHINE
 @rem HKCU=HKEY_CURRENT_USER
@@ -16,17 +19,18 @@ goto :eof
     setlocal EnableDelayedExpansion
     set src_file_name=%~1
 
-    call :color_text 2f "+++++++++++++AddToContextMenuOnFlie+++++++++++++++"
+    call :color_text 2f " +++++++++++++ AddToContextMenuOnFlie +++++++++++++++ "
     REG QUERY "HKCU\Software\Classes\*\shell\AddToContextMenu" >nul 2>&1
     if %errorlevel%==0 (
-        call :color_text 6f "-------------'Add to Context Menu' option already exists---------------"
+        call :color_text 6f " =========== 'Add to Context Menu' option already exists =========== "
         REG DELETE "HKCU\Software\Classes\*\shell\AddToContextMenu" 
     ) else (
-        REG ADD "HKCU\Software\Classes\*\shell\AddToContextMenu" /ve /d "Add to Context Menu" /f
-        REG ADD "HKCU\Software\Classes\*\shell\AddToContextMenu\command" /ve /d "\"%~dp0\handle_add_to_context_menu.bat\" \"%%1\"" /f
+        REG ADD    "HKCU\Software\Classes\*\shell\AddToContextMenu"         /ve /d "Add to Context Menu" /f
+        REG ADD    "HKCU\Software\Classes\*\shell\AddToContextMenu\command" /ve /d "\"%~dp0\handle_add_to_context_menu.bat\" \"%%1\"" /f
         echo "Add to Context Menu" option added successfully.
-        call :color_text 2f "-------------'Add to Context Menu' option added succ.---------------"
+        call :color_text 2f " =========== 'Add to Context Menu' option added succ. =========== "
     )
+    call :color_text 2f " ------------- HandleAddToContextMenuOnFlie ------------- "
     endlocal
 goto :eof
 
@@ -34,16 +38,17 @@ goto :eof
     setlocal EnableDelayedExpansion
     set src_file_name=%~1
 
-    call :color_text 2f "+++++++++++++AddToContextMenuOnSpace+++++++++++++++"
+    call :color_text 2f " +++++++++++++ AddToContextMenuOnSpace +++++++++++++++ "
     REG QUERY "HKEY_CLASSES_ROOT\Directory\Background\shell\add_bookmark" >nul 2>&1
     if %errorlevel%==0 (
-        call :color_text 6f "-------------'Add to Context Menu' option already exists---------------"
+        call :color_text 6f " =========== 'Add to Context Menu' option already exists =========== "
         REG DELETE "HKEY_CLASSES_ROOT\Directory\Background\shell\add_bookmark"
     ) else (
         REG ADD "HKEY_CLASSES_ROOT\Directory\Background\shell\add_bookmark" /ve /d "add bookmark" /f
         REG ADD "HKEY_CLASSES_ROOT\Directory\Background\shell\add_bookmark\command" /ve /d "\"C:\Windows\System32\proc_bookmark.bat\" \"%%1\"" /f
-        call :color_text 2f "-------------'Add to Context Menu' option added succ.---------------"
+        call :color_text 2f " =========== 'Add to Context Menu' option added succ. =========== "
     )
+    call :color_text 2f " ------------- AddToContextMenuOnSpace ------------- "
     endlocal
 goto :eof
 

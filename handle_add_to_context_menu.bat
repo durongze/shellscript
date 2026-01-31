@@ -10,10 +10,10 @@ if "%1"=="" (
 
 set filePath=%1
 set fileName=%~nx1
-set fileDir=%~dp1
+set fileDir="%~dp1"
 
-call :HandleAddToContextMenuOnFlie "%fileDir%" 
-call :HandleFileName %filePath%
+call :HandleAddToContextMenuOnFlie  %filePath%
+call :HandleFileName                %filePath%   mypath   myname   myext
 pause
 goto :eof
 
@@ -22,22 +22,24 @@ goto :eof
     :: add filepath to regedit.
     set FilePath=%~1
     set FileName=%~n1
-    call :color_text 2f "+++++++++++++HandleAddToContextMenuOnFlie+++++++++++++++"
+    call :color_text 2f " +++++++++++++ HandleAddToContextMenuOnFlie +++++++++++++ "
     echo FilePath:%FilePath%
     echo FileName:%FileName%
     REG QUERY "HKCR\*\shell\%FileName%" >nul 2>&1
     if %errorlevel%==0 (
-        call :color_text 6f "-------------'Current Menu' option already exists---------------"
+        call :color_text 6f " =========== 'Current Menu' option already exists =========== "
+        REG DELETE   "HKCU\*\shell\%FileName%"
     ) else (
-        REG ADD "HKCR\*\shell\%FileName%" /ve /d "%FileName%" /f
-        echo REG ADD "HKCR\*\shell\%FileName%" /ve /d "%FileName%" /f
-        REG ADD "HKCR\*\shell\%FileName%" /v "icon" /t REG_SZ /d  "%FilePath%" /f
-        echo REG ADD "HKCR\*\shell\%FileName%" /v "icon" /t REG_SZ /d  "%FilePath%" /f
-        REG ADD "HKCR\*\shell\%FileName%\command" /ve /d  "\"%FilePath%\" \"%%1\"" /f
+             REG ADD "HKCR\*\shell\%FileName%"         /ve /d  "%FileName%" /f
+        echo REG ADD "HKCR\*\shell\%FileName%"         /ve /d  "%FileName%" /f
+             REG ADD "HKCR\*\shell\%FileName%"         /v      "icon"       /t REG_SZ /d  "%FilePath%" /f
+        echo REG ADD "HKCR\*\shell\%FileName%"         /v      "icon"       /t REG_SZ /d  "%FilePath%" /f
+             REG ADD "HKCR\*\shell\%FileName%\command" /ve /d  "\"%FilePath%\" \"%%1\"" /f
         echo REG ADD "HKCR\*\shell\%FileName%\command" /ve /d  "\"%FilePath%\" \"%%1\"" /f
-        call :color_text 2f "-------------'Current Menu' option added succ.---------------"
+        call :color_text 2f " =========== 'Current Menu' option added succ. =========== "
     )
     echo REG QUERY "HKCR\*\shell\%FileName%"
+    call :color_text 2f " ------------- HandleAddToContextMenuOnFlie ------------- "
     endlocal
 goto :eof
 
@@ -74,8 +76,8 @@ goto :eof
     set mypath=%~dp1
     set myname=%~n1
     set myext=%~x1
-    call :color_text 2f "++++++++++++++++++ get_path_by_file ++++++++++++++++++++++++"
+    call :color_text 2f " ++++++++++++++++++ get_path_by_file +++++++++++++++++++++++ "
     echo !mypath! !myname! !myext!
-    call :color_text 2f "-------------------- get_path_by_file -----------------------"
+    call :color_text 2f " ------------------ get_path_by_file ----------------------- "
     endlocal & set %~2=%mypath%&set %~3=%myname%&set %~4=%myext%
 goto :eof

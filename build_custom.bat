@@ -3,6 +3,7 @@
 
 call :DetectVsPath     VisualStudioCmd
 call :DetectProgramDir ProgramDir
+call :DetectQtDir      QtEnvBat          QtMsvcPath
 
 echo ProgramDir=%ProgramDir%
 
@@ -23,23 +24,8 @@ set PATH=%NASMPath%;%YASMPath%;%GPERFPath%;%PerlPath%;%CMakePath%;%SDCCPath%;%Ma
 
 set MakeProgram=%MakePath%\make.exe
 
-set HomeDir=%ProjDir%\out\windows
-
-set software_dir="%ProjDir%\thirdparty"
-
-call :SetProjEnv %software_dir% %CurDir% include lib path CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH CMAKE_MODULE_PATH
-call :ShowProjEnv
-
-set SystemBinDir=.\
-
-@rem x86  or x64
-call %VisualStudioCmd% x64
-
-@rem call "C:\Qt\6.5.2\msvc2019_64\bin\qtenv2.bat"
-@rem call "D:/Qt/Qt5.12.0/5.12.0/msvc2017_64/bin/qtenv2.bat"
-
-@rem Win32  or x64
-set ArchType=Win32
+call :TaskKillSpecProcess  "cl.exe"
+call :TaskKillSpecProcess  "MSBuild.exe"
 
 set BuildDir=BuildLib
 set BuildType=Debug
@@ -51,11 +37,29 @@ set build_mrp_ext=%CurDir%\mythroad\build_mrp_ext.bat
 @rem sxstrace parse -logfile:%~dp0\sxstrace.etl -outfile:%~dp0\sxstrace.txt
 
 call :get_suf_sub_str %ProjDir% \ ProjName
-
 echo ProjName %ProjName%
 
-call :TaskKillSpecProcess  "cl.exe"
-call :TaskKillSpecProcess  "MSBuild.exe"
+set software_dir="%ProjDir%\thirdparty"
+set HomeDir=%ProjDir%\out\windows
+
+call :SetProjEnv  "%software_dir%"  "%CurDir%"  include lib path CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH CMAKE_MODULE_PATH
+call :ShowProjEnv
+
+set SystemBinDir=.\
+
+@rem x86  or x64
+call %VisualStudioCmd% x64
+
+call %QtEnvBat%
+
+pushd %CurDir%
+
+@rem Win32  or x64
+set ArchType=Win32
+
+
+
+
 
 call :DetectWinSdk   WinSdkDirHome   WinSdkDirBin   WinSdkDirInc   WinSdkDirLib
 
@@ -110,7 +114,7 @@ goto :eof
     call :color_text 2f " +++++++++++++++++++ TaskKillSpecProcess +++++++++++++++++++ "
     tasklist | grep  "%ProcName%"
     taskkill /f /im  "%ProcName%"
-    call :color_text 2f " -------------------- TaskKillSpecProcess ----------------------- "
+    call :color_text 2f " ------------------- TaskKillSpecProcess ------------------- "
     endlocal
 goto :eof
 
@@ -359,7 +363,7 @@ goto :eof
     )
     :DetectWinSdkBreak
     echo Use:%CurDirName%
-    call :color_text 2f " -------------------- DetectWinSdk ----------------------- "
+    call :color_text 2f " ------------------ DetectWinSdk ----------------------- "
     endlocal & set "%~1=%CurDirName%" & set %~2=%WIN_SDK_BIN% & set %~3=%WIN_SDK_INC% & set %~4=%WIN_SDK_LIB%
 goto :eof
 
