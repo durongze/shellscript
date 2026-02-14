@@ -24,7 +24,8 @@ set tools_addr=%tools_addr%;https://www.7-zip.org/a/lzma2201.7z
 
 set software_urls=https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz
 
-set build_type=Release
+@rem set BuildType=Release
+set BuildType=Debug
 
 set include=%all_inc%;%include%;%tools_dir%\include;
 set lib=%all_lib%;%lib%;%tools_dir%\lib;%tools_dir%\bin;

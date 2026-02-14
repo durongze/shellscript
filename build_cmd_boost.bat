@@ -20,12 +20,12 @@ set PATH=%NASMPath%;%YASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PATH%
 
 set HomeDir=%ProjDir%\out\windows
 
-
+@rem  x86   x64
 call %VisualStudioCmd% x86
 
 set BuildType=Release
 
-call :install_boost1830  "debug"  "64"  "%HomeDir%"
+call :install_boost1830_static  "debug"  "64"  "%HomeDir%"
 
 pause
 goto :eof
@@ -312,7 +312,7 @@ goto :eof
     set BuildType="%~1"
     set BitNum="%~2"
     set HomeDir="%~3"
-    call :color_text 2f "++++++++++++++install_boost++++++++++++++"
+    call :color_text 2f " ++++++++++++++ install_boost ++++++++++++++ "
     @rem unzip  -q  boost_1_74_0.zip
     @rem vs2008 <-> toolset=msvc-9.0
     @rem vs2010 <-> toolset=msvc-10.0
@@ -340,15 +340,16 @@ goto :eof
         echo BuildType=%BuildType%, BitNum=%BitNum%
         set BuildDir=%BuildType%_win%BitNum%
     popd
+    call :color_text 2f " -------------------- install_boost ----------------------- "
     endlocal
 goto :eof
 
-:install_boost1830
+:install_boost1830_shared
     setlocal ENABLEDELAYEDEXPANSION
     set BuildType="%~1"
     set BitNum="%~2"
     set HomeDir="%~3"
-    call :color_text 2f "++++++++++++++install_boost++++++++++++++"
+    call :color_text 2f " ++++++++++++++ install_boost1830_shared ++++++++++++++ "
     @rem unzip  -q  boost_1_83_0.zip
     @rem vs2008 <-> toolset=msvc-9.0
     @rem vs2010 <-> toolset=msvc-10.0
@@ -371,6 +372,40 @@ goto :eof
         echo BuildType=%BuildType%, BitNum=%BitNum%
         set BuildDir=%BuildType%_win%BitNum%
     popd
+    call :color_text 2f " -------------------- install_boost1830_shared ----------------------- "
+    endlocal
+goto :eof
+
+:install_boost1830_static
+    setlocal ENABLEDELAYEDEXPANSION
+    set BuildType="%~1"
+    set BitNum="%~2"
+    set HomeDir="%~3"
+    call :color_text 2f " ++++++++++++++ install_boost1830_static ++++++++++++++ "
+    @rem unzip  -q  boost_1_83_0.zip
+    @rem vs2008 <-> toolset=msvc-9.0
+    @rem vs2010 <-> toolset=msvc-10.0
+    @rem vs2013 <-> toolset=msvc-12.0
+    @rem vs2015 <-> toolset=msvc-14.0
+    @rem vs2017 <-> toolset=msvc-15.0
+    @rem vs2019 <-> toolset=msvc-16.0
+    @rem vs2022 <-> toolset=msvc-17.0  @rem 143
+    pushd boost_1_83_0
+        if exist .\b2.exe (
+            @rem .\b2 toolset=msvc-14.0 architecture=x86 address-model=64 link=static runtime-link=static --with-coroutine --with-context --with-container --with-graph --with-signals --with-iostreams --with-filesystem --with-date_time --with-thread --with-serialization --with-regex --with-system --with-program_options --with-math --with-mpi --with-python --with-wave --with-test --with-atomic --with-chrono --with-exception --with-locale --with-log --with-random --with-timer --stagedir="E:\boost_1_63_0\64" --build-dir="E:\boost_1_63_0\64\build"
+            .\b2.exe install --prefix="%HomeDir%/boost_1_83_0/" --build-type=complete --toolset=msvc-14.3 variant=%BuildType%  link=static threading=multi runtime-link=static address-model=%BitNum%
+        ) else (
+            echo .\b2.exe doesn't exist!
+        )
+        if exist .\bootstrap.bat (
+            .\bootstrap.bat vc143
+        ) else (
+            echo .\bootstrap.bat doesn't exist!
+        )
+        echo BuildType=%BuildType%, BitNum=%BitNum%
+        set BuildDir=%BuildType%_win%BitNum%
+    popd
+    call :color_text 2f " -------------------- install_boost1830_static ----------------------- "
     endlocal
 goto :eof
 
