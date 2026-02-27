@@ -55,7 +55,7 @@ set home_dir=%ProjDir%\out\windows
 set auto_install_func=%cur_dir%\auto_func.bat
 
 @rem x86  or x64
-call %VisualStudioCmd% x86
+call "%VisualStudioCmd%" x86
 
 call %auto_install_func% gen_all_env_by_dir %software_dir% %home_dir% all_inc all_lib all_bin CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH CMAKE_MODULE_PATH
 set include=%all_inc%;%include%
@@ -182,7 +182,7 @@ goto :eof
     setlocal EnableDelayedExpansion
     set lib_dir="%~1"
     set home_dir="%~2"
-    call :color_text 2f "++++++++++++++ del_lib_cacke_dir ++++++++++++++"
+    call :color_text 2f " ++++++++++++++ del_lib_cacke_dir ++++++++++++++ "
     pushd %lib_dir%
         set idx=0
         for /f %%i in ( 'dir /b /ad ' ) do (
@@ -214,7 +214,7 @@ goto :eof
     call :color_text 2f " +++++++++++++++++++ TaskKillSpecProcess +++++++++++++++++++ "
     tasklist | grep  "%ProcName%"
     taskkill /f /im  "%ProcName%"
-    call :color_text 2f " -------------------- TaskKillSpecProcess ----------------------- "
+    call :color_text 2f " ------------------- TaskKillSpecProcess ------------------- "
     endlocal
 goto :eof
 
@@ -265,22 +265,24 @@ goto :eof
             set CurProgramDir=%%i:\%%B
             echo [!idx!] !CurProgramDir!
             if exist !CurProgramDir!\SkySdk (
+                set ProgramDir=!CurProgramDir!
                 goto :DetectProgramDirBreak
             )
             set CurProgramDir=%%i:\%%C
             echo [!idx!] !CurProgramDir!
             if exist !CurProgramDir!\SkySdk (
+                set ProgramDir=!CurProgramDir!
                 goto :DetectProgramDirBreak
             )
         )
     )
     :DetectProgramDirBreak
-    set ProgramDir=!CurProgramDir!
+    echo Use:%ProgramDir%
     call :color_text 2f " ------------------- DetectProgramDir ----------------------- "
     endlocal & set %~1=%ProgramDir%
 goto :eof
 
-:CheckLibInDir
+:CopyStaticLibToSpecDir
     setlocal EnableDelayedExpansion
     set Libs=%~1
     set LibDir="%~2"
@@ -289,10 +291,10 @@ goto :eof
     if not exist "%MyPlatformSDK%" (
         mkdir %MyPlatformSDK%
     )
-    call :color_text 2f " +++++++++++++++++++ CheckLibInDir +++++++++++++++++++++++ "
+    call :color_text 2f " +++++++++++++++++++ CopyStaticLibToSpecDir +++++++++++++++++++++++ "
     echo LibDir %LibDir%
     if not exist %LibDir% (
-        call :color_text 4f " -------------------- CheckLibInDir ----------------------- "
+        call :color_text 4f " -------------------- CopyStaticLibToSpecDir ----------------------- "
         echo '%LibDir%' does not exist... 
         goto :eof
     )
@@ -306,11 +308,11 @@ goto :eof
         if not exist !LibDir!\!CurLib! (
             echo !LibDir!\!CurLib!
         ) else (
-            copy !LibDir!\!CurLib! %MyPlatformSDK%
+            copy !LibDir!\!CurLib! !MyPlatformSDK!
         )
     )
     popd
-    call :color_text 2f " -------------------- CheckLibInDir ----------------------- "
+    call :color_text 2f " -------------------- CopyStaticLibToSpecDir ----------------------- "
     endlocal
 goto :eof
 
@@ -349,15 +351,63 @@ goto :eof
                 set CurBatFile=%%A:\%%~B\%%~C\vcvarsall.bat
                 echo [!idx_a!][!idx_b!][!idx_c!] !CurBatFile!
                 if exist !CurBatFile! (
+                    set VsVcBatFile=!CurBatFile!
                     goto :DetectVsPathBreak
                 )
             )
         )
     )
     :DetectVsPathBreak
-    echo Use:%CurBatFile%
+    echo Use:%VsVcBatFile%
     call :color_text 2f " -------------------- DetectVsPath ----------------------- "
-    endlocal & set "%~1=%CurBatFile%"
+    endlocal & set "%~1=%VsVcBatFile%"
+goto :eof
+
+:DetectWinSdk
+    setlocal EnableDelayedExpansion
+    set VsBatFileVar=%~1
+    set VS_ARCH=%~1
+
+    call :color_text 2f " ++++++++++++++++++ DetectWinSdk +++++++++++++++++++++++ "
+
+    set WindowsSdkVersion=10.0.22621.0
+
+    set VSDiskSet=C;D;E;F;G;
+
+    set AllProgramsPathSet=program
+    set AllProgramsPathSet=%AllProgramsPathSet%;programs
+
+    set VCPathSet=%VCPathSet%;"VS2022\Windows Kits\10"
+    set VCPathSet=%VCPathSet%;"SkySdk\VS2005\SDK\v2.0"
+
+    set idx_a=0
+    for %%C in (!VCPathSet!) do (
+        set /a idx_a+=1
+        set idx_b=0
+        for %%B in (!AllProgramsPathSet!) do (
+            set /a idx_b+=1
+            set idx_c=0
+            for %%A in (!VSDiskSet!) do (
+                set /a idx_c+=1
+                set CurWinSdkDirName=%%A:\%%B\%%~C
+                echo [!idx_a!][!idx_b!][!idx_c!] !CurWinSdkDirName!
+                if exist !CurWinSdkDirName! (
+                    set WindowsSdkDirName=!CurWinSdkDirName!
+                    set WIN_SDK_BIN=!WindowsSdkDirName!\bin\!WindowsSdkVersion!\!VS_ARCH!;
+                    set WIN_SDK_INC=!WIN_SDK_INC!;!WindowsSdkDirName!\Include\!WindowsSdkVersion!\um;
+                    set WIN_SDK_INC=!WIN_SDK_INC!;!WindowsSdkDirName!\Include\!WindowsSdkVersion!\ucrt;
+                    set WIN_SDK_INC=!WIN_SDK_INC!;!WindowsSdkDirName!\Include\!WindowsSdkVersion!\shared;
+                    set WIN_SDK_LIB=!WIN_SDK_LIB!;!WindowsSdkDirName!\Lib\!WindowsSdkVersion!\um\!VS_ARCH!;
+                    set WIN_SDK_LIB=!WIN_SDK_LIB!;!WindowsSdkDirName!\Lib\!WindowsSdkVersion!\ucrt\!VS_ARCH!;
+                    goto :DetectWinSdkBreak
+                )
+            )
+        )
+    )
+    :DetectWinSdkBreak
+    echo Use:%WindowsSdkDirName%
+    call :color_text 2f " ------------------ DetectWinSdk ----------------------- "
+    endlocal & set "%~2=%WindowsSdkDirName%" & set %~3=%WIN_SDK_BIN% & set %~4=%WIN_SDK_INC% & set %~5=%WIN_SDK_LIB%
 goto :eof
 
 @rem YellowBackground    6f  ef
@@ -386,9 +436,20 @@ goto :eof
     set mypath=%~dp1
     set myname=%~n1
     set myext=%~x1
-    call :color_text 2f "++++++++++++++++++ get_path_by_file ++++++++++++++++++++++++"
+    call :color_text 2f " ++++++++++++++++++ get_path_by_file ++++++++++++++++++++++++ "
+
+    echo 0    =%0
+    echo f0   =%~f0
+    echo d0   =%~d0
+    echo p0   =%~p0
+    echo n0   =%~n0
+    echo x0   =%~x0
+    echo dp0  =%~dp0
+    echo nx0  =%~nx0
+    echo dpnx0=%~dpnx0
+
     echo !mypath! !myname! !myext!
-    call :color_text 2f "-------------------- get_path_by_file -----------------------"
+    call :color_text 2f " -------------------- get_path_by_file ----------------------- "
     endlocal & set %~2=%mypath%&set %~3=%myname%&set %~4=%myext%
 goto :eof
 
@@ -497,7 +558,7 @@ goto :eof
         )
     )
     echo %0 %mystr% %char_sym% %count% %mysubstr_len%
-    call :color_text 9f "--------------get_suf_sub_str--------------"
+    call :color_text 2f "--------------get_suf_sub_str--------------"
     endlocal & set %~3=%substr%
 goto :eof
 
