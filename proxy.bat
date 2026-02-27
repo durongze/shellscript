@@ -15,3 +15,28 @@ netsh interface portproxy show all
 
 @rem
 netsh interface portproxy reset
+
+
+call :color_text "   "
+pause
+goto :eof
+
+@rem YellowBackground    6f  ef
+@rem BlueBackground      9f  bf   3f
+@rem GreenBackground     af  2f
+@rem RedBackground       4f  cf
+@rem GreyBackground      7f  8f
+@rem PurpleBackground    5f
+
+:color_text
+    setlocal EnableDelayedExpansion
+    for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
+        set "DEL=%%a"
+    )
+    echo off
+    <nul set /p ".=%DEL%" > "%~2"
+    findstr /v /a:%1 /R "^$" "%~2" nul
+    del "%~2" > nul 2>&1
+    endlocal
+    echo .
+goto :eof
