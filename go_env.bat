@@ -16,22 +16,24 @@ goto :eof
 
 :GoCompileProj
     setlocal EnableDelayedExpansion
-    call :color_text 2f "+++++++++++++GoCompileProj+++++++++++++++"
+    call :color_text 2f " +++++++++++++ GoCompileProj +++++++++++++ "
     set ProjDir=%~1
     pushd  %ProjDir%
         go build main\hello.go
         .\hello.exe
         go run main\hello.go
     popd
+    call :color_text 2f " ------------- GoCompileProj ------------- "
     endlocal
 goto :eof
 
 :GoEnvShow
     setlocal EnableDelayedExpansion
-    call :color_text 2f "+++++++++++++GoEnvShow+++++++++++++++"
+    call :color_text 2f " +++++++++++++ GoEnvShow +++++++++++++ "
     echo GOROOT=%GOROOT%
     echo GOPATH=%GOPATH%
     go env
+    call :color_text 2f " ------------- GoEnvShow ------------- "
     endlocal
 goto :eof
 
@@ -39,7 +41,9 @@ goto :eof
     setlocal EnableDelayedExpansion
     set go_root_dir=%~1
     set go_path_dir=%~2
+    call :color_text 2f " +++++++++++++ GoEnvSet +++++++++++++ "
     @rem assign without space
+    call :color_text 2f " ------------- GoEnvSet ------------- "
     endlocal & set %~3=%go_root_dir%& set %~4=%go_path_dir%
 goto :eof
 
