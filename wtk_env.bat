@@ -213,7 +213,20 @@ goto :eof
             emulator.exe -version
         )
     popd
-    call :color_text 2f " --------------- ShowWtkEnv --------------- "
+    call :color_text 2f " -------------- ShowWtkEnv -------------- "
+    endlocal
+goto :eof
+
+:ShowWtkCfg
+    setlocal ENABLEDELAYEDEXPANSION
+    set WtkLocDir=%~1
+    call :color_text 2f " ++++++++++++++ ShowWtkCfg ++++++++++++++ "
+    echo %WtkLocDir%\wtklib\Windows\ktools.properties
+    echo %WtkLocDir%\wtklib\Windows\emulator.properties
+    echo %WtkLocDir%\bin\*.vm
+    echo kvem.java.home=
+    echo wtk.java.home=
+    call :color_text 2f " -------------- ShowWtkCfg -------------- "
     endlocal
 goto :eof
 
